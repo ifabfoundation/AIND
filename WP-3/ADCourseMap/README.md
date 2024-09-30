@@ -31,6 +31,14 @@ Install the necessary dependencies
 
 - The `root` directory is organized as follows:
 
+    ```
+    └── 📁ADCourseMap
+        └── 📁code
+        └── 📁datasets
+        └── 📁notebooks
+        └── README.md
+        └── requirements.txt
+    ```
     
 
 - The main files for running the model, training, validation, and generating data are located in the `code` folder. 
