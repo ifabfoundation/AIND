@@ -4,13 +4,13 @@ Personalized Data-Driven Prevention of Neurodegenerative Disorders: A Datalake &
 
 ## Repository Description
 
-This repository contains the codes for the AIND project, organized across different workpages. It is divided into three main folders, each corresponding to a specific workpage:
+This repository contains the code scripts for the AIND project, organized across different workpages. It is divided into three main folders, each corresponding to a specific workpage:
 
 - **WP2**: Datalake Building
 - **WP3**: Neurodegenerative Disease Modelling
 - **WP4**: Predictive A.I. Algorithms
 
-## Project Objectives
+## Project Goals
 
 ### Primary Objective
 
