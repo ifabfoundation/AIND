@@ -71,8 +71,12 @@ print('TRAIN SAMPLES: ' + str(len(df_train)))
 print('PERSONALIZATION SAMPLES: ' + str(len(df_pers)))
 print('VALIDATION SAMPLES: ' + str(len(df_to_pred)))
 
+
+
 # Create Data Object to use the dataset with leaspy
+print('LEASPY TRAIN DATASET CREATION...')
 data_train = Data.from_dataframe(df_train)
+print('LEASPY PERSONALIZATION DATASET CREATION...')
 data_pers = Data.from_dataframe(df_pers)
 
 print('TRAIN\n')

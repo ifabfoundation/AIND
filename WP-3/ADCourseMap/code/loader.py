@@ -6,10 +6,8 @@ def loader(opt, path):
 
     if opt.sub_data:
         sub_n = opt.sub_n
-    else:
-        sub_n = len(dataset)
 
-    vis_n = dataset[dataset['ID']==sub_n].index[-1]+1 # number of visits (rows)
-    dataset = dataset.iloc[:vis_n]
+        vis_n = dataset[dataset['ID']==sub_n].index[-1]+1 # number of visits (rows)
+        dataset = dataset.iloc[:vis_n]
 
     return dataset
