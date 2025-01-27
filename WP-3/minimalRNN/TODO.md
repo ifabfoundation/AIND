@@ -1,0 +1,9 @@
+- Provare ad aggiungere le covariate statiche come input non predetto (FATTO) -> Sembra Migliorare
+- Pesare le loss (FATTO) -> Migliora
+- Provare a togliere il dropout (FATTO, modificato il droput in maniera corretta)
+- Provare a dividere nelle loss per (batch*visits) visto che i pazienti potrebbero avere n visite diverse (FATTO)
+- Salvare i pesi con la best loss (FATTO)
+- Separare le loss per feature (NON IN QUESTA VERSIONE)
+- Arrotare l'età con i mesi (DA VALUTARE)
+- Provare Softmax come funzione in output e sostitura la cross entropy 
+- Considerare l'eventualità di avere più visite iniziali
