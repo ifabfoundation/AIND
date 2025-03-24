@@ -45,7 +45,7 @@ if __name__ == '__main__':
         spinner_thread.start()
 
         if mode == 'T':
-            downloader.download_table_by_ulr() # Download table
+            downloader.download_table_by_url() # Download table
         else:
             downloader.download_image_files_by_url() # Download study files
     except Exception as e:
