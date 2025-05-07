@@ -52,11 +52,12 @@ After installing the key, update your environment:
 source ~/.bashrc
 ```
 ### 3. Role Activation
-Launch the POLIBA role from the SSH directory:
+Connect to the login node of the HPC environment through SSH command:
 ```
 cd ~/.ssh
+ssh -i ~/.ssh/POLIBA.pem POLIBA@131.175.204.159
 ```
-Execute the POLIBA role command (specific command details will be provided separately)
+
 ### 4. Navigation
 Once connected, you can navigate to the home directory:
 ```
