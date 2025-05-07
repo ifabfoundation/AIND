@@ -23,3 +23,41 @@ Develop artificial intelligence personalized solutions as ‘proof-of-concepts�
 - **Automatic Data Extraction**: Provide an initial ‘proof-of-concept’ for establishing an automatic data extraction process to obtain information from key clinical and scientific databases and keep the Datalake constantly updated.
 
 - **Predictive Models for Precision Medicine**: Identify and operationalize the most up-to-date predictive/prognostic disease models to provide data to drive an initial training set for the precision medicine AI algorithms, as well as real data-driven comparators for validation.
+
+## POLIBA Data Lake Access Guide
+This document provides instructions on how to access and use the data lake infrastructure developed by our team.
+Prerequisites
+
+Ubuntu operating system
+SSH client
+Basic command line knowledge
+
+Initial Setup
+1. SSH Key Installation
+You will receive a POLIBA.pem SSH key file. This key must be installed in your Ubuntu SSH directory:
+
+Download the POLIBA.pem key file provided to you
+Move the key to your SSH directory:
+bashmv POLIBA.pem ~/.ssh/
+
+Set the correct permissions for the key file:
+bashchmod 600 ~/.ssh/POLIBA.pem
+
+
+2. Environment Update
+After installing the key, update your environment:
+bashsource ~/.bashrc
+3. Role Activation
+Launch the POLIBA role from the SSH directory:
+bashcd ~/.ssh
+# Execute the POLIBA role command (specific command details will be provided separately)
+4. Navigation
+Once connected, you can navigate to the home directory:
+bashcd ..
+From this directory, you will have access to the data lake resources.
+Usage
+....
+   
+Support
+If you encounter any issues or have questions regarding access or usage, please contact .
+![image](https://github.com/user-attachments/assets/71549c59-7d42-4311-9259-2e7a30ddb2c8)
