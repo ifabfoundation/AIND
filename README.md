@@ -26,38 +26,50 @@ Develop artificial intelligence personalized solutions as â€˜proof-of-conceptsâ€
 
 ## POLIBA Data Lake Access Guide
 This document provides instructions on how to access and use the data lake infrastructure developed by our team.
-Prerequisites
 
-Ubuntu operating system
-SSH client
-Basic command line knowledge
+### Prerequisites
 
-Initial Setup
-1. SSH Key Installation
+- Ubuntu operating system
+- SSH client
+- Basic command line knowledge
+
+### Initial Setup
+### 1. SSH Key Installation
 You will receive a POLIBA.pem SSH key file. This key must be installed in your Ubuntu SSH directory:
 
-Download the POLIBA.pem key file provided to you
-Move the key to your SSH directory:
-bashmv POLIBA.pem ~/.ssh/
-
-Set the correct permissions for the key file:
-bashchmod 600 ~/.ssh/POLIBA.pem
-
-
-2. Environment Update
+1. Download the POLIBA.pem key file provided to you
+2. Move the key to your SSH directory:
+```
+mv POLIBA.pem ~/.ssh/
+```
+3. Set the correct permissions for the key file:
+```
+chmod 600 ~/.ssh/POLIBA.pem
+```
+### 2. Environment Update
 After installing the key, update your environment:
-bashsource ~/.bashrc
-3. Role Activation
+```
+source ~/.bashrc
+```
+### 3. Role Activation
 Launch the POLIBA role from the SSH directory:
-bashcd ~/.ssh
-# Execute the POLIBA role command (specific command details will be provided separately)
-4. Navigation
+```
+cd ~/.ssh
+```
+Execute the POLIBA role command (specific command details will be provided separately)
+### 4. Navigation
 Once connected, you can navigate to the home directory:
-bashcd ..
+```
+cd ..
+```
 From this directory, you will have access to the data lake resources.
-Usage
+
+### Usage
 ....
    
-Support
-If you encounter any issues or have questions regarding access or usage, please contact .
-![image](https://github.com/user-attachments/assets/71549c59-7d42-4311-9259-2e7a30ddb2c8)
+### Support
+If you encounter any issues or have questions regarding access or usage, please contact us:
+raimondo.reggio@ifabfoundation.org
+benedetta.baldini@ifabfoundation.org
+chiara.pollicini@ifabfoundation.org
+
