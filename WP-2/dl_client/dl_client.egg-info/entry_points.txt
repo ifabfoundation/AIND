@@ -1,0 +1,2 @@
+[console_scripts]
+dl-client = dl_client.cli:main
