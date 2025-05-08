@@ -24,8 +24,9 @@ Develop artificial intelligence personalized solutions as â€˜proof-of-conceptsâ€
 
 - **Predictive Models for Precision Medicine**: Identify and operationalize the most up-to-date predictive/prognostic disease models to provide data to drive an initial training set for the precision medicine AI algorithms, as well as real data-driven comparators for validation.
 
-## POLIBA Data Lake Access Guide
-This document provides instructions on how to access and use the data lake infrastructure developed by our team.
+## Data Lake Access Guide
+
+This document provides instructions on how to access and use the data lake infrastructure developed by IFAB team.
 
 ### Prerequisites
 
@@ -34,17 +35,17 @@ This document provides instructions on how to access and use the data lake infra
 - Basic command line knowledge
 
 ### Initial Setup
-### 1. SSH Key Installation
-You will receive a POLIBA.pem SSH key file. This key must be installed in your Ubuntu SSH directory:
 
-1. Download the POLIBA.pem key file provided to you
-2. Move the key to your SSH directory:
+### 1. SSH Key Installation
+You will receive a key.pem SSH key file (IFAB.pem / POLIBA.pem / UNINA.pem). This key must be installed in your Ubuntu SSH directory:
+
+1. Download the key file provided to you and move the key to your SSH directory:
 ```
 mv POLIBA.pem ~/.ssh/
 ```
-3. Set the correct permissions for the key file:
+2. Set the correct permissions for the key file:
 ```
-chmod 600 ~/.ssh/POLIBA.pem
+chmod 600 ~/.ssh/key.pem
 ```
 ### 2. Environment Update
 After installing the key, update your environment:
@@ -52,10 +53,10 @@ After installing the key, update your environment:
 source ~/.bashrc
 ```
 ### 3. Role Activation
-Connect to the login node of the HPC environment through SSH command:
+Connect to the login node of the HPC environment through SSH command (substitute ROLE with POLIBA / UNINA / IFAB):
 ```
 cd ~/.ssh
-ssh -i ~/.ssh/POLIBA.pem POLIBA@131.175.204.159
+ssh -i ~/.ssh/key.pem ROLE@131.175.204.159
 ```
 
 ### 4. Navigation
@@ -63,11 +64,12 @@ Once connected, you can navigate to the home directory:
 ```
 cd ..
 ```
-From this directory, you will have access to the data lake resources.
+From this directory, you will have access to the data lake resources. Only admins (IFAB) have access to aind folder. 
 
 ### Usage
-....
-   
+All results and data MUST be kept inside the datalake (only ISO27001 certified infrastructure for data storage & manipolation).
+In you personal Role folder (IFAB/UNINA/POLIBA) scripts can be uploaded; if you think they can be useful for all teams, put them in the SHARED work zone.
+ 
 ### Support
 If you encounter any issues or have questions regarding access or usage, please contact us:
 raimondo.reggio@ifabfoundation.org
