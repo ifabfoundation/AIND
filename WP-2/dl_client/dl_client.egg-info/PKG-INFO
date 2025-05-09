@@ -1,4 +1,4 @@
-Metadata-Version: 2.4
+Metadata-Version: 2.1
 Name: dl_client
 Version: 0.1.0
 Summary: Client library for the AIND Datalake API
@@ -9,9 +9,3 @@ Requires-Python: >=3.6
 Requires-Dist: requests>=2.25.0
 Requires-Dist: click>=8.0.0
 Requires-Dist: tqdm>=4.60.0
-Dynamic: author
-Dynamic: author-email
-Dynamic: keywords
-Dynamic: requires-dist
-Dynamic: requires-python
-Dynamic: summary

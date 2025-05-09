@@ -141,12 +141,50 @@ client.download_file(
     bucket="research-data"
 )
 
-# Download and get file content as bytes
+# Download and get file content as bytes (disable auto-parsing)
 file_content = client.download_file(
     object_name="project/experiment1/dataset.csv",
+    bucket="research-data",
+    auto_parse=False
+)
+
+# Download CSV and get it as a pandas DataFrame automatically
+import pandas as pd
+df = client.download_file(
+    object_name="project/experiment1/dataset.csv",
+    bucket="research-data"
+)  # auto_parse=True by default
+print(f"DataFrame has {len(df)} rows and {len(df.columns)} columns")
+
+# Download JSON and get it as a Python dictionary automatically
+config = client.download_file(
+    object_name="project/experiment1/config.json",
     bucket="research-data"
 )
+print(f"Config contains keys: {list(config.keys())}")
+
+# Download text file and get it as a string automatically
+text = client.download_file(
+    object_name="project/experiment1/notes.txt",
+    bucket="research-data"
+)
+print(f"Text file contains {len(text.split('\n'))} lines")
 ```
+
+##### Supported Auto-Parse Formats
+
+When `auto_parse=True` (default), the following file types are automatically parsed:
+
+| File Extension | Returned as | Requires |
+|----------------|-------------|----------|
+| .csv, .tsv | pandas DataFrame | pandas |
+| .json | Python dict/list | - |
+| .txt, .md, .py, etc. | String | - |
+| .xls, .xlsx | pandas DataFrame | pandas, openpyxl |
+| .parquet | pandas DataFrame | pandas, pyarrow |
+| .h5, .hdf5 | h5py File object | h5py |
+
+For any other file types or if parsing fails, the raw bytes are returned.
 
 #### Getting file metadata
 

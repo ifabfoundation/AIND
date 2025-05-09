@@ -276,9 +276,8 @@ class DatalakeClient:
                      object_name: str, 
                      output_path: Optional[str] = None, 
                      bucket: Optional[str] = None,
-                     as_attachment: bool = False) -> Union[str, bytes]:
-        if not self.access_token:
-            raise Exception("You must be logged in to download files")
+                     as_attachment: bool = False,
+                     auto_parse: bool = True) -> Union[str, bytes, Any]:
         """
         Download a file from the Datalake.
 
@@ -287,10 +286,20 @@ class DatalakeClient:
             output_path: Path to save the downloaded file. If None, the file content will be returned.
             bucket: Bucket to download from. If None, the default bucket will be used.
             as_attachment: Whether to download the file as an attachment.
+            auto_parse: Whether to automatically parse the file content based on its extension.
+                        If True, common file types will be parsed and returned as appropriate Python objects:
+                        - CSV files will be returned as pandas DataFrames
+                        - JSON files will be parsed into Python dictionaries/lists
+                        - Text files will be returned as strings
+                        - Other files will be returned as bytes
 
         Returns:
-            Path to the downloaded file if output_path is provided, otherwise the file content.
+            If output_path is provided: Path to the downloaded file (str)
+            If output_path is None and auto_parse is True: Parsed content based on file type (DataFrame, dict, str, etc.)
+            If output_path is None and auto_parse is False: Raw file content (bytes)
         """
+        if not self.access_token:
+            raise Exception("You must be logged in to download files")
         url = f"{self.base_url}/api/files/{object_name}"
         
         params = {}
@@ -322,8 +331,70 @@ class DatalakeClient:
                     f.write(chunk)
             return output_path
         else:
-            # Return content
-            return response.content
+            # Get content
+            content = response.content
+            
+            # If auto_parse is enabled, try to parse the content based on file extension
+            if auto_parse:
+                file_ext = os.path.splitext(object_name.lower())[1]
+                
+                # CSV files - return pandas DataFrame
+                if file_ext in ('.csv', '.tsv'):
+                    try:
+                        import pandas as pd
+                        delimiter = '\t' if file_ext == '.tsv' else ','
+                        return pd.read_csv(io.BytesIO(content), delimiter=delimiter)
+                    except (ImportError, Exception) as e:
+                        # If pandas is not installed or there's an error parsing, fall back to bytes
+                        # print(f"Warning: Could not parse CSV file: {str(e)}")
+                        pass
+                
+                # JSON files - return parsed JSON
+                elif file_ext == '.json':
+                    try:
+                        return json.loads(content.decode('utf-8'))
+                    except json.JSONDecodeError:
+                        # If there's an error parsing JSON, fall back to bytes
+                        pass
+                
+                # Text files - return as string
+                elif file_ext in ('.txt', '.md', '.py', '.js', '.html', '.css', '.xml', '.yml', '.yaml'):
+                    try:
+                        return content.decode('utf-8')
+                    except UnicodeDecodeError:
+                        # If there's an error decoding as UTF-8, fall back to bytes
+                        pass
+                        
+                # Excel files - return pandas DataFrame or ExcelFile
+                elif file_ext in ('.xls', '.xlsx'):
+                    try:
+                        import pandas as pd
+                        return pd.read_excel(io.BytesIO(content))
+                    except (ImportError, Exception):
+                        # If pandas is not installed or there's an error parsing, fall back to bytes
+                        pass
+                        
+                # Parquet files - return pandas DataFrame
+                elif file_ext == '.parquet':
+                    try:
+                        import pandas as pd
+                        return pd.read_parquet(io.BytesIO(content))
+                    except (ImportError, Exception):
+                        # If pandas is not installed or there's an error parsing, fall back to bytes
+                        pass
+                        
+                # HDF5 files - return h5py File object
+                elif file_ext in ('.h5', '.hdf5'):
+                    try:
+                        import h5py
+                        f = io.BytesIO(content)
+                        return h5py.File(f, 'r')
+                    except (ImportError, Exception):
+                        # If h5py is not installed or there's an error parsing, fall back to bytes
+                        pass
+            
+            # Return raw content if auto_parse is disabled or if parsing failed
+            return content
 
     def get_metadata(self, 
                     object_name: str, 
