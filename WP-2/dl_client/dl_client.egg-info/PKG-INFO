@@ -1,0 +1,11 @@
+Metadata-Version: 2.1
+Name: dl_client
+Version: 0.1.0
+Summary: Client library for the AIND Datalake API
+Author: IFAB
+Author-email: raimondo.reggio@ifabfoundation.org
+Keywords: datalake,api,client
+Requires-Python: >=3.6
+Requires-Dist: requests>=2.25.0
+Requires-Dist: click>=8.0.0
+Requires-Dist: tqdm>=4.60.0

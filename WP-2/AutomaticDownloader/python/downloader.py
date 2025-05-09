@@ -79,7 +79,7 @@ class Downloader():
 
         return download_url
     
-    def download_table_by_ulr(self, download_path = "../data/myTable.csv"):
+    def download_table_by_url(self, download_path = "../data/myTable.csv"):
         
         download_link = self.__retrive_table_download_url()
         url = self.base_url + 'download/files/search/' + download_link
@@ -105,7 +105,7 @@ class Downloader():
 
         response = requests.get(url)
         if response.status_code == 200:
-            # Save CSV in binary mode
+            # Save ZIP in binary mode
             with open(download_path, "wb") as file:
                 for chunk in response.iter_content(chunk_size=1024):
                     file.write(chunk)

@@ -1,0 +1,11 @@
+README.md
+setup.py
+dl_client/__init__.py
+dl_client/cli.py
+dl_client/client.py
+dl_client.egg-info/PKG-INFO
+dl_client.egg-info/SOURCES.txt
+dl_client.egg-info/dependency_links.txt
+dl_client.egg-info/entry_points.txt
+dl_client.egg-info/requires.txt
+dl_client.egg-info/top_level.txt
