@@ -97,12 +97,53 @@ client = DatalakeClient(
 client.login("username", "password")
 
 # Save credentials to config file
-client.save_credentials()
-# Or to a specific path
-client.save_credentials("/path/to/config.ini")
+client.save_credentials(
+    config_path="/path/to/save/config.ini"  # Optional, uses default location if not provided
+)
 
 # Register a new user (requires admin privileges)
 client.register_user("new_user", "password", role="user")
+```
+
+### Working with DataFrames and ZIP Files
+
+```python
+# Workflow example: Download CSV, modify DataFrame, upload directly
+
+# 1. Download a CSV as DataFrame
+df = client.download_file("data/original.csv")
+
+# 2. Modify the DataFrame
+df['new_column'] = df['existing_column'] * 2
+df = df[df['value'] > 10]  # Filter rows
+
+# 3. Upload the modified DataFrame directly (no temporary files)
+client.upload_dataframe(
+    df=df,
+    object_name="data/modified.csv",
+    metadata={"status": "processed", "filters_applied": True}
+)
+
+# Working with ZIP files
+
+# Download and process a ZIP file in memory
+zip_contents = client.download_file(
+    object_name="data/archive.zip",
+    extract_zip=True
+)
+
+# Process each file in the ZIP
+for filename, content in zip_contents.items():
+    if filename.endswith('.csv'):
+        # content is already a pandas DataFrame
+        processed_df = content
+        processed_df['processed'] = True
+        
+        # Upload the processed DataFrame
+        client.upload_dataframe(
+            df=processed_df,
+            object_name=f"processed/{filename}"
+        )
 ```
 
 ### File Operations
@@ -127,6 +168,33 @@ result = client.upload_file(
     }
 )
 print(f"File uploaded with ID: {result['metadata_id']}")
+
+# Upload a pandas DataFrame directly without saving to a temporary file
+import pandas as pd
+
+# Create or modify a DataFrame
+df = pd.DataFrame({
+    'id': range(1, 101),
+    'value': [x * 2 for x in range(1, 101)],
+    'category': ['A' if x % 2 == 0 else 'B' for x in range(1, 101)]
+})
+
+# Upload the DataFrame directly
+result = client.upload_dataframe(
+    df=df,                                  # DataFrame to upload
+    object_name="generated_data.csv",       # Name in storage
+    bucket="research-data",                 # Optional bucket
+    metadata={                              # Optional metadata
+        "source": "generated", 
+        "rows": len(df),
+        "generated_date": "2025-05-09"
+    },
+    file_format='csv',                      # Format: 'csv', 'json', 'parquet', 'excel'
+    # Additional parameters for df.to_csv()
+    index=False,
+    sep=','
+)
+print(f"DataFrame uploaded with ID: {result['metadata_id']}")
 ```
 
 > **Note**: All API operations require authentication. If you're not authenticated, the client will attempt to auto-login or raise an exception.
@@ -169,6 +237,27 @@ text = client.download_file(
     bucket="research-data"
 )
 print(f"Text file contains {len(text.split('\n'))} lines")
+
+# Download and extract a ZIP file automatically
+zip_contents = client.download_file(
+    object_name="project/experiment1/archive.zip",
+    bucket="research-data",
+    extract_zip=True  # Extract and parse contents
+)
+print(f"ZIP contains {len(zip_contents)} files")
+# Access individual files in the ZIP (already parsed based on their extensions)
+for filename, content in zip_contents.items():
+    print(f"File: {filename}, Type: {type(content).__name__}")
+
+# Download and extract a ZIP file to a specific directory
+extraction_path = client.download_file(
+    object_name="project/experiment1/archive.zip",
+    bucket="research-data",
+    output_path="/path/to/save/archive.zip",
+    extract_zip=True,
+    extract_dir="/path/to/extraction/directory"  # Optional
+)
+print(f"ZIP extracted to: {extraction_path}")
 ```
 
 ##### Supported Auto-Parse Formats
@@ -183,6 +272,7 @@ When `auto_parse=True` (default), the following file types are automatically par
 | .xls, .xlsx | pandas DataFrame | pandas, openpyxl |
 | .parquet | pandas DataFrame | pandas, pyarrow |
 | .h5, .hdf5 | h5py File object | h5py |
+| .zip | zipfile.ZipFile object or extracted contents | zipfile (standard library) |
 
 For any other file types or if parsing fails, the raw bytes are returned.
 

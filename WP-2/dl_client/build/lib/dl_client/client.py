@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Dict, List, Union, Optional, BinaryIO, Any
 import io
 import pandas as pd
+import zipfile
 
 
 class DatalakeClient:
@@ -374,7 +375,9 @@ class DatalakeClient:
                      output_path: Optional[str] = None, 
                      bucket: Optional[str] = None,
                      as_attachment: bool = False,
-                     auto_parse: bool = True) -> Union[str, bytes, Any]:
+                     auto_parse: bool = True,
+                     extract_zip: bool = False,
+                     extract_dir: Optional[str] = None) -> Union[str, bytes, Dict[str, Any], Any]:
         """
         Download a file from the Datalake.
 
@@ -388,12 +391,26 @@ class DatalakeClient:
                         - CSV files will be returned as pandas DataFrames
                         - JSON files will be parsed into Python dictionaries/lists
                         - Text files will be returned as strings
+                        - ZIP files will be processed according to extract_zip parameter
                         - Other files will be returned as bytes
+            extract_zip: If True and the file is a ZIP, extract its contents. If output_path is provided,
+                        the ZIP will be extracted to extract_dir or to the directory of output_path.
+                        If output_path is None, the contents will be loaded into memory and returned
+                        as a dictionary mapping filenames to their contents (auto-parsed if auto_parse is True).
+            extract_dir: Directory to extract ZIP contents to. Only used if extract_zip is True and
+                        output_path is provided. If None, the ZIP will be extracted to the same
+                        directory as output_path.
 
         Returns:
-            If output_path is provided: Path to the downloaded file (str)
-            If output_path is None and auto_parse is True: Parsed content based on file type (DataFrame, dict, str, etc.)
-            If output_path is None and auto_parse is False: Raw file content (bytes)
+            If output_path is provided: 
+                - Path to the downloaded file (str)
+                - If extract_zip is True and the file is a ZIP, path to the extraction directory
+            If output_path is None and auto_parse is True: 
+                - Parsed content based on file type (DataFrame, dict, str, etc.)
+                - If extract_zip is True and the file is a ZIP, a dictionary mapping filenames to their parsed contents
+            If output_path is None and auto_parse is False: 
+                - Raw file content (bytes)
+                - If extract_zip is True and the file is a ZIP, a dictionary mapping filenames to their raw contents (bytes)
         """
         if not self.access_token:
             raise Exception("You must be logged in to download files")
@@ -421,6 +438,104 @@ class DatalakeClient:
             raise Exception(f"Download failed: {error_message}")
             
         # Handle response
+        file_ext = os.path.splitext(object_name.lower())[1]
+        
+        # Handle ZIP files specially if extract_zip is True
+        if extract_zip and file_ext == '.zip':
+            if output_path:
+                # Save the ZIP file first
+                with open(output_path, 'wb') as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        f.write(chunk)
+                
+                # Determine extraction directory
+                if extract_dir:
+                    extraction_path = extract_dir
+                else:
+                    extraction_path = os.path.dirname(output_path)
+                
+                # Extract the ZIP file
+                with zipfile.ZipFile(output_path, 'r') as zip_ref:
+                    zip_ref.extractall(extraction_path)
+                
+                return extraction_path
+            else:
+                # Process ZIP in memory
+                content = response.content
+                zip_buffer = io.BytesIO(content)
+                
+                # Dictionary to store file contents
+                file_contents = {}
+                
+                with zipfile.ZipFile(zip_buffer, 'r') as zip_ref:
+                    for file_info in zip_ref.infolist():
+                        if file_info.is_dir():
+                            continue  # Skip directories
+                            
+                        filename = file_info.filename
+                        file_content = zip_ref.read(filename)
+                        
+                        # Auto-parse the content if enabled
+                        if auto_parse:
+                            file_ext = os.path.splitext(filename.lower())[1]
+                            
+                            # CSV files
+                            if file_ext in ('.csv', '.tsv'):
+                                # Import pandas here to ensure it's available in the exception block
+                                import pandas as pd_local
+                                try:
+                                    delimiter = '\t' if file_ext == '.tsv' else ','
+                                    # Try different encodings to handle CSV files
+                                    try:
+                                        file_contents[filename] = pd_local.read_csv(io.BytesIO(file_content), delimiter=delimiter)
+                                        continue
+                                    except UnicodeDecodeError:
+                                        # Try latin-1 encoding if utf-8 fails
+                                        file_contents[filename] = pd_local.read_csv(io.BytesIO(file_content), delimiter=delimiter, encoding='latin-1')
+                                        continue
+                                except Exception as e:
+                                    # Log error for debugging
+                                    import sys
+                                    print(f"Error reading CSV '{filename}': {str(e)}", file=sys.stderr)
+                            
+                            # JSON files
+                            elif file_ext == '.json':
+                                try:
+                                    file_contents[filename] = json.loads(file_content.decode('utf-8'))
+                                    continue
+                                except Exception:
+                                    pass
+                            
+                            # Text files
+                            elif file_ext in ('.txt', '.md', '.py', '.js', '.html', '.css', '.xml', '.yml', '.yaml'):
+                                try:
+                                    file_contents[filename] = file_content.decode('utf-8')
+                                    continue
+                                except Exception:
+                                    pass
+                            
+                            # Excel files
+                            elif file_ext in ('.xls', '.xlsx'):
+                                try:
+                                    file_contents[filename] = pd.read_excel(io.BytesIO(file_content))
+                                    continue
+                                except Exception:
+                                    pass
+                            
+                            # Parquet files
+                            elif file_ext == '.parquet':
+                                try:
+                                    file_contents[filename] = pd.read_parquet(io.BytesIO(file_content))
+                                    continue
+                                except Exception:
+                                    pass
+                        
+                        # Default: store raw content
+                        file_contents[filename] = file_content
+                
+                return file_contents
+        
+        # Handle normal file download (non-ZIP or ZIP without extraction)
         if output_path:
             # Save to file
             with open(output_path, 'wb') as f:
@@ -433,7 +548,6 @@ class DatalakeClient:
             
             # If auto_parse is enabled, try to parse the content based on file extension
             if auto_parse:
-                file_ext = os.path.splitext(object_name.lower())[1]
                 
                 # CSV files - return pandas DataFrame
                 if file_ext in ('.csv', '.tsv'):
@@ -488,6 +602,15 @@ class DatalakeClient:
                         return h5py.File(f, 'r')
                     except (ImportError, Exception):
                         # If h5py is not installed or there's an error parsing, fall back to bytes
+                        pass
+                
+                # ZIP files - return zipfile.ZipFile object
+                elif file_ext == '.zip' and not extract_zip:
+                    try:
+                        zip_buffer = io.BytesIO(content)
+                        return zipfile.ZipFile(zip_buffer, 'r')
+                    except Exception:
+                        # If there's an error creating the ZipFile, fall back to bytes
                         pass
             
             # Return raw content if auto_parse is disabled or if parsing failed
