@@ -11,6 +11,7 @@ import configparser
 from pathlib import Path
 from typing import Dict, List, Union, Optional, BinaryIO, Any
 import io
+import pandas as pd
 
 
 class DatalakeClient:
@@ -270,6 +271,102 @@ class DatalakeClient:
         else:
             response_data = response.json()
             error_message = response_data.get('error', 'Unknown error')
+            raise Exception(f"Upload failed: {error_message}")
+            
+    def upload_dataframe(self,
+                        df: 'pd.DataFrame',
+                        object_name: str,
+                        bucket: Optional[str] = None,
+                        prefix: Optional[str] = None,
+                        metadata: Optional[Dict[str, Any]] = None,
+                        file_format: str = 'csv',
+                        **kwargs) -> Dict[str, Any]:
+        """
+        Upload a pandas DataFrame directly to the Datalake without saving to a temporary file.
+
+        Args:
+            df: The pandas DataFrame to upload.
+            object_name: Name to use for the object in the Datalake (must include appropriate extension).
+            bucket: Bucket to upload to. If None, the default bucket will be used.
+            prefix: Prefix to use for the object in the Datalake.
+            metadata: Metadata to associate with the file.
+            file_format: Format to save the DataFrame as. Options: 'csv', 'json', 'parquet', 'excel'.
+            **kwargs: Additional keyword arguments to pass to the DataFrame export function
+                     (e.g., index=False for to_csv).
+
+        Returns:
+            Dict containing the result of the upload operation.
+            
+        Raises:
+            Exception: If the upload fails, if not authenticated, or if an unsupported file format is specified.
+        """
+        if not self.access_token:
+            raise Exception("You must be logged in to upload files")
+
+        # Validate that df is a pandas DataFrame
+        if not isinstance(df, pd.DataFrame):
+            raise TypeError("df must be a pandas DataFrame")
+            
+        # Create a BytesIO object to hold the data
+        buffer = io.BytesIO()
+        
+        # Get filename from object_name
+        filename = os.path.basename(object_name)
+        
+        # Export DataFrame to the appropriate format
+        if file_format.lower() == 'csv':
+            # Set default kwargs for CSV if not provided
+            if 'index' not in kwargs:
+                kwargs['index'] = False
+            df.to_csv(buffer, **kwargs)
+        elif file_format.lower() == 'json':
+            # Set default kwargs for JSON if not provided
+            if 'orient' not in kwargs:
+                kwargs['orient'] = 'records'
+            df.to_json(buffer, **kwargs)
+        elif file_format.lower() == 'parquet':
+            df.to_parquet(buffer, **kwargs)
+        elif file_format.lower() == 'excel':
+            df.to_excel(buffer, **kwargs)
+        else:
+            raise ValueError(f"Unsupported file format: {file_format}. Supported formats: csv, json, parquet, excel")
+            
+        # Reset buffer position to the beginning
+        buffer.seek(0)
+        
+        url = f"{self.base_url}/api/files"
+        
+        # Prepare form data
+        form_data = {}
+        if bucket:
+            form_data['bucket'] = bucket
+        else:
+            form_data['bucket'] = self.default_bucket
+            
+        if object_name:
+            form_data['object_name'] = object_name
+            
+        if prefix:
+            form_data['prefix'] = prefix
+            
+        if metadata:
+            form_data['metadata'] = json.dumps(metadata)
+
+        # Prepare file
+        files = {'file': (filename, buffer)}
+        
+        # Send request
+        response = self.session.post(url, data=form_data, files=files)
+        
+        # Parse response
+        if response.status_code == 201:
+            return response.json()
+        else:
+            try:
+                response_data = response.json()
+                error_message = response_data.get('error', 'Unknown error')
+            except:
+                error_message = f"HTTP error {response.status_code}"
             raise Exception(f"Upload failed: {error_message}")
 
     def download_file(self, 
