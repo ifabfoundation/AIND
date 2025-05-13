@@ -25,8 +25,9 @@ Develop artificial intelligence personalized solutions as â€˜proof-of-conceptsâ€
 - **Predictive Models for Precision Medicine**: Identify and operationalize the most up-to-date predictive/prognostic disease models to provide data to drive an initial training set for the precision medicine AI algorithms, as well as real data-driven comparators for validation.
 
 ## Data Lake Access Guide
-
 This document provides instructions on how to access and use the data lake infrastructure developed by IFAB team.
+
+### Data Lake structure
 
 ### Prerequisites
 
