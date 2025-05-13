@@ -29,6 +29,7 @@ This document provides instructions on how to access and use the data lake infra
 
 ## Data Lake structure
 ![Datalake structure composed by: 2 routers, a Virtualk Machine (VM) for the Data Lake (orange) where is MongoDB, 6 VM for the compute nodes (green) among which the last one is the Login Node where is attached a volume with MinIO installed.](images/Datalake_structure.png)
+
 The Data Lake is composed by 7 Virtual Machines (VM) connected to the public network via 2 routers that controll the private networks and organize the comunication between the VMs. One router is connected to the Data Lake VM (orange), in this VM is installed Mongo DB which allows to have a Data Catalogue where all the file stored have specific metadata allowing for queries. The other 6 VMs (green) represent 5 Computing Nodes and 1 (the last in the graph) Login Node. 
 The Login Node is the most important one since has multiple crucial roles in the usage of the Data Lake:
 - **File storage**: to the login node is attached a Volume where is installed MinIO.  
