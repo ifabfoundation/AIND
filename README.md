@@ -28,6 +28,7 @@ Develop artificial intelligence personalized solutions as â€˜proof-of-conceptsâ€
 This document provides instructions on how to access and use the data lake infrastructure developed by IFAB team.
 
 ### Data Lake structure
+![Datalake structure composed by: 2 routers, a Virtualk Machine (VM) for the Data Lake (orange) where is MongoDB, 6 VM for the compute nodes (green) among which the last one is the Login Node where is attached a volume with MinIO installed.](images/Datalake_structure.png)
 
 ### Prerequisites
 
