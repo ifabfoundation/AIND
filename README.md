@@ -39,42 +39,79 @@ The Login Node is the most important one since has multiple crucial roles in the
 To upload, download fiels or make a query its necessary to interface with the DataLake, further inforamations are reported in the WP2 > dl_client > README (https://github.com/ifabfoundation/AIND/blob/main/WP-2/dl_client/README.md)
 
 ### MongoDB
-...
+MongoDB is a Data Catalogue which stores the metadata uploaded with the file. It is attached to the Data Lake Virtual Machine.
+
 ### MinIO
-MinIO is a software that allows to mirror the volume storage, which is tipically folder based, as an object storage allowing more efficent operations with the data.
-...(acces to MinIO --> da menzionare o no? io direi di si ma dicendo che è poco utile generalmente)
+MinIO is a software that allows to mirror the volume storage, which is tipically folder based, as an object storage wich is more efficent for operations with the data.
+Object storage is based on buckets and then in each buket the files are organised by prefix (which to us looks like a folder but tecnically has different properties)
+This software is installed to the volume attached to the login node. 
+
+It is possible to access MinIO via terminal or via website. However, it is not usefull to access MinIO since we can only view the content of the buckets, see file names and the queries folders. Even if possible files should not be directly uploaded to MinIO because this process would not include MongoDB and thus we would not have metadata linked to the file and consequently no query can be performed on that file.
+
+_**Accesso a MinIO??**_
+
 ### Roles
-Contains the **roles** each with specific privileges and permissions. Each role has its private folder (IFAB, POLIBA, UNINA), furthere there is a common folder (SHARED) where is possible to share files. The admin role (aind) has access to all the folders. (what i can put or not put in a role folder
+The login node has roles eachone with specific privileges and permissions. Each role has its private folder (IFAB, POLIBA, UNINA), furthere there is a common folder (SHARED) where is possible to share files. The admin role (aind) has access to all the folders. 
+
+In the login node folder you can upload codes and launch jobs, but you **must NOT** upload here data, no real data, no generated data and no resutls. This storage is not certified for clinical data (the datalake VM is the only ISO27001 certified infrastructure for data storage & manipolation) further file uploaded to the folders do not have metadata and queries are not supported.
+
+On the machine is not possible to upload python libraries, for this reason it is necessary to create a virtual environment in each folders where to import all libraries tha might be needed. In the shared folder is already present a Virtual environment with the most common libraries and dl_client, this library is extensively explained **here (link)**, which allows to interact via terminal with the Data Lake. It is necessary to install the dl_client library in every virtual environment to be able to interact with the Data Lake.
 
 ## Prerequisites
 
-- Ubuntu operating system
-- SSH client
+- Ubuntu operating system (https://ubuntu.com/download)
+- SSH client (Anaconda Powershell Promt)
 - Basic command line knowledge
 
-## Initial Setup
-(how to access the login node, how to create the alias, how to lunch a job,...)
-### 1. SSH Key Installation
-You will receive a key.pem SSH key file (IFAB.pem / POLIBA.pem / UNINA.pem). This key must be installed in your Ubuntu SSH directory:
+## Access to the Login Node
+It is possible to access the login node via SSH using the Ubuntu terminal. The acces is allowed through a "personal" key that gives you access to your role. There is a key-role for each institution in the project.
 
-1. Download the key file provided to you and move the key to your SSH directory:
+Accessing to the login node and role-folders is necessary to launch jobs in the computing nodes, see the jobs queue, interface with the datalake via command line.
+
+Now lets see how to activate the SSH key, update the environment, access to the login node and create an alias for easier access.
+
+### 1. SSH Key Installation
+You will receive a key_name.pem SSH key file, the name of the key is based on your institution and the possible key_names are: IFAB.pem, POLIBA.pem, UNINA.pem. In this guide we will refere to it as key_name.pem.
+
+This key must be installed in your Ubuntu SSH directory.
+
+1. Download the key_name.pem and form the dextop move it from the downlods folder to the *C:/Users* folder, in this way it will be easier to find it.
+2. To move the key_name.pem to the SSH directory in Ubunto its necessary to operate from the Ubuntu terminal:
 ```
-mv POLIBA.pem ~/.ssh/
+mv /mt/c/Users/key_name.pem ~/.ssh/
 ```
-2. Set the correct permissions for the key file:
+3. Set the correct permissions for the key file: ---> is the order right?
 ```
-chmod 600 ~/.ssh/key.pem
+chmod 600 ~/.ssh/key_name.pem
 ```
-### 2. Environment Update
-After installing the key, update your environment:
+4. Update your environment:
 ```
 source ~/.bashrc
 ```
-### 3. Role Activation
-Connect to the login node of the HPC environment through SSH command (substitute ROLE with POLIBA / UNINA / IFAB):
+### 2. Connect to the Loghin node
+Connect to the login node of the HPC environment through SSH command (ROLE is your institute, so sostitute it with the appropriate one among POLIBA / UNINA / IFAB):
 ```
-cd ~/.ssh
-ssh -i ~/.ssh/key.pem ROLE@131.175.204.159
+cd ~/.ssh  #NECESSARY?
+ssh -i ~/.ssh/key_name.pem ROLE@131.175.204.159
+```
+
+### 3. Create an alias
+For qucker acces to the loghin node and not have to type the last command lines every time you can create an allias that will allow you to acces to the login node with only a comand.
+
+1. In your Ubuntu folder creat/open the file .bash_aliases
+```
+nano ~/.bash_aliases
+```
+2. Inside the file wirite a new alias
+```
+alias NAMEssh='ssh -i ~/.ssh/key_name.pem ROLE@131.175.204.159'
+```
+The alias that you have chosen (NAMEssh) will be the command line that you can use to directly acces the login node.
+3. Exit the file --> 'Ctrl X' and then 'Enter'
+
+4. Update your environment:
+```
+source ~/.bashrc
 ```
 
 ### 4. Navigation
@@ -84,11 +121,20 @@ cd ..
 ```
 From this directory, you will have access to the data lake resources. Only admins (IFAB) have access to aind folder. 
 
-### Usage
-All results and data MUST be kept inside the datalake (only ISO27001 certified infrastructure for data storage & manipolation).
-In you personal Role folder (IFAB/UNINA/POLIBA) scripts can be uploaded; if you think they can be useful for all teams, put them in the SHARED work zone.
- 
-### Support
+## Exit from the Login Node
+...
+## Creae a virtual environment
+... (dove? in Ubuntu? e ivece nella cartella privata del nodo di login?)
+
+## Job launch from the Login Node
+... (bash commands)
+
+## Important commands
+Check the job queue
+```
+squeue
+```
+## Support
 If you encounter any issues or have questions regarding access or usage, please contact us:
 raimondo.reggio@ifabfoundation.org
 benedetta.baldini@ifabfoundation.org
