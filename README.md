@@ -46,9 +46,9 @@ MinIO is a software that allows to mirror the volume storage, which is tipically
 Object storage is based on buckets and then in each buket the files are organised by prefix (which to us looks like a folder but tecnically has different properties)
 This software is installed to the volume attached to the login node. 
 
-It is possible to access MinIO via terminal or via website. However, it is not usefull to access MinIO since we can only view the content of the buckets, see file names and the queries folders. Even if possible files should not be directly uploaded to MinIO because this process would not include MongoDB and thus we would not have metadata linked to the file and consequently no query can be performed on that file.
+It is possible to access MinIO via terminal or via website (http://131.175.204.159:9001/). However, it is not usefull to access MinIO since we can only view the content of the buckets, see file names and the queries folders. Even if possible files should not be directly uploaded to MinIO because this process would not include MongoDB and thus we would not have metadata linked to the file and consequently no query can be performed on that file.
 
-_**Accesso a MinIO??**_
+Via terminale si può acceder al bucket via la cartella data in 
 
 ### Roles
 The login node has roles eachone with specific privileges and permissions. Each role has its private folder (IFAB, POLIBA, UNINA), furthere there is a common folder (SHARED) where is possible to share files. The admin role (aind) has access to all the folders. 
