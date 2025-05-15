@@ -140,7 +140,7 @@ shared
 ### Virtual Environments
 It is not possible to install libraries and packages in the machine. Thus Virtual Environments (*venv*) are needed.
 
-#### - Activating the default Virtual Envirmnemt
+#### ⟶ Activate the default Virtual Envirmnemt
 You can find a `default` virtual environment in the `SHARED/ml_environments` folder.
 This environment can be activate any time you are in the login node, following the general comand line:
 ```bash
@@ -153,7 +153,7 @@ Another option, specific for this environment, is using the custom comand:
 defaultenv
 ```
 
-#### - Create a new Virtual Environment
+#### ⟶ Create a new Virtual Environment
 Where do I want to save this environment?????
 If you are using conda
 ```bash
@@ -167,7 +167,7 @@ python3 -m venv <venv_name>
 
 ```
 
-#### - Activate a Virtual Environment
+#### ⟶ Activate a Virtual Environment
 Where do I want to save this environment?????
 
 If you are using conda
@@ -182,7 +182,7 @@ source <venv_name>/bin/activate
 
 ```
 
-#### - Deactivate a Virtual Environment
+#### ⟶ Deactivate a Virtual Environment
 To deactivate the Virtual Environment you have activated and worked in, you can use the comand:
 ```bash
 deactivate
