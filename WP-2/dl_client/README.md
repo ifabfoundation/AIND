@@ -19,18 +19,27 @@ The library can be used both as a Python module in your scripts and as a command
 
 ### Prerequisites
 
-- Python 3.6 or higher
-- pip package manager
+- Python 3.6 or higher      # in yopur environment? how to verify?
+- pip package manager       # how to have/verify?
 
 ### Installing from local directory
+(in Anaconda Powershell Prompt)
+-# quali sono i passi prima?
 
 ```bash
+# activate the virtual environment you want to work in
+conda activate virtual_environment
+
+# Reach the Git Hub folder on your pc with the project files and the folder WP-2
+cd "C:/Users/path.../GitHub/AIND/WP-2
+
 # Navigate to the dl_client directory
 cd dl_client
 
 # Install the package
 pip install .
 ```
+-### ??? Repeat the same operation in the Login Node via Ubuntu
 
 ### Verifying installation
 
