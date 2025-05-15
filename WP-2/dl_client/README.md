@@ -21,20 +21,26 @@ The library can be used both as a Python module in your scripts and as a command
 
 - Python 3.6 or higher      # in yopur environment? how to verify?
 - pip package manager       # how to have/verify?
+- conda o pyvenv
 
 ### Installing from local directory
-(in Anaconda Powershell Prompt)
--# quali sono i passi prima?
-
+If you are using conda
 ```bash
-# activate the virtual environment you want to work in
-conda activate virtual_environment
+conda create <venv_name>
 
-# Reach the Git Hub folder on your pc with the project files and the folder WP-2
-cd "C:/Users/path.../GitHub/AIND/WP-2
+conda activate <venv_name>
+```
 
+if you are using pyvenv
+```bash
+python3 -m venv <venv_name>
+
+source <venv_name>/bin/activate
+```
+Now you can install the dl_client library 
+```bash
 # Navigate to the dl_client directory
-cd dl_client
+cd <dl_client_path>/dl_client
 
 # Install the package
 pip install .
