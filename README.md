@@ -36,7 +36,7 @@ The Login Node is the most important one since has multiple crucial roles in the
 - **Roles**: the division of the Login Node in roles allows for private and shared folders.
 - **Job Launch**: via the Login Node is possible to launch jobs, see the job queue. (link to the section ffor job launching)
 
-To upload, download fiels or make a query its necessary to interface with the DataLake, further inforamations are reported in the WP2 > dl_client > README (https://github.com/ifabfoundation/AIND/blob/main/WP-2/dl_client/README.md)
+To upload, download fiels or make a query its necessary to interface with the DataLake, further inforamations are reported in the WP2 > dl_client > [README](https://github.com/ifabfoundation/AIND/blob/main/WP-2/dl_client/README.md)
 
 ### MongoDB
 MongoDB is a Data Catalogue which stores the metadata uploaded with the file. It is attached to the Data Lake Virtual Machine.
@@ -46,9 +46,17 @@ MinIO is a software that allows to mirror the volume storage, which is tipically
 Object storage is based on buckets and then in each buket the files are organised by prefix (which to us looks like a folder but tecnically has different properties)
 This software is installed to the volume attached to the login node. 
 
-It is possible to access MinIO via terminal or via website (http://131.175.204.159:9001/). However, it is not usefull to access MinIO since we can only view the content of the buckets, see file names and the queries folders. Even if possible files should not be directly uploaded to MinIO because this process would not include MongoDB and thus we would not have metadata linked to the file and consequently no query can be performed on that file.
+It is possible to access MinIO via terminal or via [website](http://131.175.204.159:9001/). Via terminal you can list the files in the Volume after connecting with the [Login Node](https://github.com/ifabfoundation/AIND/tree/ChiaraPifab-patch-1?tab=readme-ov-file#2-connect-to-the-loghin-node) by:
+```bash
+# access the data folder in the login node rooth
+cd /data
+# enter the bucket
+cd aind
+# list file and folders
+ls
+```
 
-Via terminale si può acceder al bucket via la cartella data in 
+However, it is not usefull to access MinIO since we can only view the content of the buckets, see file names and the queries folders. Even if possible files should not be directly uploaded to MinIO because this process would not include MongoDB and thus we would not have metadata linked to the file and consequently no query can be performed on that file.
 
 ### Roles
 The login node has roles eachone with specific privileges and permissions. Each role has its private folder (IFAB, POLIBA, UNINA), furthere there is a common folder (SHARED) where is possible to share files. The admin role (aind) has access to all the folders. 
@@ -59,8 +67,7 @@ On the machine is not possible to upload python libraries, for this reason it is
 
 ## Prerequisites
 
-- Ubuntu operating system (https://ubuntu.com/download)
-- SSH client (Anaconda Powershell Promt)
+- Ubuntu operating system or [WSL](https://ubuntu.com/desktop/wsl)
 - Basic command line knowledge
 
 ## Access to the Login Node
@@ -75,58 +82,113 @@ You will receive a key_name.pem SSH key file, the name of the key is based on yo
 
 This key must be installed in your Ubuntu SSH directory.
 
-1. Download the key_name.pem and form the dextop move it from the downlods folder to the *C:/Users* folder, in this way it will be easier to find it.
+1. Download the key_name.pem and, if you are using Windows, move the key from the downlods folder to the *C:/Users* folder, in this way it will be easier to find it.
 2. To move the key_name.pem to the SSH directory in Ubunto its necessary to operate from the Ubuntu terminal:
+```bash
+mv <key_path>/key_name.pem ~/.ssh/  
+
+mv /mnt/c/Users/key_name.pem ~/.ssh/   (if the key is the User Windows folder)
 ```
-mv /mt/c/Users/key_name.pem ~/.ssh/
-```
-3. Set the correct permissions for the key file: ---> is the order right?
-```
+3. Set the correct permissions for the key file: 
+```bash
 chmod 600 ~/.ssh/key_name.pem
 ```
-4. Update your environment:
-```
-source ~/.bashrc
-```
+
 ### 2. Connect to the Loghin node
-Connect to the login node of the HPC environment through SSH command (ROLE is your institute, so sostitute it with the appropriate one among POLIBA / UNINA / IFAB):
-```
-cd ~/.ssh  #NECESSARY?
-ssh -i ~/.ssh/key_name.pem ROLE@131.175.204.159
+Connect to the login node of the HPC environment through SSH command (<ROLE> is your institute, so sostitute it with the appropriate one among POLIBA / UNINA / IFAB):
+```bash
+ssh -i ~/.ssh/key_name.pem <ROLE>@131.175.204.159
 ```
 
 ### 3. Create an alias
 For qucker acces to the loghin node and not have to type the last command lines every time you can create an allias that will allow you to acces to the login node with only a comand.
 
-1. In your Ubuntu folder creat/open the file .bash_aliases
-```
+1. From the Ubuntu terminal (wsl) creat/open the file .bash_aliases
+```bash
 nano ~/.bash_aliases
 ```
 2. Inside the file wirite a new alias
+```bash
+alias <NAMEssh>='ssh -i ~/.ssh/key_name.pem <ROLE>@131.175.204.159'
 ```
-alias NAMEssh='ssh -i ~/.ssh/key_name.pem ROLE@131.175.204.159'
-```
-The alias that you have chosen (NAMEssh) will be the command line that you can use to directly acces the login node.
+The alias that you have chosen (<NAMEssh>) will be the command line that you can use to directly acces the login node.
 3. Exit the file --> 'Ctrl X' and then 'Enter'
 
 4. Update your environment:
-```
+```bash
 source ~/.bashrc
 ```
 
 ### 4. Navigation
-Once connected, you can navigate to the home directory:
-```
+After accessing the login node you'll find yourself directly into your Role folder, where by typing `ls` ypu can see the content of the folder.
+
+The command `cd` allwos to move in side the folders and `cd ..` goes backword. 
+
+#### Access the SHARED folder
+The traditional way would be to reach the *home* folder and then move into the *SHARED* folder.
+If you are in your role folder the commands are:
+```bash
 cd ..
+cd SHARED
 ```
-From this directory, you will have access to the data lake resources. Only admins (IFAB) have access to aind folder. 
 
-## Exit from the Login Node
-...
-## Creae a virtual environment
-... (dove? in Ubuntu? e ivece nella cartella privata del nodo di login?)
+However there is a special command implemented that allows you to reache the *SHARED* folder any time from any place in the loghin node:
+```bash
+shared
+```
 
-## Job launch from the Login Node
+### Virtual Environments
+It is not possible to install libraries and packages in the machine. Thus Virtual Environments (*venv*) are needed.
+
+#### - Activating the default Virtual Envirmnemt
+You can find a `default` virtual environment in the `SHARED/ml_environments` folder.
+This environment can be activate any time you are in the login node, following the general comand line:
+```bash
+source default/bin/activate      (using pyvenv, Ubuntu)
+
+conda activate default           (using conda, Windows terminal)    ##########NOT SURE IT IS NEEDED HERE
+```
+Another option, specific for this environment, is using the custom comand:
+```bash
+defaultenv
+```
+
+#### - Create a new Virtual Environment
+Where do I want to save this environment?????
+If you are using conda
+```bash
+conda create <venv_name>
+
+```
+
+if you are using pyvenv
+```bash
+python3 -m venv <venv_name>
+
+```
+
+#### - Activate a Virtual Environment
+Where do I want to save this environment?????
+
+If you are using conda
+```bash
+conda activate <venv_name>
+
+```
+
+if you are using pyvenv
+```bash
+source <venv_name>/bin/activate
+
+```
+
+#### - Deactivate a Virtual Environment
+To deactivate the Virtual Environment you have activated and worked in, you can use the comand:
+```bash
+deactivate
+```
+
+### Job launch from the Login Node
 ... (bash commands)
 
 ## Interaction with the Data Lake
@@ -140,7 +202,13 @@ Using the dl_client library its possible to use vscode and other platforms allow
 All that is needed to know is in the README (https://github.com/ifabfoundation/AIND/tree/main/WP-2/dl_client/README.md).
 
 ## Important commands
+List the file in a directory ⟶    `ls` 
+Move in the directory ⟶    `cd` `cd ..`
+Access the *SHARED* folder ⟶    `shared`
+Activate the default environment ⟶    `defaultenv`
+Deactivate a virtual envirnment ⟶    `deactivate`
 Check the job queue ⟶     `squeue`
+Exit from login node ⟶    `exit`
 ## Support
 If you encounter any issues or have questions regarding access or usage, please contact us:
 raimondo.reggio@ifabfoundation.org
