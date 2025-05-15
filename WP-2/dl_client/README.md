@@ -24,19 +24,8 @@ The library can be used both as a Python module in your scripts and as a command
 - conda o pyvenv
 
 ### Installing from local directory
-If you are using conda
-```bash
-conda create <venv_name>
+Before installing the library you have to activate a Virtual Environment. You can use the [default](https://github.com/ifabfoundation/AIND/blob/ChiaraPifab-patch-1/README.md#--activating-the-default-virtual-envirmnemt) venv or [create](https://github.com/ifabfoundation/AIND/blob/ChiaraPifab-patch-1/README.md#--create-a-new-virtual-environment) and [activate](https://github.com/ifabfoundation/AIND/blob/ChiaraPifab-patch-1/README.md#--activate-a-virtual-environment) a new venv.
 
-conda activate <venv_name>
-```
-
-if you are using pyvenv
-```bash
-python3 -m venv <venv_name>
-
-source <venv_name>/bin/activate
-```
 Now you can install the dl_client library 
 ```bash
 # Navigate to the dl_client directory
@@ -44,8 +33,7 @@ cd <dl_client_path>/dl_client
 
 # Install the package
 pip install .
-```
--### ??? Repeat the same operation in the Login Node via Ubuntu
+```                                                                                                                                                                                                                                                        
 
 ### Verifying installation
 
@@ -54,6 +42,8 @@ After installation, you should be able to run the CLI tool:
 ```bash
 dl-client --help
 ```
+This tool allows you to see the command available with this library for the comand line.
+
 
 ## Authentication
 
@@ -82,6 +72,7 @@ password = your_password
 ```
 
 ## Python Library Usage
+It is possible to use the dl_client libray in vscode or other code editors.
 
 ### Initializing the client
 
