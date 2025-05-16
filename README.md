@@ -193,13 +193,13 @@ deactivate
 
 ## Interaction with the Data Lake
 To interface with Data Lake, and thus be able to upload, download, and search for files, there are two options:
-- via command line from terminal (https://github.com/ifabfoundation/AIND/blob/main/WP-2/dl_client/README.md#command-line-interface)
-- using the dl_client library (https://github.com/ifabfoundation/AIND/tree/main/WP-2/dl_client#dl-client) from vscode ----> ***OR WHEN????***
+- via command line from [terminal](https://github.com/ifabfoundation/AIND/blob/main/WP-2/dl_client/README.md#command-line-interface)
+- using the [dl_client library](https://github.com/ifabfoundation/AIND/tree/main/WP-2/dl_client#dl-client) from vscode ----> ***OR WHEN????***
 
 The main difference between the command line and the dl_client library is that in the former case you act locally so you upload and download files to your computer, which must not be done with medical data due to security and privacy rules.
 Using the dl_client library its possible to use vscode and other platforms allowig to open the data in the proper format (pd.DataFrame, ...), view and create modified versions of the data without downloading the file locally. In this case it is necessary to have the library in the environment we are working in and in the local folder where we have the codes we are running on vscode.
 
-All that is needed to know is in the README (https://github.com/ifabfoundation/AIND/tree/main/WP-2/dl_client/README.md).
+All that is needed to know is in the [README](https://github.com/ifabfoundation/AIND/tree/main/WP-2/dl_client/README.md).
 
 ## Important commands
 List the file in a directory ⟶    `ls` 
