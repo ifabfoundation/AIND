@@ -202,12 +202,12 @@ Using the dl_client library its possible to use vscode and other platforms allow
 All that is needed to know is in the [README](https://github.com/ifabfoundation/AIND/tree/main/WP-2/dl_client/README.md).
 
 ## Important commands
-List the file in a directory ⟶    `ls` 
-Move in the directory ⟶    `cd` `cd ..`
-Access the *SHARED* folder ⟶    `shared`
-Activate the default environment ⟶    `defaultenv`
-Deactivate a virtual envirnment ⟶    `deactivate`
-Check the job queue ⟶     `squeue`
+List the file in a directory ⟶    `ls` \
+Move in the directory ⟶    `cd` `cd ..`\
+Access the *SHARED* folder ⟶    `shared`\
+Activate the default environment ⟶    `defaultenv`\
+Deactivate a virtual envirnment ⟶    `deactivate`\
+Check the job queue ⟶     `squeue`\
 Exit from login node ⟶    `exit`
 ## Support
 If you encounter any issues or have questions regarding access or usage, please contact us:
