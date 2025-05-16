@@ -190,6 +190,8 @@ deactivate
 
 ### Job launch from the Login Node
 ... (bash commands)
+Lanciare un job interattivo da powershell ⟶    `srun --pty bash`
+
 
 ## Interaction with the Data Lake
 To interface with Data Lake, and thus be able to upload, download, and search for files, there are two options:
@@ -204,11 +206,20 @@ All that is needed to know is in the [README](https://github.com/ifabfoundation/
 ## Important commands
 List the file in a directory ⟶    `ls` \
 Move in the directory ⟶    `cd` `cd ..`\
+Apertura/creazione file codice ⟶    `nano ~/<nome_file>` \
+Aggiornamento della macchina ⟶    `source ~/.bashrc` \
 Access the *SHARED* folder ⟶    `shared`\
 Activate the default environment ⟶    `defaultenv`\
 Deactivate a virtual envirnment ⟶    `deactivate`\
+Lanciare un job interattivo da powershell ⟶    `srun --pty bash`\
 Check the job queue ⟶     `squeue`\
-Exit from login node ⟶    `exit`
+Exit from login node ⟶    `exit`\
+Ripristinare password Linux (powershell) 
+```bash
+wsl -u root
+passwd nomeUtenteLinux
+```
+
 ## Support
 If you encounter any issues or have questions regarding access or usage, please contact us:
 raimondo.reggio@ifabfoundation.org
