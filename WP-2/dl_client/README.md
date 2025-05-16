@@ -24,7 +24,8 @@ The library can be used both as a Python module in your scripts and as a command
 - conda o pyvenv
 
 ### Installing from local directory
-Before installing the library you have to activate a Virtual Environment. You can use the [default](https://github.com/ifabfoundation/AIND/blob/ChiaraPifab-patch-1/README.md#--activating-the-default-virtual-envirmnemt) venv or [create](https://github.com/ifabfoundation/AIND/blob/ChiaraPifab-patch-1/README.md#--create-a-new-virtual-environment) and [activate](https://github.com/ifabfoundation/AIND/blob/ChiaraPifab-patch-1/README.md#--activate-a-virtual-environment) a new venv.
+CAMBIA--- GRNERALE\
+Before installing the library you have to activate a Virtual Environment. You have to [create](https://github.com/ifabfoundation/AIND/blob/ChiaraPifab-patch-1/README.md#--create-a-new-virtual-environment) a new environment and/or [activate](https://github.com/ifabfoundation/AIND/blob/ChiaraPifab-patch-1/README.md#--activate-a-virtual-environment) venv.
 
 Now you can install the dl_client library 
 ```bash
@@ -55,16 +56,19 @@ The library supports JWT authentication with multiple authentication methods:
 2. **Config file**: Store credentials in a config file
 3. **Auto-login**: Automatically detect credentials from standard locations
 
-### Config File Locations
+### 2. Config File Locations
 
 The client will automatically look for credentials in these locations (in order):
+3 possible locations for the configuration file ####
+1. `~/.config/dl_client/config.ini` (User's home directory - Linux/MacOS) --> Allows for Automatic login after configuration
+2. `.dl_client.ini` (Current working directory - Windows/Linux/MacOS) --> Allows for Automatic login after configuration (text editor)
+3. Path specified in `DL_CLIENT_CONFIG` environment variable. --> Allows for Automatic login after configuration when stated the config file path as the variable --- specified in a file.env
 
-1. `~/.config/dl_client/config.ini` (User's home directory)
-2. `.dl_client.ini` (Current working directory)
-3. Path specified in `DL_CLIENT_CONFIG` environment variable
+   
+#### Config File Format
+opzione linux (1) opzione Windows e Linux (2 e 3)
 
-### Config File Format
-
+Credentials given from the library admin
 ```ini
 [credentials]
 username = your_username
@@ -82,6 +86,7 @@ from dl_client import DatalakeClient
 # Initialize with default settings (will try auto-login)
 client = DatalakeClient()
 
+### Alternatives with explicit parameters
 # Initialize with explicit credentials
 client = DatalakeClient(
     base_url="http://api.example.com:5000",  # API server URL
@@ -96,7 +101,8 @@ client = DatalakeClient(
 )
 ```
 
-### Authentication
+### Authentication 
+(1 autentication)####
 
 ```python
 # Login explicitly
