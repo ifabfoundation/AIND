@@ -19,26 +19,45 @@ The library can be used both as a Python module in your scripts and as a command
 
 ### Prerequisites
 
-- Python 3.6 or higher
-- pip package manager
+- Python 3.6 or higher      # in yopur environment? how to verify?
+- pip package manager       # how to have/verify?
+- conda o pyvenv
 
 ### Installing from local directory
+Before installing the library you have to activate a Virtual Environment where to install the library.\
+Based on the operating system you are using from the terminal here are the instructions to create a new virtual envirment and/or acivate an existing one.
 
+#### ⟶ Create a new Virtual Environment
+```bash
+conda create <venv_name>            (if using conda - Windows)
+
+python3 -m venv <venv_name>         (if using pyvenv - Linux)
+```
+
+#### ⟶ Activate a Virtual Environment
+```bash
+conda activate <venv_name>            (if using conda - Windows)
+
+source <venv_name>/bin/activate       (if using pyvenv - Linux)
+```
+#### ⟶ Install the lybrary
+Now that the venv is activated you can install the dl_client library into the virtual environment
 ```bash
 # Navigate to the dl_client directory
-cd dl_client
+cd <dl_client_path>/dl_client
 
 # Install the package
 pip install .
-```
-
-### Verifying installation
+```                                                                                                                                                                                                                                                        
+#### ⟶ Verifying installation
 
 After installation, you should be able to run the CLI tool:
 
 ```bash
 dl-client --help
 ```
+This tool allows you to see the command available with this library for the comand line.
+
 
 ## Authentication
 
@@ -50,23 +69,55 @@ The library supports JWT authentication with multiple authentication methods:
 2. **Config file**: Store credentials in a config file
 3. **Auto-login**: Automatically detect credentials from standard locations
 
-### Config File Locations
+### 1. Direct credential Authentication 
+#### ⟶ In a python file
+```python
+# Login explicitly
+client.login("username", "password")
+```
 
-The client will automatically look for credentials in these locations (in order):
+#### ⟶ From comand line autentication
+```bash
+# Login to the API
+dl-client login username
+```
 
-1. `~/.config/dl_client/config.ini` (User's home directory)
-2. `.dl_client.ini` (Current working directory)
-3. Path specified in `DL_CLIENT_CONFIG` environment variable
+### 2. Config File Locations
+It is possible to save the credential in to a .ini file, then the client will automatically look for credentials in these locations (in order):
 
-### Config File Format
+1. `~/.config/dl_client/config.ini` (User's home directory - Linux/MacOS)
+2. `.dl_client.ini` (Current working directory - Windows/Linux/MacOS)
+3. Path of the credential file specified in `DL_CLIENT_CONFIG` environment variable.
 
+#### 2.1 From comand line
+```bash
+# access the folder .config/dl_client
+cd ~/.config/dl_client
+
+# if the folder does not exist create it
+mkdir ~/.config/dl_client
+
+# create the config.ini file
+nano config.ini
+```
+Compile the file following the [Config File Format](https://github.com/ifabfoundation/AIND/edit/ChiaraPifab-patch-1/WP-2/dl_client/README.md#config-file-format).
+
+#### 2.2 Save the credentials in the current working directory
+Create a .ini file with name:     `.dl_client.ini`\
+Compile the file following the [Config File Format](https://github.com/ifabfoundation/AIND/edit/ChiaraPifab-patch-1/WP-2/dl_client/README.md#config-file-format).\
+Save the file in the directories where you want to use the library.
+
+
+#### Config File Format 
 ```ini
 [credentials]
 username = your_username
 password = your_password
 ```
+The password and username are assigned by the admin.
 
 ## Python Library Usage
+It is possible to use the dl_client libray in vscode or other code editors.
 
 ### Initializing the client
 
@@ -76,6 +127,7 @@ from dl_client import DatalakeClient
 # Initialize with default settings (will try auto-login)
 client = DatalakeClient()
 
+### Alternatives with explicit parameters
 # Initialize with explicit credentials
 client = DatalakeClient(
     base_url="http://api.example.com:5000",  # API server URL
@@ -90,7 +142,8 @@ client = DatalakeClient(
 )
 ```
 
-### Authentication
+### Authentication 
+(1 autentication)####
 
 ```python
 # Login explicitly
