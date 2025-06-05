@@ -15,20 +15,26 @@ Dependencies:
 - `lxml` for parsing XML responses.
 - `requests` for performing HTTP GET and POST requests.
 - `pandas` for reading file IDs from CSV.
+- `dl_client` for interacting with datalake.
 
 Designed for use in data collection pipelines that interface with web-based data repositories.
 """
 
+from sys import prefix
 from lxml import etree as E
 import requests
 import pandas as pd
+import io
+from dl_client import DatalakeClient
 
 class Downloader():
-    def __init__(self, project_name, base_url, jsession_id, ida_usc):
+    def __init__(self, project_name, base_url, jsession_id, ida_usc, datalake_client=None):
         self.project_name = project_name
         self.base_url = base_url
         self.session_id = jsession_id
         self.ida_usc = ida_usc
+        # Initialize datalake client if provided, otherwise it will be created when needed
+        self.datalake_client = datalake_client
 
     # Retrive the url for the download of myTable
     def __retrive_table_download_url(self, table = "myTable", filterId = 0, searchId = 1, name = "All Subject"):
@@ -79,24 +85,73 @@ class Downloader():
 
         return download_url
     
-    def download_table_by_url(self, download_path = "../data/myTable.csv"):
+    def download_table_by_url(self, download_path = "../data/myTable.csv", upload_to_datalake=True, datalake_metadata=None):
+        """
+        Download table and either save locally or upload to datalake
         
+        Args:
+            download_path: Local path where the file would be saved (also used as object_name for datalake)
+            upload_to_datalake: If True, upload to datalake instead of saving locally
+            datalake_metadata: Optional metadata to associate with the file in datalake
+        
+        Returns:
+            If uploading to datalake, returns the datalake upload response
+            Otherwise, returns None
+        """
         download_link = self.__retrive_table_download_url()
         url = self.base_url + 'download/files/search/' + download_link
 
         response = requests.get(url)
         if response.status_code == 200:
-            # Save CSV in binary mode
-            with open(download_path, "wb") as file:
-                for chunk in response.iter_content(chunk_size=1024):
-                    file.write(chunk)
-
-            print("file saved")
+            if upload_to_datalake:
+                # Make sure we have a datalake client
+                if not self.datalake_client:
+                    self.datalake_client = DatalakeClient()
+                
+                # Create in-memory file object with the content
+                csv_data = io.BytesIO(response.content)
+                
+                # Create metadata if none provided
+                metadata = datalake_metadata or {
+                    "source": "ADNI",
+                    "download_type": "study_files",
+                    "level": "raw",
+                }
+                
+                # Upload the file content directly to datalake
+                result = self.datalake_client.upload_dataframe(
+                    pd.read_csv(csv_data),
+                    metadata=metadata,
+                    prefix="raw",
+                )
+                
+                print(f"File uploaded to datalake with ID: {result.get('metadata_id')}")
+                return result
+            else:
+                # Save CSV in binary mode locally
+                with open(download_path, "wb") as file:
+                    for chunk in response.iter_content(chunk_size=1024):
+                        file.write(chunk)
+                print("File saved locally")
         else:
-            print("There is a problem! File wasn't saved")
+            print(f"There is a problem! HTTP status code: {response.status_code}")
+            return None
 
-    def download_image_files_by_url(self, csv_path = '../data/data_ids.csv', download_path="../data/study_files.zip"):
-
+    def download_image_files_by_url(self, csv_path = '../data/data_ids.csv', download_path="../data/study_files.zip", upload_to_datalake=True, datalake_metadata=None, extract_and_upload_individual_files=True):
+        """
+        Download image files as ZIP and either save locally or upload to datalake
+        
+        Args:
+            csv_path: Path to CSV file containing data IDs
+            download_path: Local path where the file would be saved (also used as object_name for datalake)
+            upload_to_datalake: If True, upload to datalake instead of saving locally
+            datalake_metadata: Optional metadata to associate with the file in datalake
+            extract_and_upload_individual_files: If True, extract the ZIP and upload each file individually
+        
+        Returns:
+            If uploading to datalake, returns the datalake upload response or a list of responses
+            Otherwise, returns None
+        """
         data_ids = pd.read_csv(csv_path)
         file_ids = [('fileId', str(id)) for id in data_ids['data_id']] # Create a list of key-value (fileId-id)
 
@@ -105,11 +160,87 @@ class Downloader():
 
         response = requests.get(url)
         if response.status_code == 200:
-            # Save ZIP in binary mode
-            with open(download_path, "wb") as file:
-                for chunk in response.iter_content(chunk_size=1024):
-                    file.write(chunk)
-
-            print("file saved")
+            if upload_to_datalake:
+                # Make sure we have a datalake client
+                if not self.datalake_client:
+                    self.datalake_client = DatalakeClient()
+                
+                # For the metadata
+                base_metadata = datalake_metadata or {
+                    "source": "ADNI",
+                    "download_type": "study_files",
+                    "level": "raw",
+                }
+                
+                import tempfile
+                import os
+                import zipfile
+                from pathlib import Path
+                
+                if extract_and_upload_individual_files:
+                    # Create a temporary directory to extract files
+                    with tempfile.TemporaryDirectory() as temp_dir:
+                        # Save ZIP content to a temporary file
+                        temp_zip_path = os.path.join(temp_dir, "temp.zip")
+                        with open(temp_zip_path, "wb") as zip_file:
+                            zip_file.write(response.content)
+                        
+                        # Extract all files to the temporary directory
+                        with zipfile.ZipFile(temp_zip_path, 'r') as zip_ref:
+                            extract_dir = os.path.join(temp_dir, "extracted")
+                            os.makedirs(extract_dir, exist_ok=True)
+                            zip_ref.extractall(extract_dir)
+                        
+                        # Upload each file individually
+                        upload_results = []
+                        
+                        # Walk through all files in the extracted directory
+                        for root, _, files in os.walk(extract_dir):
+                            for filename in files:
+                                file_path = os.path.join(root, filename)
+                                relative_path = os.path.relpath(file_path, extract_dir)
+                                
+                                # Prepare metadata for this specific file
+                                file_metadata = base_metadata.copy()
+                                
+                                # Upload the file
+                                result = self.datalake_client.upload_file(
+                                    file_path=file_path,
+                                    metadata=file_metadata,
+                                    prefix='raw'
+                                )
+                                upload_results.append(result)
+                                print(f"Uploaded file {relative_path} to datalake with ID: {result.get('metadata_id')}")
+                        
+                        return upload_results
+                else:
+                    # Upload the entire ZIP file
+                    
+                    # Update metadata for ZIP file
+                    zip_metadata = base_metadata.copy()
+                    
+                    # Create a temporary file
+                    with tempfile.NamedTemporaryFile(delete=False, suffix='.zip') as temp_file:
+                        temp_path = temp_file.name
+                        # Write content to the temporary file
+                        temp_file.write(response.content)
+                    
+                    try:
+                        # Upload the temporary file to datalake
+                        result = self.datalake_client.upload_file(temp_path, metadata=zip_metadata, prefix='raw')
+                    finally:
+                        # Clean up the temporary file
+                        if os.path.exists(temp_path):
+                            os.unlink(temp_path)
+                
+                print(f"File uploaded to datalake with ID: {result.get('metadata_id')}")
+                return result
+            else:
+                # Save ZIP in binary mode locally
+                with open(download_path, "wb") as file:
+                    for chunk in response.iter_content(chunk_size=1024):
+                        file.write(chunk)
+                print("File saved locally")
         else:
-            print("There is a problem! File wasn't saved")
+            print(f"There is a problem! HTTP status code: {response.status_code}")
+            return None
