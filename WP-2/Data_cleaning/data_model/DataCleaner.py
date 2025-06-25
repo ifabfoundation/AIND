@@ -11,6 +11,11 @@ class DataCleaner:
         self.support_file = pd.read_excel(support_file_path)
 
     def filter_variables(self, df, file_name, type='raw'):
+        '''
+        This function reduces the number of columns of the dataframe based on the variables pressent in the support file.
+        The support file is filtered for the file_code of the specific file from which was obtained the df.
+        The file_code is extracted from the medatada of the file stored in the datalake.
+        '''
         metadata = self.client.get_metadata(
             object_name = type + '/' + file_name
         )
