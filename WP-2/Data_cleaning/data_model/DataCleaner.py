@@ -16,19 +16,27 @@ class DataCleaner:
         The support file is filtered for the file_code of the specific file from which was obtained the df.
         The file_code is extracted from the medatada of the file stored in the datalake.
         '''
+        # get the metadata of the file from the data lake
         metadata = self.client.get_metadata(
             object_name = type + '/' + file_name
         )
-
+        # extraction of the file_code from the metadata
         file_code = metadata['metadata']['custom']['file_code']
-    
+
+        # filtyers the support file for the file_code
         support_file = self.support_file[self.support_file['file_code']==file_code]
+        # selection of the unique variable present in both the df and the support file
         lst_variable = [x for x in support_file['variable_code'].unique() if x in list(df.columns)] 
+        # reduction of the the df to only selected variablees/columns
         df_new = df[lst_variable]
 
         return df_new
 
     def convert_visitcode_to_int(self, value: string) -> int or string:
+        '''
+        function to convert the visit codes (strings) in to integers corresponding to the number of months from the first visist or baseline (month = 0)
+        In case of non conventional visit codes ('f', 'sc') the value its self is returned and it willbe handeled by another function.
+        '''
         # If the value is 'sc' or 'f', return the value
         if value == 'sc' or value == 'f':
             return value
@@ -232,6 +240,14 @@ class DataCleaner:
         return result_df
 
     def add_calculated_age(self, exam_date, birth_date=None, birth_year=None, age_bl=None, bl_date=None, visit_code=None):
+        '''
+        Calculates the age of the subject at the visit based on different inputs, 
+        in ordere the preference to calculate the subject age @ visit are:
+        1. birth date
+        2. birth year
+        3. age at baseline and baseline date
+        4. age at baseline and numbero of months from the visit (visit code)
+        '''
         # Convert exam_date to a datetime object, ensuring any invalid dates are coerced to NaT
         exam_date = pd.to_datetime(exam_date, errors='coerce').date()
         # Check if exam_date is not valid, in that case return age = None
@@ -269,6 +285,10 @@ class DataCleaner:
             return age
 
     def age_when_missing_bl_date(self, df, ID, ID_col, AGE_col, visit_date_col, visit_code_col):
+        '''
+        If the baseline age and date arent saved on the same line of the visit you want to calculate the age 
+        this function allows to find these data from the dataset and call the add_calculated_age function.
+        '''
         # Find the baseline index for the given ID where visit_code is 0 (baseline visit)
         index_bl = df[(df[ID_col] == ID) & (df[visit_code_col] == 0)].index
 
@@ -301,9 +321,12 @@ class DataCleaner:
         return df
 
     def binarization_gender(self, df, col_name):
-        # female : 0
-        # male : 1
-
+        '''
+        Function to binarize the gender of the subject, it works with strings ('female', 'male) and floats (1. male, 2. female)
+        The binarization decoding is:
+        female : 0
+        male : 1
+        '''
         # Check the most common type in the column excluding Nans
         common_type = df[col_name].dropna().map(type).value_counts().idxmax()
 
@@ -325,6 +348,13 @@ class DataCleaner:
         return df
 
     def categorize_marry(self, df, col_name):
+        '''
+        Function to cathegorize the marital status, works for strings ('married', 'divorced', 'widowed', 'never married') and floats
+        (1. married, 2. divorced, 3. widowed, 4. 'never married')
+
+        class decodeing:
+        'married' -> 1, 'divorced' -> 2, 'widowed' -> 3, 'never married' -> 0
+        '''
         # Married = 1, Divorced = 2, Widowed = 3, Never married = 0, Unknown/ nan = nan
 
         # Check the most common type in the column excluding Nans
@@ -349,12 +379,20 @@ class DataCleaner:
         return df
 
     def categorize_education(self, df, col_name):
-        # Married = 1, Divorced = 2, Widowed = 3, Never married = 0, Unknown/ nan = nan
+        '''
+        Tunrs education variable in to integers, if they are not yet integers
+        '''
         df[col_name] = df[col_name].apply(lambda x: int(x) if pd.notna(x) and x >= 0 else np.nan)
         return df
 
     def categorize_ethnicity(self, df, col_name):
-        # Not Hisp/Latino = 0 , Hisp/Latino = 1, Unknown Unknown/ nan = nan
+        '''
+        Function to binbarize the the ethnical class, works for strings ('not hisp/latino', 'hisp/latino') and floats
+        (1. not hisp/latino, 2. hisp/latino)
+
+        class decodeing:
+        1 = 'not hisp/latino', 2 = 'hisp/latino'
+        '''
 
         # Check the most common type in the column excluding Nans
         common_type = df[col_name].dropna().map(type).value_counts().idxmax()
@@ -375,6 +413,19 @@ class DataCleaner:
         return df
 
     def categorize_race(self, df, col_name):
+        '''
+        Function to cathegorize the the ethnical class, works for strings ('White', 'More than one', 'Black', 'Asian', 'Am Indian/Alaskan', 'Hawaiian/Other PI') 
+        and floats (5. White, 0. More than one, 4. Black, 2. Asian, 1. Am Indian/Alaskan, 3. Hawaiian/Other PI)
+
+        class decodeing:
+        1 = American Indian or Alaskan Native, 
+        2 = Asian, 
+        3 = Native Hawaiian or Other Pacific Islander, 
+        4 = Black or African American, 
+        5 = White, 
+        6 = More than one race
+        '''
+
         # 1 = American Indian or Alaskan Native, 2 = Asian, 3 = Native Hawaiian or Other Pacific Islander, 4 = Black or African American, 5 = White, 6=More than one race, nan = Unknown
         
         # Check the most common type in the column excluding Nans
