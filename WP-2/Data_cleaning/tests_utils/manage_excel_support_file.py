@@ -1,0 +1,263 @@
+import pandas as pd
+import numpy as np
+from dl_client import DatalakeClient
+import warnings
+import os
+warnings.filterwarnings('ignore')
+
+
+def save_df(df_to_save, output_path):
+    """
+    Salva un DataFrame in un file  e csv.
+
+    Args:
+        df_to_save (pd.DataFrame): Il DataFrame da salvare.
+        output_path (str): Il percorso (incluso il nome del file) dove salvare il file Excel.
+    """
+    df_to_save.to_excel(output_path+'.xlsx', index=False)
+    df_to_save.to_csv(output_path+'.csv', index=False)
+
+
+def create_new_support_file(support_file, support_file_path):
+    """
+    Crea una copia di `self.support_file`, aggiunge la colonna 'new_variable_code',
+    salva il nuovo DataFrame in un file Excel e lo restituisce.
+    Il nuovo file viene salvato nella stessa directory dell'originale, con 'new_' 
+    aggiunto all'inizio del nome del file.
+    """
+    new_support_file = support_file.copy(deep=True)
+
+    new_support_file.rename(columns={'variable_code': 'orig_variable_code'}, inplace=True)
+    # Trova la posizione della colonna 'variable_code'
+    variable_code_loc = new_support_file.columns.get_loc('orig_variable_code')
+
+    # Inserisce la nuova colonna con valore nullo
+    new_support_file.insert(
+        loc=variable_code_loc + 1,
+        column='variable_code',
+        value=new_support_file['orig_variable_code']
+    )
+
+    # Svuota le colonne successive a 'variable_code'
+    cols_to_empty = new_support_file.columns[variable_code_loc + 2:]
+    new_support_file[cols_to_empty] = np.nan
+
+    directory, filename = os.path.split(support_file_path)
+    new_filename = 'new_' + filename
+    new_output_path = os.path.join(directory, new_filename)
+    save_df(new_support_file, new_output_path)     # si può rimuovere il return quando si vede che funziona in quanto mi interessa poi aprire l'excel inserire i nuovi nomi delle variabili
+  
+class InfoSupportFile:
+    def __init__(self, support_file, df, file_name, type='raw'):
+        self.client = DatalakeClient()
+        self.support_file = support_file
+        self.df = df
+        self.file_name = file_name
+        self.population = None
+         # Ottiene i metadati del file dal data lake
+        metadata = self.client.get_metadata(
+            object_name = type + '/' + self.file_name
+        )
+        # Estrazione del file_code dai metadati
+        file_code = metadata['metadata']['custom']['file_code']
+        self.file_code = file_code
+
+    def filter_variables(self):
+        '''
+        Rimuove le righe dal file di supporto (`self.support_file`) che, per un dato `file_code`, 
+        contengono variabili (`variable_code`) non presenti nelle colonne del DataFrame `df`.
+        '''
+        # Controlla che il file_code sia presente nel support_file
+        if self.file_code not in self.support_file['file_code'].values:
+            print(f"file_code '{self.file_code}' non trovato nel support_file.")
+            return self.support_file, self.file_code
+
+        # Ottiene i codici delle variabili unici dal file di supporto per il file_code corrente
+        support_file_vars = self.support_file[self.support_file['file_code'] == self.file_code]['variable_code'].unique()
+
+        # Identifica le variabili presenti nel file di supporto ma non nelle colonne del df
+        vars_not_in_df = [var for var in support_file_vars if var not in self.df.columns]
+
+        # Ottiene gli indici delle righe da rimuovere
+        indices_to_remove = self.support_file[
+            (self.support_file['file_code'] == self.file_code) &
+            (self.support_file['variable_code'].isin(vars_not_in_df))
+        ].index
+
+        # Rimuove le righe identificate dal dataframe del file di supporto
+        self.support_file.drop(indices_to_remove, inplace=True)
+        return self.support_file, self.file_code
+    
+    def find_population_variable(self):
+        """
+        Identifica la variabile di popolazione nei dati ADNI.
+
+        Args:
+            df (pd.DataFrame): DataFrame contenente i dati ADNI
+            file_code (str): Codice del file per l'identificazione
+            support_file (pd.DataFrame): DataFrame di supporto per salvare le informazioni
+
+        Returns:
+            tuple: (str or None, pd.DataFrame) Nome della variabile di popolazione identificata e support_file aggiornato
+        """
+        adni_versions = ['ADNI1', 'ADNI2', 'ADNIGO', 'ADNI3', 'ADNI4']
+        key_population = [col for col in self.df.columns if any(self.df[col].astype(str).str.contains(ver).any() for ver in adni_versions)]
+
+        population = None
+        warning_msg = None
+
+        if len(key_population) == 1:
+            population = key_population[0]
+        elif len(key_population) == 2:
+            # Se le due colonne sono identiche, usa la prima
+            if self.df[key_population[0]].equals(self.df[key_population[1]]):
+                population = key_population[0]
+            else:
+                # Cerca la colonna che varia tra i soggetti
+                for key in key_population:
+                    if not self.df.groupby('RID')[key].nunique().eq(1).all():
+                        population = key
+                if population is None:
+                    warning_msg = f"{self.file_code}\nPROBLEMA: 2 chiavi di popolazione diverse, ma con tutti valori uguali"
+        elif len(key_population) > 2:
+            warning_msg = f"{self.file_code}\nPROBLEMA: più di 2 chiavi di popolazione trovate: {key_population}"
+        else:
+            warning_msg = f"{self.file_code}\nPROBLEMA: nessuna chiave di popolazione trovata"
+
+        if warning_msg:
+            print(warning_msg)
+
+        # Aggiorna il file di supporto se necessario
+        support_file_new = self.support_file.copy(deep=True)
+        if population is not None:
+            try:
+                if population not in self.support_file[self.support_file['file_code'] == self.file_code]['variable_code'].values:
+                    filtered_df = self.support_file[self.support_file['file_code'] == self.file_code]
+                    if not filtered_df.empty:
+                        index = filtered_df.index[0] + 1
+                        file_name = filtered_df['file_name'].iloc[0]
+                        new_row = pd.Series({
+                            'file_name': file_name,
+                            'file_code': self.file_code,
+                            'parameter': 'Cohort',
+                            'population': None,
+                            'variable_code': population,
+                            'type_variable': None,
+                            'classes': None,
+                            'range': None,
+                            'valid_values': None,
+                            'missing_values': None,
+                            'missing_pop': None,
+                            'del': False,
+                        })
+                        support_file_new = pd.concat([
+                            self.support_file.iloc[:index],
+                            pd.DataFrame([new_row]),
+                            self.support_file.iloc[index:]
+                        ]).reset_index(drop=True)
+            except Exception as e:
+                print(f"Errore nell'aggiornamento del file di supporto: {e}")
+                support_file_new = self.support_file
+            
+            self.support_file = support_file_new
+            self.population = population
+        return self.population, self.support_file
+
+    def check_missing_values(self):  
+        n_missing = int(self.df[self.key].isna().sum())
+        n_tot = int(self.df.shape[0])
+        n_valid = int(n_tot - n_missing)
+        
+        if self.population is not None:
+            pop = ['ADNI1', 'ADNIGO', 'ADNI2', 'ADNI3', 'ADNI4']
+            pop_valid = self.df[self.df[self.key].isna() == False][self.population].unique().tolist()
+            pop_missing = [x for x in pop if x not in pop_valid]
+        else:
+            pop_valid = ['pop not found']
+            pop_missing = ['pop not found']
+        
+#        warnings.warn(
+#            f"Variabile: {self.key} - Valori mancanti/totali: {n_missing}/{n_tot}, "
+#            f"Popolazioni con valori mancanti: {pop_missing}"
+#        )
+        
+        return n_tot, n_valid, n_missing, pop_valid, pop_missing
+    
+    def check_type_range_variables(self):
+        n = self.df[self.key].first_valid_index()
+        if n is None:
+            tipo = None
+            intervallo = [None]
+            classes = [None]
+            print(self.key, ' non ha valori')
+            return tipo, intervallo, classes
+        else:
+            tipo = type(self.df[self.key][n])
+            options = self.df[self.key].unique()
+            if tipo is float or tipo is int:
+                intervallo = [float(self.df[self.key].max()), float(self.df[self.key].min())]
+            else:
+                intervallo = [None]
+            
+            if len(options) <= 10:
+                classes = options
+            elif tipo == str:
+                classes = options[:5]
+            else:
+                classes = [None]
+
+            return tipo, intervallo, classes
+    
+    def get_varible_info(self, key):
+        self.key = key
+
+        if self.population is None and 'Cohort' in self.support_file[self.support_file['file_code']==self.file_code]['parameter'].values:
+            ind = self.support_file[(self.support_file['file_code']==self.file_code) & (self.support_file['parameter']=='Cohort')].index[0]  
+            self.population =self.support_file['variable_code'].loc[ind]
+
+        n_tot, n_valid, n_missing, _, pop_missing = self.check_missing_values()
+        tipo, intervallo, classes = self.check_type_range_variables()
+
+        index = self.support_file.index[(self.support_file['file_code'] == self.file_code) & (self.support_file['variable_code'] == self.key)][0]
+
+        self.support_file['type_variable'][index] = tipo
+        self.support_file['classes'][index] = ', '.join(map(str, classes))
+        self.support_file['range'][index] = ', '.join(map(str, intervallo))
+        self.support_file['valid_values'][index] = int(n_valid)
+        self.support_file['missing_values'][index] = int(n_missing)
+        self.support_file['missing_pop'][index] = ', '.join(map(str, pop_missing))
+        
+        if n_valid/n_tot <= 0.65:
+            self.support_file['del'][index] = 'True'
+        else:
+            self.support_file['del'][index] = 'False'
+
+        return self.support_file
+
+    def get_present_populations(self, file_code=None):
+        """
+        Estrae le popolazioni effettivamente presenti per un certo file_code dal support file.
+        - Filtra new_support_file per file_code
+        - Dalla colonna 'missing_pop' estrae le popolazioni che sono presenti in tutte le righe (completely missing)
+        - Sottrae queste dalla lista delle possibili popolazioni
+        - Restituisce la lista delle popolazioni effettivamente presenti
+        """
+        if file_code != None:
+            self.file_code = file_code
+
+        possible_population = ['ADNI1', 'ADNIGO', 'ADNI2', 'ADNI3', 'ADNI4']
+        filtered = self.support_file[self.support_file['file_code'] == self.file_code]
+        if filtered.empty or 'missing_pop' not in filtered.columns:
+            return []  # Se non c'è info, restituisci lista vuoto
+        # Trova tutte le popolazioni che sono presenti in tutte le righe della colonna 'missing_pop'
+        missing_lists = filtered['missing_pop'].dropna().apply(lambda x: [s.strip() for s in str(x).split(',') if s.strip()])
+        if missing_lists.empty:
+            completely_missing_population = []
+        else:
+            # Intersezione di tutte le popolazioni mancanti
+            completely_missing_population = set(missing_lists.iloc[0])
+            for pop_list in missing_lists.iloc[1:]:
+                completely_missing_population &= set(pop_list)
+        # Sottrai le popolazioni completamente mancanti da quelle possibili
+        present_population = [pop for pop in possible_population if pop not in completely_missing_population]
+        return present_population

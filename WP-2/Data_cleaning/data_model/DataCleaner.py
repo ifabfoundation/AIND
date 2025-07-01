@@ -10,7 +10,7 @@ class DataCleaner:
         self.client = DatalakeClient()
         self.support_file = pd.read_excel(support_file_path)
 
-    def filter_variables(self, df, file_name, type='raw'):
+    def filter_variables(self, df, file_name, new_var=[], type='raw'):
         '''
         This function reduces the number of columns of the dataframe based on the variables pressent in the support file.
         The support file is filtered for the file_code of the specific file from which was obtained the df.
@@ -28,7 +28,7 @@ class DataCleaner:
         # selection of the unique variable present in both the df and the support file
         lst_variable = [x for x in support_file['variable_code'].unique() if x in list(df.columns)] 
         # reduction of the the df to only selected variablees/columns
-        df_new = df[lst_variable]
+        df_new = df[lst_variable + new_var]
 
         return df_new
 
@@ -161,7 +161,8 @@ class DataCleaner:
                 raise ValueError(f"Column '{col}' not found in dataframe")
         
         # Convert date column to datetime if it isn't already
-        result_df[date_column] = pd.to_datetime(result_df[date_column])
+        date_format = pd.to_datetime(result_df[date_column])
+        result_df[date_column] = date_format.dt.date
         
         # Get rows with null VISCODE2
         null_viscode_mask = result_df['VISCODE2'].isna()
@@ -239,6 +240,14 @@ class DataCleaner:
         
         return result_df
 
+    def to_date_format(self, df, col_list=[]):
+        for col_name in col_list:
+            n = df[col_name].first_valid_index()
+            if n is not None and type(df[col_name][n]) is not datetime.date:
+                series_date = pd.to_datetime(df[col_name], errors='coerce')
+                df[col_name] = series_date.dt.date
+        return df
+
     def add_calculated_age(self, exam_date, birth_date=None, birth_year=None, age_bl=None, bl_date=None, visit_code=None):
         '''
         Calculates the age of the subject at the visit based on different inputs, 
@@ -249,7 +258,8 @@ class DataCleaner:
         4. age at baseline and numbero of months from the visit (visit code)
         '''
         # Convert exam_date to a datetime object, ensuring any invalid dates are coerced to NaT
-        exam_date = pd.to_datetime(exam_date, errors='coerce').date()
+        if type(exam_date) is not datetime.date:
+            exam_date = pd.to_datetime(exam_date, errors='coerce').date()
         # Check if exam_date is not valid, in that case return age = None
         if exam_date is pd.NaT:
             return None
@@ -309,14 +319,14 @@ class DataCleaner:
         if pd.notna(bl_date):
             for index in df[df[AGE_col].isna()].index:
                 exam_date=df[visit_date_col][index] 
-                df[AGE_col][index] = add_calculated_age(exam_date=exam_date, age_bl=age_bl, bl_date=bl_date)
+                df[AGE_col][index] = self.add_calculated_age(self, exam_date=exam_date, age_bl=age_bl, bl_date=bl_date)
         
         # If the baseline date is missing, calculate age using baseline age and visit_code
         else:
             for index in df[df[AGE_col].isna()].index:
                 exam_date=df[visit_date_col][index] 
                 vist_code = df[visit_code_col][index]
-                df[AGE_col][index] = add_calculated_age(exam_date=exam_date, age_bl=age_bl, visit_code=vist_code)
+                df[AGE_col][index] = self.add_calculated_age(self, exam_date=exam_date, age_bl=age_bl, visit_code=vist_code)
                 
         return df
 
@@ -329,7 +339,7 @@ class DataCleaner:
         '''
         # Check the most common type in the column excluding Nans
         common_type = df[col_name].dropna().map(type).value_counts().idxmax()
-
+        
         # Case 1: The column contains string values ('female', 'male')
         if common_type == str:
             df[col_name] = df[col_name].str.strip().str.lower()  # cleaning strings
@@ -521,3 +531,57 @@ class DataCleaner:
             raise ValueError(f"Tipo di dato imprevisto nella colonna '{col_name}'. Sono attesi valori stringa o numerici e non {common_type}")
         
         return df
+
+    def new_variable_names(self, new_support_file_path, df, file_code):
+        """
+        - Apre il file di supporto da Excel (new_support_file_path)
+        - Filtra il support file per il file_code fornito
+        - Se ci sono variabili nel df che mancano nella colonna variable_code filtrata del support file,
+          aggiunge la riga corrispondente al support file non filtrato
+        - Rinomina le colonne del df secondo la colonna new_variable_code (se presente), altrimenti lascia il nome originale
+        - Restituisce sia il df rinominato che il support file aggiornato
+        """
+        import pandas as pd
+        import numpy as np
+
+        # Carica il support file da Excel
+        new_support_file = pd.read_excel(new_support_file_path)
+
+        # Filtra il support file per il file_code fornito
+        support_file_filtered = new_support_file[new_support_file['file_code'] == file_code]
+
+        # Trova le variabili del df che mancano nel support file filtrato
+        missing_vars = [col for col in df.columns if col not in support_file_filtered['orig_variable_code'].values]
+
+        # Se ci sono variabili mancanti, aggiungile al support file (con valori NaN tranne variable_code e file_code)
+        if missing_vars:
+            #print(missing_vars)
+            rows = []
+            for var in missing_vars:
+                new_row = {col: np.nan for col in new_support_file.columns}
+                new_row['variable_code'] = var
+                new_row['file_code'] = file_code
+                rows.append(new_row)
+            
+            rows_to_add = pd.DataFrame(rows)
+            support_file_filtered = pd.concat([support_file_filtered, rows_to_add], ignore_index=True)
+            # Ora aggiorna il support file originale con le nuove righe (solo se ci sono variabili mancanti)
+            index = new_support_file[new_support_file['file_code'] == file_code].index[-1]+1
+            # Rimuovi le righe del file_code corrente dal support file originale
+            df_up = new_support_file.iloc[:index]
+            df_down = new_support_file.iloc[index:]
+            # Aggiungi il support_file_filtered aggiornato
+            new_support_file = pd.concat([df_up, rows_to_add, df_down], ignore_index=True)
+
+        # Crea il mapping per la rinomina delle colonne
+        rename_dict = {}
+        for _, row in support_file_filtered.iterrows():
+            orig = row['orig_variable_code']
+            new = row['variable_code'] if pd.notna(row['variable_code']) else orig
+            if orig in df.columns:
+                rename_dict[orig] = new
+
+        # Rinomina le colonne del df
+        df_renamed = df.rename(columns=rename_dict)
+
+        return df_renamed, new_support_file
