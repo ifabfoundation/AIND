@@ -7,9 +7,9 @@ This class supports two main functionalities:
 
 Key methods:
 - `__retrive_table_download_url`: Internal method to generate the download URL for a table based on search and filter IDs.
-- `__retrive_study_files_download_url`: Internal method to generate the download URL for image files based on a list of file IDs.
+- `__retrive_images_files_download_url`: Internal method to generate the download URL for image files based on a list of file IDs.
 - `download_table_by_ulr`: Downloads the table as a CSV file and saves it locally.
-- `download_study_files_by_url`: Downloads image files (ZIP format) using data IDs provided in a CSV file.
+- `download_image_files_by_url`: Downloads image files (ZIP format) using data IDs provided in a CSV file.
 
 Dependencies:
 - `lxml` for parsing XML responses.
@@ -62,7 +62,7 @@ class Downloader():
 
         return download_url
     
-    def __retrive_study_files_download_url(self, filesId):
+    def __retrive_images_files_download_url(self, filesId):
         # Complete URL
         url = self.base_url + "pages/ajax/getStudyData"
 
@@ -137,7 +137,7 @@ class Downloader():
             print(f"There is a problem! HTTP status code: {response.status_code}")
             return None
 
-    def download_study_files_by_url(self, csv_path = '../data/data_ids.csv', download_path="../data/study_files.zip", upload_to_datalake=True, datalake_metadata=None, extract_and_upload_individual_files=True, population_csv_path='../data/ADNI_code_pop.csv'):
+    def download_image_files_by_url(self, csv_path = '../data/data_ids.csv', download_path="../data/study_files.zip", upload_to_datalake=True, datalake_metadata=None, extract_and_upload_individual_files=True):
         """
         Download image files as ZIP and either save locally or upload to datalake
         
@@ -147,7 +147,6 @@ class Downloader():
             upload_to_datalake: If True, upload to datalake instead of saving locally
             datalake_metadata: Optional metadata to associate with the file in datalake
             extract_and_upload_individual_files: If True, extract the ZIP and upload each file individually
-            population_csv_path: Optional path to CSV containing file_code and population columns to add population metadata
         
         Returns:
             If uploading to datalake, returns the datalake upload response or a list of responses
@@ -156,7 +155,7 @@ class Downloader():
         data_ids = pd.read_csv(csv_path)
         file_ids = [('fileId', str(id)) for id in data_ids['data_id']] # Create a list of key-value (fileId-id)
 
-        download_link = self.__retrive_study_files_download_url(file_ids)
+        download_link = self.__retrive_images_files_download_url(file_ids)
         url = self.base_url + 'download/files/study/' + download_link
 
         response = requests.get(url)
@@ -177,19 +176,6 @@ class Downloader():
                 import os
                 import zipfile
                 from pathlib import Path
-                
-                # Read population data from CSV if provided
-                population_data = None
-                if population_csv_path:
-                    try:
-                        population_data = pd.read_csv(population_csv_path, sep=';')
-                        # Validate that the CSV has the required columns
-                        if 'file_code' not in population_data.columns or 'population' not in population_data.columns:
-                            print("Warning: population CSV should contain 'file_code' and 'population' columns")
-                            population_data = None
-                    except Exception as e:
-                        print(f"Error reading population CSV: {e}")
-                        population_data = None
                 
                 if extract_and_upload_individual_files:
                     # Create a temporary directory to extract files
@@ -216,17 +202,6 @@ class Downloader():
                                 
                                 # Prepare metadata for this specific file
                                 file_metadata = base_metadata.copy()
-                                
-                                # Check if the filename contains any of the file_codes and add population metadata if it does
-                                if population_data is not None:
-                                    for _, row in population_data.iterrows():
-                                        file_code = str(row['file_code'])
-                                        if file_code and file_code in filename:
-                                            file_metadata['file_code'] = file_code
-                                            if pd.notna(row['population']):
-                                                file_metadata['population'] = row['population'].split(',')
-                                                print(f"Added population={row['population']} to metadata for file {filename}")
-                                            break
                                 
                                 # Upload the file
                                 result = self.datalake_client.upload_file(
