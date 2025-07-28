@@ -5,12 +5,67 @@ import string
 from dateutil.relativedelta import relativedelta
 from dl_client import DatalakeClient
 
-class DataCleaner:
-    def __init__(self, support_file_path):
-        self.client = DatalakeClient()
-        self.support_file = pd.read_excel(support_file_path)
+def boolenaizer(support_file, column_list):
+    for flag_col in column_list:
+        # se non tutti i valori sono boleani allora si assicura che vengano trasformati in Boleani
+        support_file[flag_col] = support_file[flag_col].apply(
+            lambda x: np.nan if pd.isna(x) else str(x).strip().lower() in ['true', '1', '1.0']
+        )
+    return support_file
 
-    def filter_variables(self, df, file_name, new_var=[], type='raw'):
+def update_variables_support_file(df, support_file, file_code, variable_col='variable_code'):
+    # identify 
+    support_file_filtered = support_file[support_file['file_code'] == file_code]
+    # Trova le variabili del df che mancano nel support file filtrato
+    missing_vars = [col for col in df.columns if col not in support_file_filtered[variable_col].values]
+
+    # Se ci sono variabili mancanti, aggiungile al support file (con valori NaN tranne variable_code e file_code)
+    if missing_vars:
+        #print(missing_vars)
+        rows = []
+        for var in missing_vars:
+            new_row = {col: np.nan for col in support_file.columns}
+            new_row['variable_code'] = var
+            new_row['file_code'] = file_code
+            rows.append(new_row)
+        
+        rows_to_add = pd.DataFrame(rows)
+        support_file_filtered = pd.concat([support_file_filtered, rows_to_add], ignore_index=True)
+        # Ora aggiorna il support file originale con le nuove righe (solo se ci sono variabili mancanti)
+        index = support_file[support_file['file_code'] == file_code].index[-1]+1
+        # Rimuovi le righe del file_code corrente dal support file originale
+        df_up = support_file.iloc[:index]
+        df_down = support_file.iloc[index:]
+        # Aggiungi il support_file_filtered aggiornato
+        support_file = pd.concat([df_up, rows_to_add, df_down], ignore_index=True)
+    
+    # identificare le variabili extra nel support file
+    extra_vars = [col for col in support_file_filtered[variable_col].values if col not in df.columns]
+    
+    # Rimuovi dal support file le righe corrispondenti alle variabili extra
+    if extra_vars:
+        # Trova gli indici delle righe da rimuovere
+        idx_to_remove = support_file_filtered[support_file_filtered[variable_col].isin(extra_vars)].index
+        # Rimuovi queste righe dal support file originale
+        support_file = support_file.drop(idx_to_remove)
+        # Reindicizza il DataFrame risultante
+        support_file = support_file.reset_index(drop=True)
+    
+    return support_file
+
+
+class DataCleaner:
+    def __init__(self, support_file_path=None, support_file=pd.DataFrame()):
+        self.client = DatalakeClient()
+        if support_file_path:
+            self.support_file = pd.read_excel(support_file_path)
+        elif not support_file.empty:
+            self.support_file = support_file
+        else:
+            print('Need to give as imput either the file path or the file its self')
+    
+
+    def filter_variables(self, df, file_name, new_var=[], prefix='raw'):
         '''
         This function reduces the number of columns of the dataframe based on the variables pressent in the support file.
         The support file is filtered for the file_code of the specific file from which was obtained the df.
@@ -18,7 +73,7 @@ class DataCleaner:
         '''
         # get the metadata of the file from the data lake
         metadata = self.client.get_metadata(
-            object_name = type + '/' + file_name
+            object_name = prefix + '/' + file_name
         )
         # extraction of the file_code from the metadata
         file_code = metadata['metadata']['custom']['file_code']
@@ -119,7 +174,7 @@ class DataCleaner:
         if patients_to_remove:
             rows_to_remove = result_df['PTID'].isin(patients_to_remove)
             result_df = result_df[~rows_to_remove]
-            print(f"Rimossi {len(patients_to_remove)} pazienti con meno di 2 visite")
+            #print(f"Rimossi {len(patients_to_remove)} pazienti con meno di 2 visite")
         
         # Report errors if any
         if patients_with_errors:
@@ -519,7 +574,7 @@ class DataCleaner:
         # Case 1: The column contains string values ('CN', 'MCI', 'Dementia')
         if common_type == str:
             df[col_name] = df[col_name].str.strip()  # pulizia
-            df[col_name] = df[col_name].map({'CN' : 0 , 'MCI' : 1, 'Dementia': 3}).astype('Int64')
+            df[col_name] = df[col_name].map({'CN' : 0 , 'MCI' : 1, 'Dementia': 2}).astype('Int64')
 
         # Case 2: The column contains int or float values (1 = 'CN', 2 = 'MCI', 3 = 'Dementia')
         elif common_type in [int, float]:
@@ -531,6 +586,7 @@ class DataCleaner:
             raise ValueError(f"Tipo di dato imprevisto nella colonna '{col_name}'. Sono attesi valori stringa o numerici e non {common_type}")
         
         return df
+    
 
     def new_variable_names(self, new_support_file_path, df, file_code):
         """
@@ -549,10 +605,13 @@ class DataCleaner:
 
         # Filtra il support file per il file_code fornito
         support_file_filtered = new_support_file[new_support_file['file_code'] == file_code]
+        
+        new_support_file = update_variables_support_file(df, new_support_file, file_code, variable_col='orig_variable_code')
 
+        '''
+        ##### inizio funzione
         # Trova le variabili del df che mancano nel support file filtrato
         missing_vars = [col for col in df.columns if col not in support_file_filtered['orig_variable_code'].values]
-
         # Se ci sono variabili mancanti, aggiungile al support file (con valori NaN tranne variable_code e file_code)
         if missing_vars:
             #print(missing_vars)
@@ -572,7 +631,8 @@ class DataCleaner:
             df_down = new_support_file.iloc[index:]
             # Aggiungi il support_file_filtered aggiornato
             new_support_file = pd.concat([df_up, rows_to_add, df_down], ignore_index=True)
-
+        ##### fine funzione
+        '''
         # Crea il mapping per la rinomina delle colonne
         rename_dict = {}
         for _, row in support_file_filtered.iterrows():
@@ -585,3 +645,211 @@ class DataCleaner:
         df_renamed = df.rename(columns=rename_dict)
 
         return df_renamed, new_support_file
+    
+    def remove_param_few_subjects(self, df: pd.DataFrame, file_name: str, flag_col: str='del', prefix: str = 'raw'):
+        """
+        Rimuove i parametri che nel file di supporto hanno il valore True nella colonna specificata.
+
+        Args:
+            df (pd.DataFrame): Il dataframe di input.
+            file_name (str): Il nome del file nel datalake.
+            column_with_true (str): La colonna nel file di supporto da controllare per il valore True.
+            type (str, optional): Il tipo di file nel datalake. Defaults to 'raw'.
+
+        Returns:
+            pd.DataFrame: Il dataframe con le colonne rimosse.
+        """
+        # Step 1: trovare il codice del file dai metadati
+        metadata = self.client.get_metadata(
+            object_name = prefix + '/' + file_name
+        )
+        self.metadata_costum = metadata['metadata']['custom']
+        self.file_code = self.metadata_costum['file_code']
+
+            
+        # Step 2: filtraggio file_supporto per il codice del file
+        support_file_for_file = self.support_file[self.support_file['file_code'] == self.file_code]
+
+        # Step 3: in questo sottogruppo identificare i variable_code che hanno True nella colonna specificata
+        if flag_col not in support_file_for_file.columns:
+            print(f"Attenzione: la colonna '{flag_col}' non è presente nel file di supporto per il file_code '{self.file_code}'. Nessuna colonna verrà rimossa.")
+            return df
+        
+        # Verifica che tutti i valori della colonna flag_col siano booleani, altrimenti li converte
+        if not support_file_for_file[flag_col].dropna().map(lambda x: isinstance(x, bool)).all():
+            support_file_for_file = boolenaizer(support_file_for_file, column_list=[flag_col])
+        
+        variables_to_remove = support_file_for_file[support_file_for_file[flag_col] == True]['variable_code'].tolist()
+        #print('variable removed',variables_to_remove)
+
+        # Step 4: rimuovere dal df dato in input le colonne che corrispondono alle stringhe della lista appena creata
+        df_cleaned = df.drop(columns=[col for col in variables_to_remove if col in df.columns], errors='ignore')
+        
+        # Rimuovi le righe dal support_file per il file_code corrente e le variabili da rimuovere
+        mask = ~(
+            (self.support_file['file_code'] == self.file_code) &
+            (self.support_file['variable_code'].isin(variables_to_remove))
+        )
+        self.support_file = self.support_file[mask].reset_index(drop=True)
+
+        return df_cleaned, self.file_code, self.support_file
+          
+    def remove_sub_1visit(self, df: pd.DataFrame, subject_id_col: str = 'RID') -> pd.DataFrame:
+        """
+        Rimuove dal dataframe i soggetti che hanno una sola visita.
+
+        Args:
+            df (pd.DataFrame): Il dataframe di input.
+            subject_id_col (str, optional): La colonna che identifica univocamente il soggetto. Defaults to 'RID'.
+
+        Returns:
+            pd.DataFrame: Il dataframe senza i soggetti con una sola visita.
+        """
+        if subject_id_col not in df.columns:
+            raise ValueError(f"La colonna '{subject_id_col}' non è presente nel dataframe.")
+
+        # Conta le visite per ogni soggetto
+        visit_counts = df[subject_id_col].value_counts()
+        
+        # Identifica i soggetti con una sola visita
+        subjects_to_remove = visit_counts[visit_counts == 1].index.tolist()
+        
+        if subjects_to_remove:
+            #print(f"Rimossi {len(subjects_to_remove)} soggetti con una sola visita.")
+            # Filtra il dataframe per mantenere solo i soggetti con più di una visita
+            return df[~df[subject_id_col].isin(subjects_to_remove)].copy()
+        else:
+            print("Nessun soggetto con una sola visita da rimuovere.")
+            return df.copy()
+         
+    def extract_metadata_from_support(self, df, new_level, file_name=None, prefix=None):
+        """
+        Estrae le liste di variabili per 'fattori' e 'normalizzazione' dal file di supporto,
+        filtrando per il file_code corrente dell'istanza.
+
+        Returns:
+            Dizionario: Metadati del file aggiornati con liste dei parametri cofattori/predittori e da normalizzare su scala/intervallo
+        """
+        
+        if file_name and prefix:
+            metadata = self.client.get_metadata(
+                object_name = prefix + '/' + file_name
+            )
+            self.file_code = metadata['metadata']['custom']['file_code']
+            self.metadata_costum = metadata['metadata']['custom']
+        elif not hasattr(self, 'metadata_costum') or not self.metadata_costum:
+            raise ValueError("L'attributo 'metadata_costum' non è stato impostato. Inserire come input il metadata_costum. Oppure eseguire prima una funzione come 'remove_param_few_subjects'.")
+        if not hasattr(self, 'file_code') or not self.file_code:
+            raise ValueError("L'attributo 'file_code' non è stato impostato. Inserire come input il file_code. Oppure eseguire prima una funzione come 'remove_param_few_subjects'.")
+
+        # 1. Filtraggio file supporto sulla base del file_code
+        support_filtered = self.support_file[self.support_file['file_code'] == self.file_code]
+
+        if support_filtered.empty:
+            print(f"Attenzione: nessun dato trovato nel file di supporto per il file_code '{self.file_code}'.")
+            return self.metadata_costum
+
+        # 2. Estrazione delle liste di variable_code
+        if 'metadati_fattori' in support_filtered.columns:
+            cofattori = support_filtered[support_filtered['metadati_fattori']=='cofattore']['variable_code'].tolist()
+            predittori = support_filtered[support_filtered['metadati_fattori']=='predittore']['variable_code'].tolist()
+            self.metadata_costum['cofattori'] = [x for x in df.columns if x.split('/')[0] in cofattori]
+            self.metadata_costum['predittori'] = [x for x in df.columns if x.split('/')[0] in predittori]
+            #print('cofattori', cofattori, '\npredittori', predittori)
+        else:
+            print("Attenzione: la colonna 'metadati_fattori' non è stata trovata.")
+            
+        if 'metadati_normalizzazione' in support_filtered.columns:
+            norm_scala = support_filtered[support_filtered['metadati_normalizzazione']=='scala']['variable_code'].tolist()
+            norm_intervallo = support_filtered[support_filtered['metadati_normalizzazione']=='intervallo']['variable_code'].tolist()
+            self.metadata_costum['norm_scala'] = [x for x in df.columns if x.split('/')[0] in norm_scala]
+            self.metadata_costum['norm_intervallo'] = [x for x in df.columns if x.split('/')[0] in norm_intervallo]
+            #print('scala', norm_scala, '\nintervallo', norm_intervallo)
+        else:
+            print("Attenzione: la colonna 'metadati_normalizzazione' non è stata trovata.")
+
+        # aggiornamento level del file
+        self.metadata_costum['level'] = new_level
+        
+        metadata = self.metadata_costum
+
+        return metadata 
+
+    def file_versions_name(self, file_name, suffix):
+        import re
+        
+        # Se il file ha un'estensione
+        if '.' in file_name:
+            name, ext = file_name.rsplit('.', 1)
+            
+            # Controlla se il nome del file ha già un suffisso di versione (_numero)
+            # Pattern per trovare suffissi come _1, _01, _23, ecc.
+            version_pattern = r'_(\d+)$'
+            match = re.search(version_pattern, name)
+            
+            if match:
+                # Rimuovi il suffisso di versione esistente
+                name_without_version = re.sub(version_pattern, '', name)
+                new_file_name = f"{name_without_version}{suffix}.{ext}"
+            else:
+                # Nessun suffisso di versione esistente, aggiungi quello nuovo
+                new_file_name = f"{name}{suffix}.{ext}"
+        else:
+            # Se il file non ha estensione, controlla comunque per suffissi di versione
+            version_pattern = r'_(\d+)$'
+            match = re.search(version_pattern, file_name)
+            
+            if match:
+                # Rimuovi il suffisso di versione esistente
+                name_without_version = re.sub(version_pattern, '', file_name)
+                new_file_name = name_without_version + suffix
+            else:
+                # Nessun suffisso di versione esistente, aggiungi quello nuovo
+                new_file_name = file_name + suffix
+                
+        return new_file_name
+    
+    def classes_to_dummies(self, df, col_list, prefix_step='/'):
+        # classi per mappare il passaggio da classe int a classe stringa
+        classes = {'GENDER':{0 :'female', 1 :'male'},
+                   'MARRY':{1: 'married', 2:'divorced', 3: 'widowed', 0:'single'},
+                   'ETHNICITY': {0: 'not_latino', 1: 'latino'}, 
+                   'RACE': {5: 'White', 0: 'Mixed', 4: 'Black', 2: 'Asian', 1: 'Native_american', 'Pacific': 3},
+                   'DX': {0: 'CN',1: 'MCI', 2: 'Dementia'}}
+        ranges = {'GENDER':[0, 1],
+                   'MARRY':[0, 1, 2, 3],
+                   'ETHNICITY': [0, 1], 
+                   'RACE': [0, 1, 2, 3, 4, 5],
+                   'DX': [0, 1, 2]}
+    
+        col_list_new = [col for col in col_list if col in df.columns]
+        
+        if col_list_new:
+            for col in col_list_new:
+                # Verifica che tutti i valori nella colonna rientrino nei range validi
+                unique_values = df[col].dropna().unique()
+                invalid_values = [val for val in unique_values if val not in ranges[col]]
+                
+                if invalid_values:
+                    print(f"La colonna '{col}' ha valori non validi: {invalid_values}. I valori validi sono: {ranges[col]}")
+                    continue  # Salta questa colonna se ha valori non validi
+                else:
+                    # Per ogni colonna in col_list, se col presente nel df
+                    # trasforma i valori in interi se sono float o stringhe numeriche
+                    df[col] = df[col].apply(
+                        lambda x: int(float(x)) if (isinstance(x, (float, str)) and str(x).replace('.', '', 1).isdigit()) else x
+                    )
+                    # conversione da classe numerica in classe stringa
+                    df[col] = df[col].map(classes[col])
+            
+            # Salva le colonne originali prima della creazione delle dummies
+            original_columns = set(df.columns)
+            # Conversione delle colonne di classe in variabili dummies
+            df = pd.get_dummies(df, columns=col_list_new, prefix=col_list_new, prefix_sep=prefix_step)
+            # Trova le nuove colonne dummies create
+            new_columns = [col for col in df.columns if col not in original_columns]
+        else:
+            new_columns = []
+        return df, new_columns
+
+                
