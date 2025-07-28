@@ -1,0 +1,156 @@
+file_name,file_code,parameter,orig_variable_code,variable_code,type_variable,classes,range,valid_values,missing_values,missing_pop,del,Metadati_fattori
+Key ADNI tables merged into one table,ADNIMERGE,ID,PTID,PTID,<class 'str'>,"011_S_0002, 011_S_0003, 022_S_0004, 011_S_0005, 100_S_0006",,11458.0,0.0,ADNI4,False,
+Key ADNI tables merged into one table,ADNIMERGE,ID,RID,RID,<class 'numpy.int64'>,,,11458.0,0.0,ADNI4,False,
+Key ADNI tables merged into one table,ADNIMERGE,Cohort,COLPROT,COHORT,<class 'str'>,"ADNI1, ADNI2, ADNIGO, ADNI3",,11458.0,0.0,ADNI4,False,
+Key ADNI tables merged into one table,ADNIMERGE,visit,VISCODE,VISCODE,<class 'numpy.int64'>,,,11458.0,0.0,ADNI4,False,
+Key ADNI tables merged into one table,ADNIMERGE,visit,EXAMDATE,EXAMDATE,<class 'datetime.date'>,,,11458.0,0.0,ADNI4,False,
+Key ADNI tables merged into one table,ADNIMERGE,Sex,PTGENDER,GENDER,<class 'numpy.int64'>,"1, 0",,11458.0,0.0,ADNI4,False,cofattore
+Key ADNI tables merged into one table,ADNIMERGE,Education,PTEDUCAT,EDUCAT,<class 'numpy.int64'>,,,11458.0,0.0,ADNI4,False,cofattore
+Key ADNI tables merged into one table,ADNIMERGE,Ethnicity,PTETHCAT,ETHNICITY,<class 'numpy.int64'>,"0, 1, <NA>",,11406.0,52.0,ADNI4,False,cofattore
+Key ADNI tables merged into one table,ADNIMERGE,Ethnicity,PTRACCAT,RACE,<class 'numpy.int64'>,"5, 0, 4, 2, 1, <NA>, 3",,11432.0,26.0,ADNI4,False,cofattore
+Key ADNI tables merged into one table,ADNIMERGE,Marry,PTMARRY,MARRY,<class 'numpy.int64'>,"1, 2, 3, 0, <NA>",,11411.0,47.0,ADNI4,False,cofattore
+Key ADNI tables merged into one table,ADNIMERGE,APOE,APOE4,APOE4,<class 'numpy.float64'>,"0.0, 1.0, 2.0, nan",,11176.0,282.0,ADNI4,False,cofattore
+Key ADNI tables merged into one table,ADNIMERGE,Abeta,PIB,PIB,<class 'numpy.float64'>,,,222.0,11236.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True,predittore
+Key ADNI tables merged into one table,ADNIMERGE,Abeta,AV45,AV45,<class 'numpy.float64'>,,,3055.0,8403.0,"ADNI1, ADNI4",True,predittore
+Key ADNI tables merged into one table,ADNIMERGE,CDR,CDRSB,CDRSB,<class 'numpy.float64'>,,,11309.0,149.0,ADNI4,False,predittore
+Key ADNI tables merged into one table,ADNIMERGE,ADAS,ADAS11,ADAS11,<class 'numpy.float64'>,,,11356.0,102.0,ADNI4,False,predittore
+Key ADNI tables merged into one table,ADNIMERGE,RAVLT ,RAVLT_immediate,RAVLT_immediate,<class 'numpy.float64'>,,,11273.0,185.0,ADNI4,False,predittore
+Key ADNI tables merged into one table,ADNIMERGE,FAQ,FAQ,FAQ,<class 'numpy.float64'>,,,11289.0,169.0,ADNI4,False,predittore
+Key ADNI tables merged into one table,ADNIMERGE,MOCA,MOCA,MOCA,<class 'numpy.float64'>,,,7355.0,4103.0,"ADNI1, ADNI4",True,predittore
+Key ADNI tables merged into one table,ADNIMERGE,Volume,Ventricles,Ventricles,<class 'numpy.float64'>,,,8727.0,2731.0,ADNI4,False,predittore
+Key ADNI tables merged into one table,ADNIMERGE,Volume,Hippocampus,Hippocampus,<class 'numpy.float64'>,,,8137.0,3321.0,ADNI4,False,predittore
+Key ADNI tables merged into one table,ADNIMERGE,Volume,Entorhinal,Entorhinal,<class 'numpy.float64'>,,,7746.0,3712.0,ADNI4,False,predittore
+Key ADNI tables merged into one table,ADNIMERGE,Volume,Fusiform,Fusiform,<class 'numpy.float64'>,,,7746.0,3712.0,ADNI4,False,predittore
+Key ADNI tables merged into one table,ADNIMERGE,Volume,MidTemp,MidTemp,<class 'numpy.float64'>,,,7746.0,3712.0,ADNI4,False,predittore
+Key ADNI tables merged into one table,ADNIMERGE,Volume,ICV,ICV,<class 'numpy.float64'>,,,9306.0,2152.0,ADNI4,False,predittore
+Key ADNI tables merged into one table,ADNIMERGE,Diagnosi,DX,DX,<class 'numpy.int64'>,"0, 2, 1",,11458.0,0.0,ADNI4,False,predittore
+Key ADNI tables merged into one table,ADNIMERGE,Age,AGE_bl,AGE_bl,<class 'numpy.float64'>,,,11451.0,7.0,ADNI4,False,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,ID,PTID,PTID,<class 'str'>,"011_S_0003, 022_S_0004, 011_S_0005, 011_S_0008, 011_S_0010",,1245.0,0.0,"ADNI3, ADNI4",False,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,ID,RID,RID,<class 'numpy.int64'>,,,1245.0,0.0,"ADNI3, ADNI4",False,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Cohort,PHASE,COHORT,<class 'str'>,"ADNI1, ADNIGO, ADNI2",,1245.0,0.0,"ADNI3, ADNI4",False,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Visit,VISCODE2,VISCODE,<class 'numpy.int64'>,"12, 60, 24, 0, 84, 48, 72, 36",,1245.0,0.0,"ADNI3, ADNI4",False,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Education,PHC_Education,EDUCAT,<class 'numpy.int64'>,,,1245.0,0.0,"ADNI3, ADNI4",False,cofattore
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Ethnicity,PHC_Ethnicity,ETHNICITY,<class 'numpy.int64'>,"0, 1, <NA>",,1238.0,7.0,"ADNI3, ADNI4",False,cofattore
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Ethnicity,PHC_Race,RACE,<class 'numpy.float64'>,"5.0, 4.0, 2.0, nan, 1.0, 3.0",,1230.0,15.0,"ADNI3, ADNI4",False,cofattore
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Sex,PHC_Sex,GENDER,<class 'numpy.int64'>,"1, 0",,1245.0,0.0,"ADNI3, ADNI4",False,cofattore
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Tau,PHC_Tau,PHC_Tau,<class 'numpy.float64'>,,,1212.0,33.0,"ADNI3, ADNI4",False,predittore
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Visit,PHC_Visit,PHC_Visit,<class 'numpy.float64'>,,,1243.0,2.0,"ADNI3, ADNI4",False,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Tau,PHC_pTau,PHC_pTau,<class 'numpy.float64'>,,,1238.0,7.0,"ADNI3, ADNI4",False,predittore
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Diagnosi,PHC_Diagnosis,DX,<class 'numpy.int64'>,"2, 1, 0",,1245.0,0.0,"ADNI3, ADNI4",False,predittore
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Abeta,PHC_AB42,PHC_AB42,<class 'numpy.float64'>,,,1242.0,3.0,"ADNI3, ADNI4",False,predittore
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Abeta,PHC_SCeNS_AB42_Score,PHC_SCeNS_AB42_Score,<class 'numpy.float64'>,,,1236.0,9.0,"ADNI3, ADNI4",False,predittore
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Tau,PHC_SCeNS_pTau_Score,PHC_SCeNS_pTau_Score,<class 'numpy.float64'>,,,1236.0,9.0,"ADNI3, ADNI4",False,predittore
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,AT,AT_class,AT_class,<class 'numpy.float64'>,"2.0, 0.0, 3.0, 1.0, nan",,1236.0,9.0,"ADNI3, ADNI4",False,predittore
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Age,PHC_Age_Biomarker,AGE,<class 'numpy.float64'>,,,1245.0,0.0,"ADNI3, ADNI4",False,cofattore
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,ID,RID,RID,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,visit,VISCODE,VISCODE,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Age,BIRTHYR,BIRTHYR,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,CDRGLOB,CDRGLOB,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,CDRSUM,CDRSUM,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,CDR_BASELINE,CDR_BASELINE,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Other,CORT,CORT,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Visit,CSFDATE,CSFDATE,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,CSF_CDRSB_BL,CSF_CDRSB_BL,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,CSF_CDR_BL,CSF_CDR_BL,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Other,CSF_DATE_BL,CSF_DATE_BL,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Abeta,CSF_ELC_AB40,CSF_ELC_AB40,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Abeta,CSF_ELC_AB42,CSF_ELC_AB42,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Abeta,CSF_ELC_AB4240,CSF_ELC_AB4240,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Tau,CSF_ELC_PTAU,CSF_ELC_PTAU,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Tau,CSF_ELC_TAU,CSF_ELC_TAU,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,APOE,DIAN_APOE,DIAN_APOE,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,DIAN_CDRSB_BL,DIAN_CDRSB_BL,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,MMSE,DIAN_MMSE,DIAN_MMSE,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Age,DIAN_YEARS_BL,DIAN_YEARS_BL,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Sex,GENDER,GENDER,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Visit,LAST_VISIT_DATE,LAST_VISIT_DATE,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Marry,MARISTAT,MARISTAT,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,MRI_CDRSB_BL,MRI_CDRSB_BL,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,MRI_CDR_BL,MRI_CDR_BL,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Visit,MRI_DATE_BL,MRI_DATE_BL,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Visit,MRI_SCANDATE,MRI_SCANDATE,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Volume,MR_TOTT_PRECUNEUS,MR_TOTT_PRECUNEUS,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Volume,MR_TOTV_HIPPOCAMPUS,MR_TOTV_HIPPOCAMPUS,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Volume,MR_TOTV_INTRACRANIAL,MR_TOTV_INTRACRANIAL,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Volume,MR_TOTV_WMHYPOINTENSITIES,MR_TOTV_WMHYPOINTENSITIES,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,PET_CDRSB_BL,PET_CDRSB_BL,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,PET_CDR_BL,PET_CDR_BL,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Visit,PET_DATE_BL,PET_DATE_BL,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Visit,PET_SCANDATE,PET_SCANDATE,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Other,PET_TYPE,PET_TYPE,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Abeta,PIB_FSUVR_RSF_TOT_CORTMEAN,PIB_FSUVR_RSF_TOT_CORTMEAN,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Abeta,PIB_FSUVR_RSF_TOT_CTX_PRECUNEUS,PIB_FSUVR_RSF_TOT_CTX_PRECUNEUS,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Abeta,PIB_FSUVR_RSF_TOT_HIPPOCAMPUS,PIB_FSUVR_RSF_TOT_HIPPOCAMPUS,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Abeta,PIB_MSUVR_TOT_CORTMEAN,PIB_MSUVR_TOT_CORTMEAN,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Abeta,PIB_MSUVR_TOT_PRECUNEUS,PIB_MSUVR_TOT_PRECUNEUS,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Ethnicity,RACE,RACE,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Age,VISITAGE,VISITAGE,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,visit,VISIT_DATE_BL,VISIT_DATE_BL,,,,,,,,
+Diagnostic Summary - Baseline Changes,BLCHANGE,ID,PTID,PTID,<class 'str'>,"023_S_0030, 023_S_0031, 100_S_0015, 022_S_0007, 011_S_0002",,9453.0,0.0,,False,
+Diagnostic Summary - Baseline Changes,BLCHANGE,Cohort,PHASE,COHORT,<class 'str'>,"ADNI1, ADNIGO, ADNI2, ADNI3, ADNI4",,9453.0,0.0,,False,
+Diagnostic Summary - Baseline Changes,BLCHANGE,ID,RID,RID,<class 'numpy.int64'>,,,9453.0,0.0,,False,
+Diagnostic Summary - Baseline Changes,BLCHANGE,Visit,VISCODE2,VISCODE,<class 'numpy.int64'>,,,9453.0,0.0,,False,
+Diagnostic Summary - Baseline Changes,BLCHANGE,Visit,EXAMDATE,EXAMDATE,<class 'datetime.date'>,,,9452.0,1.0,,False,
+Diagnostic Summary - Baseline Changes,BLCHANGE,Diagnosi,BCPREDX,BCPREDX,<class 'numpy.int64'>,"1, 0, 2, <NA>",,3397.0,6056.0,"ADNI2, ADNI3, ADNI4",True,
+Diagnostic Summary - Baseline Changes,BLCHANGE,ADAS,BCADAS,ADAS,<class 'numpy.float64'>,"0.0, 1.0, -1.0, nan",,9429.0,24.0,,False,predittore
+Diagnostic Summary - Baseline Changes,BLCHANGE,MMSE,BCMMSE,MMSE,<class 'numpy.float64'>,"1.0, 0.0, -1.0, nan",,9447.0,6.0,,False,predittore
+Diagnostic Summary - Baseline Changes,BLCHANGE,MMSE,BCMMSREC,MMSREC,<class 'numpy.float64'>,"1.0, 0.0, -1.0, nan",,9445.0,8.0,,False,predittore
+Diagnostic Summary - Baseline Changes,BLCHANGE,MMSE,BCNMMMS,BCNMMMS,<class 'numpy.float64'>,"1.0, 0.0, -1.0, nan",,9442.0,11.0,,False,predittore
+Diagnostic Summary - Baseline Changes,BLCHANGE,Other,BCNEUPSY,BCNEUPSY,<class 'numpy.float64'>,"1.0, 0.0, -1.0, nan",,9435.0,18.0,,False,predittore
+Diagnostic Summary - Baseline Changes,BLCHANGE,Other,BCNONMEM,BCNONMEM,<class 'numpy.float64'>,"0.0, 1.0, -1.0, nan",,9434.0,19.0,,False,predittore
+Diagnostic Summary - Baseline Changes,BLCHANGE,FAQ,BCFAQ,FAQ,<class 'numpy.float64'>,"0.0, 1.0, -1.0, nan",,9420.0,33.0,,False,predittore
+Diagnostic Summary - Baseline Changes,BLCHANGE,Other,BCDEPRES,BCDEPRES,<class 'numpy.float64'>,"0.0, 1.0, nan",,9449.0,4.0,,False,predittore
+Diagnostic Summary - Baseline Changes,BLCHANGE,Other,BCSTROKE,BCSTROKE,<class 'numpy.float64'>,"0.0, 1.0, nan",,9452.0,1.0,,False,predittore
+Diagnostic Summary - Baseline Changes,BLCHANGE,CDR,BCCDR,CDR,<class 'numpy.float64'>,"1.0, 0.0, -1.0, nan",,9398.0,55.0,,False,predittore
+Participant Demographic Information,PTDEMOG,ID,PTID,PTID,<class 'str'>,"011_S_0002, 011_S_0008, 100_S_0015, 011_S_0021, 023_S_0031",,1907.0,0.0,,False,
+Participant Demographic Information,PTDEMOG,Cohort,PHASE,COHORT,<class 'str'>,"ADNI1, ADNIGO, ADNI2, ADNI3, ADNI4",,1907.0,0.0,,False,
+Participant Demographic Information,PTDEMOG,ID,RID,RID,<class 'numpy.int64'>,,,1907.0,0.0,,False,
+Participant Demographic Information,PTDEMOG,Visit,VISDATE,VISDATE,<class 'datetime.date'>,,,1906.0,1.0,,False,
+Participant Demographic Information,PTDEMOG,Sex,PTGENDER,GENDER,<class 'numpy.int64'>,"1, 0",,1907.0,0.0,,False,
+Participant Demographic Information,PTDEMOG,Age,PTDOB,PTDOB,<class 'datetime.date'>,,,1907.0,0.0,,False,
+Participant Demographic Information,PTDEMOG,Marry,PTMARRY,MARRY,<class 'numpy.int64'>,"1, 2, 3, 0, <NA>",,1887.0,20.0,,False,cofattore
+Participant Demographic Information,PTDEMOG,Education,PTEDUCAT,EDUCAT,<class 'numpy.float64'>,,,1902.0,5.0,,False,cofattore
+Participant Demographic Information,PTDEMOG,Other,PTADBEG,PTADBEG,<class 'numpy.float64'>,"nan, 2002.0, -1.0, 2009.0, 2010.0, 2005.0, 2008.0, 2007.0, 2004.0",,49.0,1858.0,"ADNI2, ADNI3, ADNI4",True,cofattore
+Participant Demographic Information,PTDEMOG,Ethnicity,PTETHCAT,ETHNICITY,<class 'numpy.int64'>,"0, 1, <NA>",,1904.0,3.0,,False,cofattore
+Participant Demographic Information,PTDEMOG,Ethnicity,PTRACCAT,RACE,<class 'numpy.int64'>,"5, 4, 2, 0, 1, <NA>",,1891.0,16.0,,False,cofattore
+Participant Demographics,PTDEMOG,Visit,VISCODE2,VISCODE,<class 'int'>,,"228.0, 0.0",1907.0,0.0,,False,
+Participant Demographics,PTDEMOG,Age,PTDOBYY,PTDOBYY,<class 'numpy.float64'>,,,1907.0,0.0,,False,cofattore
+Participant Demographics,PTDEMOG,Other,PTCOGBEG,PTCOGBEG,<class 'numpy.float64'>,,,1486.0,421.0,ADNI1,False,
+Participant Demographics,PTDEMOG,Diagnosi,PTADDX,DX,<class 'numpy.float64'>,,,1252.0,655.0,"ADNI1, ADNIGO",False,predittore
+Participant Demographics,PTDEMOG,Age,,AGE,<class 'numpy.float64'>,,,1906.0,1.0,,False,
+,PTDEMOG,,,AGE,,,,,,,,
+Mini Mental State Exam,MMSE,ID,PTID,PTID,<class 'str'>,"011_S_0002, 011_S_0003, 022_S_0004, 011_S_0005, 022_S_0007",,11853.0,0.0,,False,predittore
+Mini Mental State Exam,MMSE,Cohort,PHASE,COHORT,<class 'str'>,"ADNI1, ADNIGO, ADNI2, ADNI3, ADNI4",,11853.0,0.0,,False,cofattore
+Mini Mental State Exam,MMSE,ID,RID,RID,<class 'numpy.int64'>,,,11853.0,0.0,,False,
+Mini Mental State Exam,MMSE,Visit,VISDATE,VISDATE,<class 'datetime.date'>,,,11850.0,3.0,,False,
+Mini Mental State Exam,MMSE,MMSE,MMSCORE,MMSCORE,<class 'numpy.float64'>,,,11853.0,0.0,,False,
+Mini Mental State Exam,MMSE,Visit,VISCODE2,VISCODE,<class 'int'>,,"228.0, 0.0",11853.0,0.0,,False,
+Diagnostic Summary,DXSUM,ID,PTID,PTID,<class 'str'>,"011_S_0002, 011_S_0005, 011_S_0008, 100_S_0015, 023_S_0030",None,2751.0,0.0,"ADNIGO, ADNI2, ADNI3, ADNI4",False,predittore
+Diagnostic Summary,DXSUM,Cohort,PHASE,COHORT,<class 'str'>,ADNI1,None,2751.0,0.0,"ADNIGO, ADNI2, ADNI3, ADNI4",False,
+Diagnostic Summary,DXSUM,ID,RID,RID,<class 'numpy.int64'>,None,None,2751.0,0.0,"ADNIGO, ADNI2, ADNI3, ADNI4",False,
+Diagnostic Summary,DXSUM,Visit,EXAMDATE,EXAMDATE,<class 'datetime.date'>,None,None,2751.0,0.0,"ADNIGO, ADNI2, ADNI3, ADNI4",False,
+Diagnostic Summary,DXSUM,Other,DXNORM,DXNORM,<class 'numpy.float64'>,"1.0, nan",None,1129.0,1622.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True,predittore
+Diagnostic Summary,DXSUM,Other,DXNODEP,DXNODEP,<class 'numpy.float64'>,"nan, 1.0",None,85.0,2666.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True,predittore
+Diagnostic Summary,DXSUM,Other,DXMCI,DXMCI,<class 'numpy.float64'>,"nan, 1.0",None,1601.0,1150.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True,predittore
+Diagnostic Summary,DXSUM,Other,DXMDES,DXMDES,<class 'str'>,"nan, 1, 1|02, 2",None,1601.0,1150.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True,predittore
+Diagnostic Summary,DXSUM,Other,DXMPTR1,DXMPTR1,<class 'numpy.float64'>,"nan, 1.0, 0.0",None,1592.0,1159.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True,predittore
+Diagnostic Summary,DXSUM,Other,DXMPTR2,DXMPTR2,<class 'numpy.float64'>,"nan, 1.0, 0.0",None,1592.0,1159.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True,predittore
+Diagnostic Summary,DXSUM,Other,DXMPTR3,DXMPTR3,<class 'numpy.float64'>,"nan, 1.0, 2.0, 0.0",None,1592.0,1159.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True,predittore
+Diagnostic Summary,DXSUM,Other,DXMPTR4,DXMPTR4,<class 'numpy.float64'>,"nan, 1.0, 2.0, 0.0",None,1592.0,1159.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True,predittore
+Diagnostic Summary,DXSUM,Other,DXMPTR5,DXMPTR5,<class 'numpy.float64'>,"nan, 1.0, 0.0",None,1592.0,1159.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True,predittore
+Diagnostic Summary,DXSUM,Other,DXMPTR6,DXMPTR6,<class 'numpy.float64'>,"nan, 1.0, 0.0",None,1592.0,1159.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True,predittore
+Diagnostic Summary,DXSUM,Diagnosi,DXMDUE,DXMDUE,<class 'numpy.float64'>,"nan, 1.0, 2.0",None,1601.0,1150.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True,predittore
+Diagnostic Summary,DXSUM,Other,DXMOTHET,DXMOTHET,<class 'str'>,"nan, 9, 14, 1, 9|14",None,75.0,2676.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True,predittore
+Diagnostic Summary,DXSUM,Diagnosi,DXAD,DXAD,<class 'numpy.float64'>,"nan, 1.0",None,20.0,2731.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True,predittore
+Diagnostic Summary,DXSUM,Other,DXAPP,DXAPP,<class 'numpy.float64'>,"nan, 2.0, 1.0",None,20.0,2731.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True,predittore
+Diagnostic Summary,DXSUM,Other,DXAPROB,DXAPROB,<class 'str'>,"nan, 1, 3, 1|03, 5",None,19.0,2732.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True,predittore
+Diagnostic Summary,DXSUM,Other,DXAPOSS,DXAPOSS,<class 'str'>,"nan, 3",None,1.0,2750.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True,predittore
+Diagnostic Summary,DXSUM,Other,DXPARK,DXPARK,<class 'numpy.float64'>,"nan, 1.0",None,1.0,2750.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True,predittore
+Diagnostic Summary,DXSUM,Other,DXPDES,DXPDES,<class 'numpy.float64'>,"nan, 4.0",None,1.0,2750.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True,predittore
+Diagnostic Summary,DXSUM,Other,DXPATYP,DXPATYP,<class 'numpy.float64'>,"nan, 7.0",None,1.0,2750.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True,predittore
+Diagnostic Summary,DXSUM,Other,DXOTHDEM,DXOTHDEM,<class 'numpy.float64'>,"nan, 1.0",None,1.0,2750.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True,predittore
+Diagnostic Summary,DXSUM,Other,DXODES,DXODES,<class 'numpy.float64'>,"nan, 1.0",None,1.0,2750.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True,predittore
+Diagnostic Summary,DXSUM,Diagnosi,DXCONFID,DXCONFID,<class 'numpy.float64'>,"4.0, 3.0, 1.0, 2.0",None,2751.0,0.0,"ADNIGO, ADNI2, ADNI3, ADNI4",False,predittore
+Diagnostic Summary,DXSUM,Visit,VISCODE2,VISCODE,<class 'numpy.int64'>,"0, 6, 12, 36, 18, 24, 48",None,2751.0,0.0,"ADNIGO, ADNI2, ADNI3, ADNI4",False,
+Diagnostic Summary,DXSUM,Other,DXDSEV,DXDSEV,<class 'numpy.float64'>,"nan, 1.0, 2.0, 3.0",None,20.0,2731.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True,predittore
+Diagnostic Summary,DXSUM,Diagnosi,DIAGNOSIS,DIAGNOSIS,<class 'numpy.int64'>,"0, 1, 2",None,2751.0,0.0,"ADNIGO, ADNI2, ADNI3, ADNI4",False,predittore
