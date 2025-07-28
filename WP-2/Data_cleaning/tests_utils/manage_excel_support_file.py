@@ -18,7 +18,7 @@ def save_df(df_to_save, output_path):
     df_to_save.to_csv(output_path+'.csv', index=False)
 
 
-def create_new_support_file(support_file, support_file_path):
+def create_new_support_file(support_file, support_file_path, new_name=None, rename=True):
     """
     Crea una copia di `self.support_file`, aggiunge la colonna 'new_variable_code',
     salva il nuovo DataFrame in un file Excel e lo restituisce.
@@ -26,42 +26,51 @@ def create_new_support_file(support_file, support_file_path):
     aggiunto all'inizio del nome del file.
     """
     new_support_file = support_file.copy(deep=True)
-
-    new_support_file.rename(columns={'variable_code': 'orig_variable_code'}, inplace=True)
+    
     # Trova la posizione della colonna 'variable_code'
-    variable_code_loc = new_support_file.columns.get_loc('orig_variable_code')
+    variable_code_loc = new_support_file.columns.get_loc('variable_code')
+    if rename:
+        new_support_file.rename(columns={'variable_code': 'orig_variable_code'}, inplace=True)
+        # Inserisce la nuova colonna con valore nullo
+        new_support_file.insert(
+            loc=variable_code_loc + 1,
+            column='variable_code',
+            value=new_support_file['orig_variable_code']
+        )
+        
 
-    # Inserisce la nuova colonna con valore nullo
-    new_support_file.insert(
-        loc=variable_code_loc + 1,
-        column='variable_code',
-        value=new_support_file['orig_variable_code']
-    )
-
-    # Svuota le colonne successive a 'variable_code'
-    cols_to_empty = new_support_file.columns[variable_code_loc + 2:]
-    new_support_file[cols_to_empty] = np.nan
+    # Svuota le celle delle colonne specificate
+    cols_to_empty = ['type_variable', 'classes', 'range', 'valid_values', 'missing_values', 'missing_pop']
+    for col in cols_to_empty:
+        if col in new_support_file.columns:
+            new_support_file[col] = np.nan
 
     directory, filename = os.path.split(support_file_path)
-    new_filename = 'new_' + filename
+    
+    if new_name:
+        new_filename = new_name
+    else: 
+        new_filename = 'new_' + filename
+    
     new_output_path = os.path.join(directory, new_filename)
     save_df(new_support_file, new_output_path)     # si può rimuovere il return quando si vede che funziona in quanto mi interessa poi aprire l'excel inserire i nuovi nomi delle variabili
   
 class InfoSupportFile:
-    def __init__(self, support_file, df, file_name, type='raw'):
+    def __init__(self, support_file, df, file_name, prefix='raw'):
         self.client = DatalakeClient()
         self.support_file = support_file
         self.df = df
         self.file_name = file_name
         self.population = None
-         # Ottiene i metadati del file dal data lake
+        # Ottiene i metadati del file dal data lake
         metadata = self.client.get_metadata(
-            object_name = type + '/' + self.file_name
+            object_name = prefix + '/' + self.file_name
         )
         # Estrazione del file_code dai metadati
         file_code = metadata['metadata']['custom']['file_code']
         self.file_code = file_code
-
+        self.metadata = metadata['metadata']['custom']
+        
     def filter_variables(self):
         '''
         Rimuove le righe dal file di supporto (`self.support_file`) che, per un dato `file_code`, 
@@ -164,11 +173,22 @@ class InfoSupportFile:
         return self.population, self.support_file
 
     def check_missing_values(self):  
-        n_missing = int(self.df[self.key].isna().sum())
+        # Verifica che la colonna esista nel DataFrame
+        if self.key not in self.df.columns:
+            print(f"Colonna '{self.key}' non trovata nel DataFrame")
+            return None, None, None, ['pop not found'], ['pop not found']
+        
+        # Calcola i valori mancanti
+        missing_series = self.df[self.key].isna()
+        if isinstance(missing_series, pd.Series):
+            n_missing = int(missing_series.sum())
+        else:
+            n_missing = int(missing_series)
+        
         n_tot = int(self.df.shape[0])
         n_valid = int(n_tot - n_missing)
         
-        if self.population is not None:
+        if self.population is not None and self.population in self.df.columns:
             pop = ['ADNI1', 'ADNIGO', 'ADNI2', 'ADNI3', 'ADNI4']
             pop_valid = self.df[self.df[self.key].isna() == False][self.population].unique().tolist()
             pop_missing = [x for x in pop if x not in pop_valid]
@@ -184,7 +204,13 @@ class InfoSupportFile:
         return n_tot, n_valid, n_missing, pop_valid, pop_missing
     
     def check_type_range_variables(self):
+        # Verifica che la colonna esista nel DataFrame
+        if self.key not in self.df.columns:
+            print(f"Colonna '{self.key}' non trovata nel DataFrame")
+            return None, [None], [None]
+        
         n = self.df[self.key].first_valid_index()
+        #print(self.key, n)
         if n is None:
             tipo = None
             intervallo = [None]
@@ -218,7 +244,13 @@ class InfoSupportFile:
         n_tot, n_valid, n_missing, _, pop_missing = self.check_missing_values()
         tipo, intervallo, classes = self.check_type_range_variables()
 
-        index = self.support_file.index[(self.support_file['file_code'] == self.file_code) & (self.support_file['variable_code'] == self.key)][0]
+        # Verifica che la variabile esista nel support file
+        matching_rows = self.support_file[(self.support_file['file_code'] == self.file_code) & (self.support_file['variable_code'] == self.key)]
+        if matching_rows.empty:
+            print(f"Variabile '{self.key}' non trovata nel support file per il file_code '{self.file_code}'")
+            return self.support_file
+        
+        index = matching_rows.index[0]
 
         self.support_file['type_variable'][index] = tipo
         self.support_file['classes'][index] = ', '.join(map(str, classes))
@@ -227,10 +259,15 @@ class InfoSupportFile:
         self.support_file['missing_values'][index] = int(n_missing)
         self.support_file['missing_pop'][index] = ', '.join(map(str, pop_missing))
         
-        if n_valid/n_tot <= 0.65:
-            self.support_file['del'][index] = 'True'
+        if n_tot > 0:
+            if n_valid / n_tot <= 0.65:
+                self.support_file['del'][index] = 'True'
+            else:
+                self.support_file['del'][index] = 'False'
         else:
-            self.support_file['del'][index] = 'False'
+            # Se n_tot è 0, la colonna è vuota, quindi la marchiamo per l'eliminazione
+            self.support_file['del'][index] = 'True'
+            print('usata scappatoia')
 
         return self.support_file
 
