@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import datetime
 import string
+import json
+import os
 from dateutil.relativedelta import relativedelta
 from dl_client import DatalakeClient
 
@@ -851,5 +853,58 @@ class DataCleaner:
         else:
             new_columns = []
         return df, new_columns
+    
+    def get_normalization_settings(self, df, additional_scales=None):
+        '''
+        This function reads a normalization_settings.json file and returns a dictionary containing
+        only the keys (column names) and their respective min/max values that are actually present
+        in the dataframe. Optionally accepts additional_scales parameter to add missing scales
+        and updates the JSON file.
+        
+        Parameters:
+        df (pandas.DataFrame): The dataframe to check columns against
+        additional_scales (dict, optional): Dictionary with column names as keys and [min, max] arrays as values
+                                           to add scales not present in the JSON file
+        
+        Returns:
+        dict: Dictionary containing only the normalization settings for columns present in the dataframe
+        '''
+        # Path to the normalization settings file
+        json_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'normalization_settings.json')
+        
+        # Load existing normalization settings
+        try:
+            with open(json_path, 'r') as f:
+                normalization_settings = json.load(f)
+        except FileNotFoundError:
+            print(f"Warning: {json_path} not found. Starting with empty settings.")
+            normalization_settings = {}
+        except json.JSONDecodeError:
+            print(f"Warning: {json_path} contains invalid JSON. Starting with empty settings.")
+            normalization_settings = {}
+        
+        # Get dataframe columns
+        df_columns = set(df.columns)
+        
+        # Filter normalization settings to include only columns present in the dataframe
+        filtered_settings = {key: value for key, value in normalization_settings.items() if key in df_columns}
+        
+        # Handle additional scales if provided
+        if additional_scales is not None:
+            # Add new scales to the filtered settings
+            for column, scale_range in additional_scales.items():
+                if column in df_columns:
+                    filtered_settings[column] = scale_range
+                    # Also add to the original settings for saving back to JSON
+                    normalization_settings[column] = scale_range
+            
+            # Save updated settings back to JSON file
+            try:
+                with open(json_path, 'w') as f:
+                    json.dump(normalization_settings, f, indent=4)
+                print(f"Updated normalization settings saved to {json_path}")
+            except Exception as e:
+                print(f"Warning: Could not save updated settings to {json_path}. Error: {e}")
+        
+        return filtered_settings
 
-                
