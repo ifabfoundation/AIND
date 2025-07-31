@@ -16,44 +16,74 @@ def boolenaizer(support_file, column_list):
     return support_file
 
 def update_variables_support_file(df, support_file, file_code, variable_col='variable_code'):
-    # identify 
+    """
+    Aggiorna il file di supporto sincronizzandolo con le variabili presenti nel DataFrame.
+    
+    Questa funzione mantiene il file di supporto aggiornato rispetto alle variabili effettivamente
+    presenti nel DataFrame, aggiungendo le variabili mancanti e rimuovendo quelle non più presenti.
+    
+    Args:
+        df (pd.DataFrame): DataFrame contenente i dati da analizzare
+        support_file (pd.DataFrame): File di supporto da aggiornare
+        file_code (str): Codice del file per filtrare il support file
+        variable_col (str, optional): Nome della colonna che contiene i codici delle variabili. 
+                                    Defaults to 'variable_code'.
+    
+    Returns:
+        pd.DataFrame: File di supporto aggiornato con le variabili sincronizzate
+        
+    Note:
+        - Le variabili presenti nel DataFrame ma non nel support file vengono aggiunte con valori NaN
+        - Le variabili presenti nel support file ma non nel DataFrame vengono rimosse
+        - La funzione mantiene l'ordine delle righe nel support file originale
+    """
+    # Inizializza updated_support_file con il support_file originale
+    updated_support_file = support_file.copy()
+    
+    # Filtra il support file per il file_code specificato
     support_file_filtered = support_file[support_file['file_code'] == file_code]
     # Trova le variabili del df che mancano nel support file filtrato
     missing_vars = [col for col in df.columns if col not in support_file_filtered[variable_col].values]
-
+    #print('missing_vars: ', missing_vars)
     # Se ci sono variabili mancanti, aggiungile al support file (con valori NaN tranne variable_code e file_code)
     if missing_vars:
         #print(missing_vars)
         rows = []
         for var in missing_vars:
             new_row = {col: np.nan for col in support_file.columns}
+            new_row['file_name'] = support_file_filtered['file_name'].iloc[0]
+            new_row['orig_variable_code'] = np.nan
             new_row['variable_code'] = var
             new_row['file_code'] = file_code
+            #print(new_row)
             rows.append(new_row)
         
         rows_to_add = pd.DataFrame(rows)
         support_file_filtered = pd.concat([support_file_filtered, rows_to_add], ignore_index=True)
         # Ora aggiorna il support file originale con le nuove righe (solo se ci sono variabili mancanti)
         index = support_file[support_file['file_code'] == file_code].index[-1]+1
+        #print('index: ', index)
         # Rimuovi le righe del file_code corrente dal support file originale
         df_up = support_file.iloc[:index]
         df_down = support_file.iloc[index:]
         # Aggiungi il support_file_filtered aggiornato
-        support_file = pd.concat([df_up, rows_to_add, df_down], ignore_index=True)
+        updated_support_file = pd.concat([df_up, rows_to_add, df_down], ignore_index=True)
     
     # identificare le variabili extra nel support file
-    extra_vars = [col for col in support_file_filtered[variable_col].values if col not in df.columns]
+    # Escludiamo i valori np.nan che rappresentano variabili appena aggiunte
+    extra_vars = [col for col in support_file_filtered[variable_col].values 
+                 if pd.notna(col) and col not in df.columns]
     
     # Rimuovi dal support file le righe corrispondenti alle variabili extra
     if extra_vars:
         # Trova gli indici delle righe da rimuovere
         idx_to_remove = support_file_filtered[support_file_filtered[variable_col].isin(extra_vars)].index
         # Rimuovi queste righe dal support file originale
-        support_file = support_file.drop(idx_to_remove)
+        updated_support_file = updated_support_file.drop(idx_to_remove)
         # Reindicizza il DataFrame risultante
-        support_file = support_file.reset_index(drop=True)
-    
-    return support_file
+        updated_support_file = updated_support_file.reset_index(drop=True)
+
+    return updated_support_file
 
 
 class DataCleaner:
@@ -273,7 +303,7 @@ class DataCleaner:
         result_df = result_df.drop(rows_to_drop)
         
         return result_df
-
+############## MODIFICATO ##############
     def replace_unknown_values(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Replace 'Unknown', 'unknown', and '-4' values with NaN across all columns in a dataframe.
@@ -285,16 +315,17 @@ class DataCleaner:
         replace_dict = {
             'Unknown': np.nan,
             'unknown': np.nan,
-            '-4': np.nan
+            '-4': np.nan,
+            '9999.0': np.nan,
+            '9999': np.nan
         }
         
         # Replace values across the entire dataframe
         result_df = result_df.replace(replace_dict)
         
-        # Handle numeric columns where -4 might be stored as an integer
+        # Gestisce le colonne numeriche dove -4, -4.0, 9999, 9999.0 potrebbero essere presenti come numeri
         for col in result_df.select_dtypes(include=['number']).columns:
-            result_df[col] = result_df[col].replace(-4, np.nan)
-        
+            result_df[col] = result_df[col].replace([-4, -4.0, 9999, 9999.0], np.nan)
         return result_df
 
     def to_date_format(self, df, col_list=[]):
@@ -608,8 +639,7 @@ class DataCleaner:
         # Filtra il support file per il file_code fornito
         support_file_filtered = new_support_file[new_support_file['file_code'] == file_code]
         
-        new_support_file = update_variables_support_file(df, new_support_file, file_code, variable_col='orig_variable_code')
-
+        new_updated_support_file = update_variables_support_file(df, new_support_file, file_code, variable_col='orig_variable_code')
         '''
         ##### inizio funzione
         # Trova le variabili del df che mancano nel support file filtrato
@@ -646,7 +676,7 @@ class DataCleaner:
         # Rinomina le colonne del df
         df_renamed = df.rename(columns=rename_dict)
 
-        return df_renamed, new_support_file
+        return df_renamed, new_updated_support_file
     
     def remove_param_few_subjects(self, df: pd.DataFrame, file_name: str, flag_col: str='del', prefix: str = 'raw'):
         """
@@ -723,8 +753,32 @@ class DataCleaner:
         else:
             print("Nessun soggetto con una sola visita da rimuovere.")
             return df.copy()
-         
-    def extract_metadata_from_support(self, df, new_level, file_name=None, prefix=None):
+        
+    def update_metadati_support(self, updated_support_file):
+        """
+        Aggiorna il file di supporto con i metadati delle nuove variabili.
+        """
+        # Per ogni nuova variabile, aggiorna la colonna appropriata nel self.support_file
+        meta_class = [x for x in self.metadata_costum.keys() if x in ['cofattori', 'predittori', 'norm_scala', 'norm_intervallo']]
+        for key in meta_class:
+            if self.metadata_costum[key] == []:
+                continue
+            if key in ['cofattori', 'predittori']:
+                colonna = 'metadati_fattori'
+            elif key in ['norm_scala', 'norm_intervallo']:
+                colonna = 'metadati_normalizzazione'
+            else:
+                continue  # ignora chiavi non riconosciute
+            for var in self.metadata_costum[key]:
+                #print('var: ', var, 'colonna: ', key)
+                # Trova la riga corrispondente alla variabile nel support_file
+                idx = updated_support_file[updated_support_file['file_code'] == self.file_code][updated_support_file['variable_code'] == var].index
+                #print('idx: ', idx)
+                if not idx.empty:
+                    updated_support_file.loc[idx, colonna] = key
+        return updated_support_file
+    
+    def extract_metadata_from_support(self, df, new_level, file_name=None, prefix=None, updated_support_file=None):
         """
         Estrae le liste di variabili per 'fattori' e 'normalizzazione' dal file di supporto,
         filtrando per il file_code corrente dell'istanza.
@@ -732,6 +786,12 @@ class DataCleaner:
         Returns:
             Dizionario: Metadati del file aggiornati con liste dei parametri cofattori/predittori e da normalizzare su scala/intervallo
         """
+        cofattori = []
+        predittori = []
+        norm_scala = []
+        norm_intervallo = []
+        if updated_support_file:
+            self.support_file = updated_support_file
         
         if file_name and prefix:
             metadata = self.client.get_metadata(
@@ -772,7 +832,8 @@ class DataCleaner:
 
         # aggiornamento level del file
         self.metadata_costum['level'] = new_level
-        
+
+        # restituzione metadati
         metadata = self.metadata_costum
 
         return metadata 

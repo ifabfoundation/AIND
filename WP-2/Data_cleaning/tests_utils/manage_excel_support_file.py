@@ -212,27 +212,30 @@ class InfoSupportFile:
         n = self.df[self.key].first_valid_index()
         #print(self.key, n)
         if n is None:
-            tipo = None
+            raw_tipo = None
             intervallo = [None]
             classes = [None]
             print(self.key, ' non ha valori')
             return tipo, intervallo, classes
         else:
-            tipo = type(self.df[self.key][n])
+            raw_tipo = type(self.df[self.key][n])  # numpy.int64
+            tipo = str(raw_tipo.__name__)
             options = self.df[self.key].unique()
-            if tipo is float or tipo is int:
+            # intervallo
+            if 'float' in tipo or 'int' in tipo:
                 intervallo = [float(self.df[self.key].max()), float(self.df[self.key].min())]
             else:
                 intervallo = [None]
             
+            #classi
             if len(options) <= 10:
                 classes = options
-            elif tipo == str:
+            elif tipo == 'str':
                 classes = options[:5]
             else:
                 classes = [None]
 
-            return tipo, intervallo, classes
+            return raw_tipo, intervallo, classes
     
     def get_varible_info(self, key):
         self.key = key
@@ -243,6 +246,7 @@ class InfoSupportFile:
 
         n_tot, n_valid, n_missing, _, pop_missing = self.check_missing_values()
         tipo, intervallo, classes = self.check_type_range_variables()
+        
 
         # Verifica che la variabile esista nel support file
         matching_rows = self.support_file[(self.support_file['file_code'] == self.file_code) & (self.support_file['variable_code'] == self.key)]
