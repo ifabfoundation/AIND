@@ -50,14 +50,15 @@ def update_variables_support_file(df, support_file, file_code, variable_col='var
         #print(missing_vars)
         rows = []
         for var in missing_vars:
-            new_row = {col: np.nan for col in support_file.columns}
+            # crea una nuova riga indipendente con valori nulli per tutte le colonne del support file
+            new_row = {col: np.nan for col in updated_support_file.columns}
             new_row['file_name'] = support_file_filtered['file_name'].iloc[0]
             new_row['orig_variable_code'] = np.nan
             new_row['variable_code'] = var
             new_row['file_code'] = file_code
             #print(new_row)
             rows.append(new_row)
-        
+                
         rows_to_add = pd.DataFrame(rows)
         support_file_filtered = pd.concat([support_file_filtered, rows_to_add], ignore_index=True)
         # Ora aggiorna il support file originale con le nuove righe (solo se ci sono variabili mancanti)
@@ -73,11 +74,12 @@ def update_variables_support_file(df, support_file, file_code, variable_col='var
     # Escludiamo i valori np.nan che rappresentano variabili appena aggiunte
     extra_vars = [col for col in support_file_filtered[variable_col].values 
                  if pd.notna(col) and col not in df.columns]
-    
+    #print('extra_vars: ', extra_vars)
     # Rimuovi dal support file le righe corrispondenti alle variabili extra
     if extra_vars:
         # Trova gli indici delle righe da rimuovere
-        idx_to_remove = support_file_filtered[support_file_filtered[variable_col].isin(extra_vars)].index
+        idx_to_remove = updated_support_file[(updated_support_file['file_code'] == file_code) & (updated_support_file[variable_col].isin(extra_vars))].index 
+        #print('idx_to_remove: ', idx_to_remove)
         # Rimuovi queste righe dal support file originale
         updated_support_file = updated_support_file.drop(idx_to_remove)
         # Reindicizza il DataFrame risultante
@@ -884,7 +886,8 @@ class DataCleaner:
                    'ETHNICITY': [0, 1], 
                    'RACE': [0, 1, 2, 3, 4, 5],
                    'DX': [0, 1, 2]}
-    
+        
+        # filtra le colonne in col_list che sono presenti nel df
         col_list_new = [col for col in col_list if col in df.columns]
         
         if col_list_new:
