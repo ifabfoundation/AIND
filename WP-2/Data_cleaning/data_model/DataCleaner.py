@@ -918,7 +918,7 @@ class DataCleaner:
             new_columns = []
         return df, new_columns
     
-    def get_normalization_settings(self, df, additional_scales=None):
+    def get_normalization_settings(self, df, additional_scales=None, file_name = 'normalization_settings.json'):
         '''
         This function reads a normalization_settings.json file and returns a dictionary containing
         only the keys (column names) and their respective min/max values that are actually present
@@ -934,7 +934,7 @@ class DataCleaner:
         dict: Dictionary containing only the normalization settings for columns present in the dataframe
         '''
         # Path to the normalization settings file
-        json_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'normalization_settings.json')
+        json_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), file_name)
         
         # Load existing normalization settings
         try:

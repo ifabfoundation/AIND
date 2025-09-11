@@ -1,0 +1,27 @@
+{
+    "Ventricles": [
+        2,
+        6.5,
+        "increasing"
+    ],
+    "Hippocampus": [
+        0.25,
+        0.6,
+        "inverse"
+    ],
+    "Entorhinal": [
+        0.15,
+        0.43,
+        "inverse"
+    ],
+    "Fusiform": [
+        0.75,
+        2.3,
+        "inverse"
+    ],
+    "MidTemp": [
+        0.6,
+        2.5,
+        "inverse"
+    ]
+}
