@@ -761,13 +761,13 @@ class DataCleaner:
         Aggiorna il file di supporto con i metadati delle nuove variabili.
         """
         # Per ogni nuova variabile, aggiorna la colonna appropriata nel self.support_file
-        meta_class = [x for x in self.metadata_costum.keys() if x in ['cofattori', 'predittori', 'norm_scala', 'norm_intervallo']]
+        meta_class = [x for x in self.metadata_costum.keys() if x in ['cofattori', 'predittori', 'norm_scala', 'norm_intervallo', 'norm_volume']]
         for key in meta_class:
             if self.metadata_costum[key] == []:
                 continue
             if key in ['cofattori', 'predittori']:
                 colonna = 'metadati_fattori'
-            elif key in ['norm_scala', 'norm_intervallo']:
+            elif key in ['norm_scala', 'norm_intervallo', 'norm_volume']:
                 colonna = 'metadati_normalizzazione'
             else:
                 continue  # ignora chiavi non riconosciute
@@ -792,6 +792,7 @@ class DataCleaner:
         predittori = []
         norm_scala = []
         norm_intervallo = []
+        norm_volume = []
         if updated_support_file:
             self.support_file = updated_support_file
         
@@ -826,8 +827,10 @@ class DataCleaner:
         if 'metadati_normalizzazione' in support_filtered.columns:
             norm_scala = support_filtered[support_filtered['metadati_normalizzazione']=='scala']['variable_code'].tolist()
             norm_intervallo = support_filtered[support_filtered['metadati_normalizzazione']=='intervallo']['variable_code'].tolist()
+            norm_volume = support_filtered[support_filtered['metadati_normalizzazione']=='volume']['variable_code'].tolist()
             self.metadata_costum['norm_scala'] = [x for x in df.columns if x.split('/')[0] in norm_scala]
             self.metadata_costum['norm_intervallo'] = [x for x in df.columns if x.split('/')[0] in norm_intervallo]
+            self.metadata_costum['norm_volume'] = [x for x in df.columns if x.split('/')[0] in norm_volume]
             #print('scala', norm_scala, '\nintervallo', norm_intervallo)
         else:
             print("Attenzione: la colonna 'metadati_normalizzazione' non è stata trovata.")
