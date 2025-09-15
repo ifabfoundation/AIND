@@ -246,7 +246,7 @@ class InfoSupportFile:
 
         n_tot, n_valid, n_missing, _, pop_missing = self.check_missing_values()
         tipo, intervallo, classes = self.check_type_range_variables()
-        
+        #print('===='+key+'====\n', 'tipo', tipo, '\nintervallo', intervallo, '\nclasses', classes)
 
         # Verifica che la variabile esista nel support file
         matching_rows = self.support_file[(self.support_file['file_code'] == self.file_code) & (self.support_file['variable_code'] == self.key)]
@@ -255,8 +255,7 @@ class InfoSupportFile:
             return self.support_file
         
         index = matching_rows.index[0]
-
-        self.support_file['type_variable'][index] = tipo
+        self.support_file['type_variable'][index] = str(tipo)
         self.support_file['classes'][index] = ', '.join(map(str, classes))
         self.support_file['range'][index] = ', '.join(map(str, intervallo))
         self.support_file['valid_values'][index] = int(n_valid)
@@ -290,6 +289,9 @@ class InfoSupportFile:
         filtered = self.support_file[self.support_file['file_code'] == self.file_code]
         if filtered.empty or 'missing_pop' not in filtered.columns:
             return []  # Se non c'è info, restituisci lista vuoto
+        if filtered['missing_pop'].unique()== 'pop not found':
+            print('WARNING: "Population not found" ==> need to manually adjust the metadata manually')
+            return []
         # Trova tutte le popolazioni che sono presenti in tutte le righe della colonna 'missing_pop'
         missing_lists = filtered['missing_pop'].dropna().apply(lambda x: [s.strip() for s in str(x).split(',') if s.strip()])
         if missing_lists.empty:
