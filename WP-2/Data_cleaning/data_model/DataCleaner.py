@@ -975,3 +975,31 @@ class DataCleaner:
         
         return filtered_settings
 
+    def trasform_volums_as_ICV_percent(self, df: pd.DataFrame, ICV_column: str, volume_column: str) -> pd.DataFrame:
+        # Transform the volumes as ICV percentage
+        df[volume_column] = (df[volume_column] / df[ICV_column]) * 100
+        return df
+
+    def transform_volumes_as_ICV_percent(self, df: pd.DataFrame, file_name: str, prefix: str = 'raw') -> pd.DataFrame:
+        # Get the metadata for the file
+        metadata = self.client.get_metadata(
+            object_name = prefix + '/' + file_name
+        )
+        metadata_costum = metadata['metadata']['custom']
+        # Get the file code
+        file_code = metadata_costum['file_code']
+
+        # Filter the support file for the current file code
+        support_file_for_file = self.support_file[self.support_file['file_code'] == file_code]
+        
+        # Get the volumes columns
+        volumes_columns = support_file_for_file[support_file_for_file['metadati_normalizzazione'] == 'norm_volume']['variable_code'].tolist()
+
+        # Transform the volumes as ICV percentage
+        if len(volumes_columns) > 0:
+            for col in volumes_columns:
+                df = self.trasform_volums_as_ICV_percent(df, ICV_column='ICV', volume_column=col)
+        else:
+            print(f"No volumes columns found for file code {file_code}")
+
+        return df, file_code, metadata_costum
