@@ -99,7 +99,7 @@ class DataCleaner:
             print('Need to give as imput either the file path or the file its self')
     
 
-    def filter_variables(self, df, file_name, new_var=[], prefix='raw'):
+    def filter_variables(self, df, file_name, new_var=[], remove_var=[], prefix='raw'):
         '''
         This function reduces the number of columns of the dataframe based on the variables pressent in the support file.
         The support file is filtered for the file_code of the specific file from which was obtained the df.
@@ -115,12 +115,228 @@ class DataCleaner:
         # filtyers the support file for the file_code
         support_file = self.support_file[self.support_file['file_code']==file_code]
         # selection of the unique variable present in both the df and the support file
-        lst_variable = [x for x in support_file['variable_code'].unique() if x in list(df.columns)] 
+        support_list = support_file['variable_code'].unique()
+        new_list = new_var + support_list
+        columns_to_keep = [x for x in new_list if x in list(df.columns) and x not in remove_var] 
         # reduction of the the df to only selected variablees/columns
-        df_new = df[lst_variable + new_var]
+        df_new = df[columns_to_keep]
 
         return df_new
 
+    
+    def segmentation_complete_filter(self, df, filter_col='STATUS'):
+        '''
+        Specific for imaging datasets - FreeSurfer.
+        This function filters the dataframe based on the value of the filter_col.
+        '''
+        print('Segmentation Status: \n', df[filter_col].value_counts())
+        return df[df[filter_col] == 'complete'].reset_index(drop=True)
+    
+    def find_exam_code(self, df, date_column = 'EXAMDATE', viscode_refernce = 'VISCODE', patient_id_column = 'RID', essential_variables: list = []):
+        '''
+        This function finds the exam code for each patient based on the date of the visit.
+        Pipeline per ciascun paziente:
+        1) Riorganizza le righe in ordine seguendo le date_column
+        2) Verifica che non ci siano date uguali per lo stesso soggetto
+        3) Se ci sono più righe con date uguali:
+           a) Se hanno valori uguali nelle essential_variables, tieni la prima riga
+           b) Altrimenti verifica quale ha meno valori nulli nelle essential_variables
+           c) Se hanno lo stesso numero di valori nulli, seleziona quella con visit_reference 'bl' o che inizia per 'm'
+        4) Calcola VISIT_MONTH: prima data = 0, successive = mesi di distanza dalla visita 0
+        '''
+        # Create a copy of the dataframe to avoid modifying the original
+        start_df = df.copy()
+        
+        # Verifica che le colonne richieste esistano
+        required_cols = [date_column, viscode_refernce, patient_id_column] + essential_variables
+        for col in required_cols:
+            if col not in start_df.columns:
+                raise ValueError(f"Column '{col}' not found in dataframe")
+        
+        # Converti la colonna data in datetime
+        #start_df[date_column] = pd.to_datetime(start_df[date_column])
+        
+        # Lista per raccogliere le righe finali
+        final_rows = []
+        N_patient = 0
+        adopted_strategy = []
+        for ptid in start_df[patient_id_column].unique():
+            # 1) Riorganizza le righe in ordine seguendo le date_column
+            df_patient = start_df[start_df[patient_id_column] == ptid].copy()
+            df_patient = df_patient.sort_values(by=date_column).reset_index(drop=True)
+            
+            # 2) Verifica che non ci siano date uguali per lo stesso soggetto
+            duplicate_dates = df_patient[date_column].duplicated()
+            
+            if duplicate_dates.any():
+                # 3) Gestisci le date duplicate
+                N_patient += 1
+                df_patient_cleaned, adopted_strategy = self._handle_duplicate_dates(
+                    df_patient, date_column, viscode_refernce, essential_variables, adopted_strategy
+                )
+            else:
+                df_patient_cleaned = df_patient
+            # 4) Calcola VISIT_MONTH
+            df_patient_cleaned = self._calculate_visit_month(
+                df_patient_cleaned, date_column, patient_id_column
+            )
+
+            final_rows.append(df_patient_cleaned)
+        
+        print('Number of patients with duplicate dates: ', N_patient)
+        print('Adopted visit selection strategy:\n', pd.Series(adopted_strategy).value_counts())
+        
+        # Combina tutti i pazienti processati
+        if final_rows:
+            result_df = pd.concat(final_rows, ignore_index=True)
+        else:
+            result_df = start_df
+            pritn('The function find_exam_code has failed, no changes have been applied')
+        
+        return result_df
+    
+    def _handle_duplicate_dates(self, df_patient, date_column, viscode_refernce, essential_variables, adopted_strategy):
+        """
+        Gestisce le date duplicate per un singolo paziente seguendo la logica specificata.
+        """
+        df_cleaned = df_patient.copy()
+        
+        # Trova le date duplicate
+        date_groups = df_cleaned.groupby(date_column)
+
+        for date, group in date_groups:
+            if len(group) > 1:
+                if essential_variables:
+                    # 3a) Verifica se le righe hanno valori uguali nelle essential_variables
+                    essential_values = group[essential_variables]
+                    if essential_values.nunique().sum() == len(essential_variables):
+                        # Valori uguali, tieni la prima riga
+                        row_to_keep = group.index[0]
+                        adopted_strategy.append('Equal values')
+                    else:
+                        # 3b) Valori diversi, verifica quale ha meno valori nulli
+                        null_counts = group[essential_variables].isnull().sum(axis=1)
+                        min_null_count = null_counts.min()
+                        
+                        candidates = group[null_counts == min_null_count]
+                        
+                        if len(candidates) == 1:
+                            # Una sola riga con il minor numero di nulli
+                            row_to_keep = candidates.index[0]
+                            adopted_strategy.append('Min null values')
+                        else:
+                            # 3c) Stesso numero di nulli, seleziona quella con 'bl' o che inizia per 'm'
+                            row_to_keep, adopted_strategy = self._select_by_viscode_priority(candidates, viscode_refernce, adopted_strategy)
+                            
+                else:
+                    # Se non ci sono essential_variables, usa solo la logica del viscode
+                    row_to_keep = self._select_by_viscode_priority(group, viscode_refernce)
+                
+                # Rimuovi le righe duplicate mantenendo solo quella selezionata
+                rows_to_remove = group.index[group.index != row_to_keep]
+                df_cleaned = df_cleaned.drop(rows_to_remove)
+        
+        return df_cleaned.reset_index(drop=True), adopted_strategy
+    
+    def _select_by_viscode_priority(self, candidates, viscode_refernce, adopted_strategy):
+        """
+        Seleziona la riga basandosi sulla priorità del viscode: 'bl' o che inizia per 'm'.
+        """
+        for idx, row in candidates.iterrows():
+            viscode = row[viscode_refernce]
+            if pd.notna(viscode):
+                if viscode == 'bl' or (isinstance(viscode, str) and viscode.startswith('m')):
+                    adopted_strategy.append('VISITCODE priority')
+                    return idx, adopted_strategy
+       
+        adopted_strategy.append('first row, same VISITCODE')
+        # Se nessuna riga soddisfa i criteri, restituisci la prima
+        return candidates.index[0], adopted_strategy
+    
+    def _calculate_visit_month(self, df_patient, date_column, patient_id_column, viscode_refernce):
+        """
+        Calcola VISIT_MONTH: prima data = 0, successive = mesi di distanza dalla visita 0.
+        Inserisce la colonna VISIT_MONTH subito dopo la colonna VISCODE.
+        """
+        df_patient = df_patient.copy()
+        # se il dataframe è vuoto, restituisci il dataframe originale
+        if len(df_patient) == 0:
+            print('The dataframe is empty, no changes have been applied for the visit month calculation')
+            return df_patient
+        
+        # Ordina per data
+        df_patient = df_patient.sort_values(by=date_column).reset_index(drop=True)
+        
+        # La prima data è la baseline (mese 0)
+        baseline_date = df_patient[date_column].iloc[0]
+        
+        # Calcola i mesi di distanza dalla baseline
+        visit_months = []
+        for date in df_patient[date_column]:
+            if pd.notna(date):
+                # Calcola la differenza in mesi
+                months_diff = (date - baseline_date).days / 30.44  # Media giorni per mese
+                visit_months.append(int(round(months_diff)))
+            else:
+                visit_months.append(np.nan)
+        
+        # Trova la posizione della colonna VISCODE
+        viscode_position = df_patient.columns.get_loc(viscode_refernce)
+        
+        # Inserisci la colonna VISIT_MONTH subito dopo VISCODE
+        df_patient.insert(viscode_position + 1, 'VISIT_MONTH', visit_months)
+        
+        return df_patient
+    
+    def _select_from_complete_rows(self, complete_rows, essential_variables, viscode_refernce, adopted_strategy):
+        """
+        Seleziona una riga dalle righe con STATUS == 'complete' applicando la logica di selezione.
+        """
+        if len(complete_rows) == 1:
+            adopted_strategy.append('STATUS complete - single row')
+            return complete_rows.index[0]
+        
+        # Applica la logica di selezione sulle righe complete
+        if essential_variables:
+            # Controlla se tutte le righe complete hanno gli stessi valori nelle essential_variables
+            essential_values = complete_rows[essential_variables]
+            if essential_values.nunique().sum() == len(essential_variables):
+                # Valori uguali, tieni la prima riga
+                adopted_strategy.append('STATUS complete - equal essential values')
+                return complete_rows.index[0]
+            else:
+                # Valori diversi, verifica quale ha meno valori nulli
+                return self._select_by_null_count_and_viscode(
+                    complete_rows, essential_variables, viscode_refernce, adopted_strategy
+                )
+        else:
+            # Se non ci sono essential_variables, usa solo la logica del viscode
+            return self._select_by_viscode_priority(complete_rows, viscode_refernce, adopted_strategy)[0]
+    
+    def _select_by_null_count_and_viscode(self, group, essential_variables, viscode_refernce, adopted_strategy):
+        """
+        Seleziona una riga basandosi sul numero di valori nulli e poi sulla priorità del viscode.
+        """
+        if essential_variables:
+            # Verifica quale ha meno valori nulli nelle essential_variables
+            null_counts = group[essential_variables].isnull().sum(axis=1)
+            min_null_count = null_counts.min()
+            
+            candidates = group[null_counts == min_null_count]
+            
+            if len(candidates) == 1:
+                # Una sola riga con il minor numero di nulli
+                adopted_strategy.append('Min null values')
+                return candidates.index[0]
+            else:
+                # Stesso numero di nulli, seleziona quella con 'bl' o che inizia per 'm'
+                return self._select_by_viscode_priority(candidates, viscode_refernce, adopted_strategy)[0]
+        else:
+            # Se non ci sono essential_variables, usa solo la logica del viscode
+            return self._select_by_viscode_priority(group, viscode_refernce, adopted_strategy)[0]
+
+            
+    
     def convert_visitcode_to_int(self, value: string) -> int or string:
         '''
         function to convert the visit codes (strings) in to integers corresponding to the number of months from the first visist or baseline (month = 0)
@@ -146,7 +362,7 @@ class DataCleaner:
             
         raise ValueError('Ops, qualche caso non è stato considerato', value)
 
-    def handle_f_sc_values(self, df: pd.DataFrame, dataset: pd.DataFrame, column: str) -> pd.DataFrame:
+    def handle_f_sc_values(self, df: pd.DataFrame, dataset: pd.DataFrame, column: str, patient_id_column: str='PTID') -> pd.DataFrame:
         """
         Handle the 'f' and 'sc' values in the visitcode column.
         Identifies patients with 'f' or 'sc' values in the filtered dataframe,
@@ -157,8 +373,8 @@ class DataCleaner:
         if column not in df.columns or column not in dataset.columns:
             raise ValueError(f"Column '{column}' not found in one or both dataframes")
         
-        if 'PTID' not in df.columns or 'PTID' not in dataset.columns:
-            raise ValueError("Column 'PTID' not found in one or both dataframes")
+        if patient_id_column not in df.columns or patient_id_column not in dataset.columns:
+            raise ValueError(f"Column '{patient_id_column}' not found in one or both dataframes")
         
         # Create a copy of the complete dataset to avoid modifying the original
         result_df = dataset.copy()
@@ -173,9 +389,9 @@ class DataCleaner:
         patients_to_update = []
         
         # First, identify patients in the filtered dataframe that have 'f' or 'sc'
-        for ptid in df['PTID'].unique():
+        for ptid in df[patient_id_column].unique():
             # Get all visits for this patient from the complete dataset
-            patient_data = dataset[dataset['PTID'] == ptid]
+            patient_data = dataset[dataset[patient_id_column] == ptid]
             
             # If patient has less than 2 visits, add to removal list
             if len(patient_data) < 2:
@@ -197,7 +413,7 @@ class DataCleaner:
         # Now update all occurrences of 'f' and 'sc' in the complete dataset
         for ptid in patients_to_update:
             # Get indices for this patient in the complete result dataframe
-            patient_indices = result_df.index[result_df['PTID'] == ptid]
+            patient_indices = result_df.index[result_df[patient_id_column] == ptid]
             
             # Update rows where column value is 'f' or 'sc' to 0
             mask_f_sc = result_df.loc[patient_indices, column].isin(['f', 'sc'])
@@ -206,7 +422,7 @@ class DataCleaner:
         
         # Remove patients with fewer than 2 visits from the result
         if patients_to_remove:
-            rows_to_remove = result_df['PTID'].isin(patients_to_remove)
+            rows_to_remove = result_df[patient_id_column].isin(patients_to_remove)
             result_df = result_df[~rows_to_remove]
             #print(f"Rimossi {len(patients_to_remove)} pazienti con meno di 2 visite")
         
@@ -234,7 +450,7 @@ class DataCleaner:
         # Return dataframe with those rows dropped
         return df[~mask].copy()
 
-    def handle_null_viscode2(self, df: pd.DataFrame, columns_to_check: list, date_column: str) -> pd.DataFrame:
+    def handle_null_viscode2(self, df: pd.DataFrame, columns_to_check: list, date_column: str, visit_code_column: str='VISCODE2', patient_id_column: str='PTID') -> pd.DataFrame:
         """
         Process rows where VISCODE2 is null:
         - If all values in specified columns are null, remove the row
@@ -244,7 +460,7 @@ class DataCleaner:
         result_df = df.copy()
         
         # Verify that all required columns exist in the dataframe
-        required_cols = columns_to_check + [date_column, 'VISCODE2', 'PTID']
+        required_cols = columns_to_check + [date_column, visit_code_column, patient_id_column]
         for col in required_cols:
             if col not in result_df.columns:
                 raise ValueError(f"Column '{col}' not found in dataframe")
@@ -254,7 +470,7 @@ class DataCleaner:
         result_df[date_column] = date_format.dt.date
         
         # Get rows with null VISCODE2
-        null_viscode_mask = result_df['VISCODE2'].isna()
+        null_viscode_mask = result_df[visit_code_column].isna()
         rows_to_process = result_df[null_viscode_mask].copy()
         
         # Create a mask for rows to drop (all values in columns_to_check are null)
@@ -262,14 +478,14 @@ class DataCleaner:
         
         # Create a list to collect rows to keep with updated VISCODE2
         rows_to_update = []
-        
+
         # Process rows where not all columns are null
         for idx, row in rows_to_process[~drop_mask].iterrows():
-            patient_id = row['PTID']
+            patient_id = row[patient_id_column]
             visit_date = row[date_column]
             
             # Get all visits for this patient, sorted by date
-            patient_visits = result_df[result_df['PTID'] == patient_id].sort_values(by=date_column)
+            patient_visits = result_df[result_df[patient_id_column] == patient_id].sort_values(by=date_column)
             
             # Find the previous visit (if any)
             prev_visits = patient_visits[patient_visits[date_column] < visit_date]
@@ -278,27 +494,27 @@ class DataCleaner:
                 # Get the most recent previous visit
                 prev_visit = prev_visits.iloc[-1]
                 
-                if pd.notna(prev_visit['VISCODE2']):
+                if pd.notna(prev_visit[visit_code_column]):
                     # Calculate date difference in months
                     date_diff = (visit_date - prev_visit[date_column]).days / 30.44  # Average days per month
                     
-                    if prev_visit['VISCODE2'] == 'bl' or prev_visit['VISCODE2'] == 'sc' or prev_visit['VISCODE2'] == 'f': 
+                    if prev_visit[visit_code_column] == 'bl' or prev_visit[visit_code_column] == 'sc' or prev_visit[visit_code_column] == 'f': 
                         # If previous visit was baseline, calculate months since baseline
                         new_viscode = f"m{int(round(date_diff))}"
                     else:
                         # If previous visit had mXX format, add the months
-                        prev_month = int(prev_visit['VISCODE2'].replace('m', ''))
+                        prev_month = int(prev_visit[visit_code_column].replace('m', ''))
                         new_viscode = f"m{int(round(prev_month + date_diff))}"
                     
                     # Update the row's VISCODE2
-                    result_df.loc[idx, 'VISCODE2'] = new_viscode
+                    result_df.loc[idx, visit_code_column] = new_viscode
                 else:
                     # If previous visit also had null VISCODE2, we can't reliably calculate
                     # Keep the row but leave VISCODE2 as null
                     pass
             else:
                 # No previous visits, might be baseline
-                result_df.loc[idx, 'VISCODE2'] = 'bl'
+                result_df.loc[idx, visit_code_column] = 'bl'
         
         # Filter out rows with all null values in specified columns and null VISCODE2
         rows_to_drop = rows_to_process[drop_mask].index
