@@ -18,7 +18,7 @@ def save_df(df_to_save, output_path):
     df_to_save.to_csv(output_path+'.csv', index=False)
 
 
-def create_new_support_file(support_file, support_file_path, new_name=None, rename=True):
+def create_new_support_file(support_file, support_file_path, new_name=None, rename_column=True):
     """
     Crea una copia di `self.support_file`, aggiunge la colonna 'new_variable_code',
     salva il nuovo DataFrame in un file Excel e lo restituisce.
@@ -29,7 +29,7 @@ def create_new_support_file(support_file, support_file_path, new_name=None, rena
     
     # Trova la posizione della colonna 'variable_code'
     variable_code_loc = new_support_file.columns.get_loc('variable_code')
-    if rename:
+    if rename_column:
         new_support_file.rename(columns={'variable_code': 'orig_variable_code'}, inplace=True)
         # Inserisce la nuova colonna con valore nullo
         new_support_file.insert(
@@ -53,8 +53,33 @@ def create_new_support_file(support_file, support_file_path, new_name=None, rena
         new_filename = 'new_' + filename
     
     new_output_path = os.path.join(directory, new_filename)
+    print(f'The {new_name} file has been created.\nOpen the file and verify it, if needed update the variables names and metadata')
+
     save_df(new_support_file, new_output_path)     # si può rimuovere il return quando si vede che funziona in quanto mi interessa poi aprire l'excel inserire i nuovi nomi delle variabili
-  
+
+def update_new_support_file(support_file, new_support_file_name):
+    """
+    Aggiorna il file di supporto con i nuovi file
+    """
+    support = support_file.copy(deep=True)
+    new_support_file = pd.read_excel(new_support_file_name+'.xlsx')
+    new_file_code = [x for x in support['file_code'].unique() if x not in new_support_file['file_code'].unique()]
+
+    # sezione del file originale di supporto da aggiungere al nuovo support file, in base ai file_code nuovi
+    section_to_add = support[support['file_code'].isin(new_file_code)]
+
+    # Svuota le celle delle colonne specificate
+    cols_to_empty = ['type_variable', 'classes', 'range', 'valid_values', 'missing_values', 'missing_pop']
+    for col in cols_to_empty:
+        if col in section_to_add.columns:
+            section_to_add[col] = np.nan
+
+    # aggiunge la sezione al nuovo support file
+    new_support_file = pd.concat([new_support_file, section_to_add], ignore_index=True)
+    print(f'The {new_support_file_name} file has been updated with the new file_code: {new_file_code}\nOpen the file and verify it, if needed update the variables names and metadata')
+
+    save_df(new_support_file, new_support_file_name)
+
 class InfoSupportFile:
     def __init__(self, support_file, df, file_name, prefix='raw'):
         self.client = DatalakeClient()
@@ -289,7 +314,7 @@ class InfoSupportFile:
         filtered = self.support_file[self.support_file['file_code'] == self.file_code]
         if filtered.empty or 'missing_pop' not in filtered.columns:
             return []  # Se non c'è info, restituisci lista vuoto
-        if filtered['missing_pop'].unique()== 'pop not found':
+        if 'pop not found' in list(filtered['missing_pop'].unique()):
             print('WARNING: "Population not found" ==> need to manually adjust the metadata manually')
             return []
         # Trova tutte le popolazioni che sono presenti in tutte le righe della colonna 'missing_pop'

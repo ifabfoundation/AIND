@@ -115,9 +115,11 @@ class DataCleaner:
         # filtyers the support file for the file_code
         support_file = self.support_file[self.support_file['file_code']==file_code]
         # selection of the unique variable present in both the df and the support file
-        support_list = support_file['variable_code'].unique()
+        support_list = list(support_file['variable_code'].unique())
         new_list = new_var + support_list
+        
         columns_to_keep = [x for x in new_list if x in list(df.columns) and x not in remove_var] 
+       
         # reduction of the the df to only selected variablees/columns
         df_new = df[columns_to_keep]
 
@@ -178,7 +180,7 @@ class DataCleaner:
                 df_patient_cleaned = df_patient
             # 4) Calcola VISIT_MONTH
             df_patient_cleaned = self._calculate_visit_month(
-                df_patient_cleaned, date_column, patient_id_column
+                df_patient_cleaned, date_column, patient_id_column, viscode_refernce
             )
 
             final_rows.append(df_patient_cleaned)
@@ -972,7 +974,7 @@ class DataCleaner:
             print("Nessun soggetto con una sola visita da rimuovere.")
             return df.copy()
         
-    def update_metadati_support(self, updated_support_file):
+    def update_metadati_support(self, updated_support_file): # HO DEI DUBBI pensavo servisse per le nuove variabili boh
         """
         Aggiorna il file di supporto con i metadati delle nuove variabili.
         """
@@ -987,6 +989,7 @@ class DataCleaner:
                 colonna = 'metadati_normalizzazione'
             else:
                 continue  # ignora chiavi non riconosciute
+
             for var in self.metadata_costum[key]:
                 #print('var: ', var, 'colonna: ', key)
                 # Trova la riga corrispondente alla variabile nel support_file
@@ -1048,6 +1051,18 @@ class DataCleaner:
             self.metadata_costum['norm_intervallo'] = [x for x in df.columns if x.split('/')[0] in norm_intervallo]
             self.metadata_costum['norm_volume'] = [x for x in df.columns if x.split('/')[0] in norm_volume]
             #print('scala', norm_scala, '\nintervallo', norm_intervallo)
+            if norm_scala or norm_intervallo:
+                # Estrazione altri metadata per la normalizzazione da un file Jaison
+                norm_metadata =  self.get_normalization_settings(df)
+                self.metadata_costum['norm_scale_value'] = norm_metadata
+            else:
+                self.metadata_costum['norm_scale_value'] = []
+            if norm_volume:
+                # Estrazione altri metadata per la normalizzazione di volumi da un file Jaison
+                volume_metadata = self.get_normalization_settings(df, file_name='volume_values_settings.json')
+                self.metadata_costum['volume_norm_values'] = volume_metadata
+            else:
+                self.metadata_costum['volume_norm_values'] = []
         else:
             print("Attenzione: la colonna 'metadati_normalizzazione' non è stata trovata.")
 
@@ -1107,7 +1122,8 @@ class DataCleaner:
                    'DX': [0, 1, 2]}
         
         # filtra le colonne in col_list che sono presenti nel df
-        col_list_new = [col for col in col_list if col in df.columns]
+        #col_list_new = [col for col in col_list if col in df.columns]  ##### fatto nel main quando viene chiamata la funzione, riprestinare nel cso si usasse la funzione in altro
+        col_list_new = col_list.copy()
         
         if col_list_new:
             for col in col_list_new:
