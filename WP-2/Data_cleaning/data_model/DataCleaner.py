@@ -15,6 +15,8 @@ def boolenaizer(support_file, column_list):
         )
     return support_file
 
+
+
 def update_variables_support_file(df, support_file, file_code, variable_col='variable_code'):
     """
     Aggiorna il file di supporto sincronizzandolo con le variabili presenti nel DataFrame.
@@ -34,6 +36,7 @@ def update_variables_support_file(df, support_file, file_code, variable_col='var
         
     Note:
         - Le variabili presenti nel DataFrame ma non nel support file vengono aggiunte con valori NaN
+        - Se le nuove variabili sono derivate da variabili presenti nel support file, i metadati vengono copiati dalla variabile di riferimento
         - Le variabili presenti nel support file ma non nel DataFrame vengono rimosse
         - La funzione mantiene l'ordine delle righe nel support file originale
     """
@@ -48,6 +51,7 @@ def update_variables_support_file(df, support_file, file_code, variable_col='var
     # Se ci sono variabili mancanti, aggiungile al support file (con valori NaN tranne variable_code e file_code)
     if missing_vars:
         #print(missing_vars)
+        #rows_to_add, support_file_filtered = rows_for_missing_variables(missing_vars, support_file_filtered, updated_support_file, file_code)
         rows = []
         for var in missing_vars:
             # crea una nuova riga indipendente con valori nulli per tutte le colonne del support file
@@ -56,18 +60,32 @@ def update_variables_support_file(df, support_file, file_code, variable_col='var
             new_row['orig_variable_code'] = np.nan
             new_row['variable_code'] = var
             new_row['file_code'] = file_code
+            # ottenere i metadati delle nuove variabili se derivate da variabili del support_file_filtered
+            # Estrai il prefisso della variabile (prima di '/' o '%')
+            var_prefix = var.split('/')[0].split('%')[0]
+            # Cerca se esiste una variabile nel support file che contiene il prefisso nel suo nome
+            matching_vars = support_file_filtered[support_file_filtered[variable_col].str.contains(var_prefix, na=False)]
+            if not matching_vars.empty:
+                # Prendi la prima variabile che corrisponde al prefisso
+                reference_var = matching_vars.iloc[0]
+                # Copia i metadati dalla variabile di riferimento
+                if 'metadati_fattori' in reference_var and pd.notna(reference_var['metadati_fattori']):
+                    new_row['metadati_fattori'] = reference_var['metadati_fattori']
+                if 'metadati_normalizzazione' in reference_var and pd.notna(reference_var['metadati_normalizzazione']):
+                    new_row['metadati_normalizzazione'] = reference_var['metadati_normalizzazione']
+            
             #print(new_row)
             rows.append(new_row)
                 
         rows_to_add = pd.DataFrame(rows)
         support_file_filtered = pd.concat([support_file_filtered, rows_to_add], ignore_index=True)
         # Ora aggiorna il support file originale con le nuove righe (solo se ci sono variabili mancanti)
+        # trovo l'indice a cui termina il file_code corrente nel support file originale
         index = support_file[support_file['file_code'] == file_code].index[-1]+1
-        #print('index: ', index)
-        # Rimuovi le righe del file_code corrente dal support file originale
+        # divisione del support file originale in due parti dopo l'indice trovato
         df_up = support_file.iloc[:index]
         df_down = support_file.iloc[index:]
-        # Aggiungi il support_file_filtered aggiornato
+        # Aggiungi il le nuove righe tra le due parti del support file originale ==> support file aggiornato
         updated_support_file = pd.concat([df_up, rows_to_add, df_down], ignore_index=True)
     
     # identificare le variabili extra nel support file
@@ -97,7 +115,16 @@ class DataCleaner:
             self.support_file = support_file
         else:
             print('Need to give as imput either the file path or the file its self')
-    
+
+
+    def get_file_code_metadata(self, file_name, prefix='raw'):
+        metadata = self.client.get_metadata(
+            object_name = prefix + '/' + file_name
+        )
+        metadata_costum = metadata['metadata']['custom']
+        # Get the file code
+        file_code = metadata_costum['file_code']
+        return file_code, metadata_costum
 
     def filter_variables(self, df, file_name, new_var=[], remove_var=[], prefix='raw'):
         '''
@@ -106,11 +133,7 @@ class DataCleaner:
         The file_code is extracted from the medatada of the file stored in the datalake.
         '''
         # get the metadata of the file from the data lake
-        metadata = self.client.get_metadata(
-            object_name = prefix + '/' + file_name
-        )
-        # extraction of the file_code from the metadata
-        file_code = metadata['metadata']['custom']['file_code']
+        file_code, metadata_costum = self.get_file_code_metadata(file_name, prefix)
 
         # filtyers the support file for the file_code
         support_file = self.support_file[self.support_file['file_code']==file_code]
@@ -125,7 +148,7 @@ class DataCleaner:
 
         return df_new
 
-    
+
     def segmentation_complete_filter(self, df, filter_col='STATUS'):
         '''
         Specific for imaging datasets - FreeSurfer.
@@ -912,13 +935,8 @@ class DataCleaner:
             pd.DataFrame: Il dataframe con le colonne rimosse.
         """
         # Step 1: trovare il codice del file dai metadati
-        metadata = self.client.get_metadata(
-            object_name = prefix + '/' + file_name
-        )
-        self.metadata_costum = metadata['metadata']['custom']
-        self.file_code = self.metadata_costum['file_code']
+        self.file_code, self.metadata_costum = self.get_file_code_metadata(file_name, prefix)
 
-            
         # Step 2: filtraggio file_supporto per il codice del file
         support_file_for_file = self.support_file[self.support_file['file_code'] == self.file_code]
 
@@ -974,7 +992,7 @@ class DataCleaner:
             print("Nessun soggetto con una sola visita da rimuovere.")
             return df.copy()
         
-    def update_metadati_support(self, updated_support_file): # HO DEI DUBBI pensavo servisse per le nuove variabili boh
+    def update_metadati_support(self, updated_support_file): 
         """
         Aggiorna il file di supporto con i metadati delle nuove variabili.
         """
@@ -986,6 +1004,7 @@ class DataCleaner:
             if key in ['cofattori', 'predittori']:
                 colonna = 'metadati_fattori'
             elif key in ['norm_scala', 'norm_intervallo', 'norm_volume']:
+                key = key.replace('norm_', '')
                 colonna = 'metadati_normalizzazione'
             else:
                 continue  # ignora chiavi non riconosciute
@@ -1016,11 +1035,7 @@ class DataCleaner:
             self.support_file = updated_support_file
         
         if file_name and prefix:
-            metadata = self.client.get_metadata(
-                object_name = prefix + '/' + file_name
-            )
-            self.file_code = metadata['metadata']['custom']['file_code']
-            self.metadata_costum = metadata['metadata']['custom']
+            self.file_code, self.metadata_costum = self.get_file_code_metadata(file_name, prefix)
         elif not hasattr(self, 'metadata_costum') or not self.metadata_costum:
             raise ValueError("L'attributo 'metadata_costum' non è stato impostato. Inserire come input il metadata_costum. Oppure eseguire prima una funzione come 'remove_param_few_subjects'.")
         if not hasattr(self, 'file_code') or not self.file_code:
@@ -1109,6 +1124,7 @@ class DataCleaner:
         return new_file_name
     
     def classes_to_dummies(self, df, col_list, prefix_step='/'):
+        # col_list è la lista di variabili da rendere dummies
         # classi per mappare il passaggio da classe int a classe stringa
         classes = {'GENDER':{0 :'female', 1 :'male'},
                    'MARRY':{1: 'married', 2:'divorced', 3: 'widowed', 0:'single'},
@@ -1121,8 +1137,7 @@ class DataCleaner:
                    'RACE': [0, 1, 2, 3, 4, 5],
                    'DX': [0, 1, 2]}
         
-        # filtra le colonne in col_list che sono presenti nel df
-        #col_list_new = [col for col in col_list if col in df.columns]  ##### fatto nel main quando viene chiamata la funzione, riprestinare nel cso si usasse la funzione in altro
+        # copia la lista di variabili da rendere booleane
         col_list_new = col_list.copy()
         
         if col_list_new:
@@ -1207,31 +1222,43 @@ class DataCleaner:
         
         return filtered_settings
 
-    def trasform_volums_as_ICV_percent(self, df: pd.DataFrame, ICV_column: str, volume_column: str) -> pd.DataFrame:
-        # Transform the volumes as ICV percentage
-        df[volume_column] = (df[volume_column] / df[ICV_column]) * 100
-        return df
-
-    def transform_volumes_as_ICV_percent(self, df: pd.DataFrame, file_name: str, prefix: str = 'raw') -> pd.DataFrame:
-        # Get the metadata for the file
-        metadata = self.client.get_metadata(
-            object_name = prefix + '/' + file_name
-        )
-        metadata_costum = metadata['metadata']['custom']
-        # Get the file code
-        file_code = metadata_costum['file_code']
-
+    
+    def get_volumes_total(self, df: pd.DataFrame, file_code: str, prefix: str = 'raw') -> pd.DataFrame:
         # Filter the support file for the current file code
         support_file_for_file = self.support_file[self.support_file['file_code'] == file_code]
         
         # Get the volumes columns
-        volumes_columns = support_file_for_file[support_file_for_file['metadati_normalizzazione'] == 'norm_volume']['variable_code'].tolist()
+        volume_original_columns = support_file_for_file[support_file_for_file['metadati_normalizzazione'] == 'volume']['variable_code'].tolist()
+        # lista di volumi già 'totali' quindi da tenere
+        volume_list = [x for x in volume_original_columns if x[0] not in ['R', 'L']]
+        # lista di volumi da sommare per ottenere il volume totale, la label però resta generica, seza R e L così da sapere già come nominare la nuova colonna
+        vol_tot_labels = list({x[1:] for x in volume_original_columns if x and x[0] in ["R","L"]})
+        # lista di volumi da rimuovere dal df
+        volumes_to_remove = []
+        for label in vol_tot_labels:
+            if ['R'+label, 'L'+label] in volume_original_columns:
+                df[label] = df['R'+label] + df['L'+label]
+                volume_list.append(label)
+                volumes_to_remove += ['R'+label,'L'+label]
+        
+        # rimozione dei volumi da rimuovere dal df
+        df_processed = df.drop(columns=volumes_to_remove)
 
+        return df_processed, volume_list
+    
+    
+    def to_ICV_percentage(self, df: pd.DataFrame, ICV_column: str, volume_column: str) -> pd.DataFrame:         # messa direttamente dentro alla funzione transform_volumes_as_ICV_percent# Ho cambiato il nome per evitare confusione con la funzione transform_volumes_as_ICV_percent
         # Transform the volumes as ICV percentage
-        if len(volumes_columns) > 0:
+        df[volume_column] = (df[volume_column] / df[ICV_column]) * 100
+        return df
+
+    def transform_volumes_as_ICV_percent(self, df: pd.DataFrame, volume_list: list, file_code: str) -> pd.DataFrame:
+        volumes_columns = [x for x in volume_list if x in df.columns]
+        # Transform the volumes as ICV percentage
+        if len(volumes_columns) > 0 and 'ICV' in df.columns:
             for col in volumes_columns:
-                df = self.trasform_volums_as_ICV_percent(df, ICV_column='ICV', volume_column=col)
+                df[col] = (df[col] / df['ICV']) * 100
         else:
             print(f"No volumes columns found for file code {file_code}")
 
-        return df, file_code, metadata_costum
+        return df
