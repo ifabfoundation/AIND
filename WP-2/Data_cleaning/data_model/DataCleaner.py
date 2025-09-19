@@ -7,13 +7,6 @@ import os
 from dateutil.relativedelta import relativedelta
 from dl_client import DatalakeClient
 
-def boolenaizer(support_file, column_list):
-    for flag_col in column_list:
-        # se non tutti i valori sono boleani allora si assicura che vengano trasformati in Boleani
-        support_file[flag_col] = support_file[flag_col].apply(
-            lambda x: np.nan if pd.isna(x) else str(x).strip().lower() in ['true', '1', '1.0']
-        )
-    return support_file
 
 
 
@@ -116,16 +109,13 @@ class DataCleaner:
         self.client = DatalakeClient()
         if support_file_path:
             self.support_file = pd.read_excel(support_file_path)
-            self.support_file['del'] = self.support_file['del'].astype(bool)
         elif not support_file.empty:
             self.support_file = support_file
-            self.support_file['del'] = self.support_file['del'].astype(bool)
         else:
             print('Need to give as imput either the file path or the file its self')
 
     def update_self_support_file(self, support_file):
         self.support_file = support_file
-        self.support_file['del'] = self.support_file['del'].astype(bool)
         return self.support_file
 
     def get_file_code_metadata(self, file_name, prefix='raw'):
@@ -956,11 +946,7 @@ class DataCleaner:
             print(f"Attenzione: la colonna '{flag_col}' non è presente nel file di supporto per il file_code '{self.file_code}'. Nessuna colonna verrà rimossa.")
             return df
         
-        # Verifica che tutti i valori della colonna flag_col siano booleani, altrimenti li converte
-        if not support_file_for_file[flag_col].dropna().map(lambda x: isinstance(x, bool)).all():
-            support_file_for_file = boolenaizer(support_file_for_file, column_list=[flag_col])
-        
-        variables_to_remove = support_file_for_file[support_file_for_file[flag_col] == True]['variable_code'].tolist()
+        variables_to_remove = support_file_for_file[support_file_for_file[flag_col] == 'drop']['variable_code'].tolist()
 
         # Step 4: rimuovere dal df dato in input le colonne che corrispondono alle stringhe della lista appena creata
         df_cleaned = df.drop(columns=[col for col in variables_to_remove if col in df.columns], errors='ignore')
@@ -1077,15 +1063,20 @@ class DataCleaner:
             self.metadata_costum['norm_volume'] = [x for x in df.columns if x.split('/')[0] in norm_volume]
             #print('scala', norm_scala, '\nintervallo', norm_intervallo)
             if norm_scala or norm_intervallo:
+                print('entro in scala o intervallo')
                 # Estrazione altri metadata per la normalizzazione da un file Jaison
                 norm_metadata =  self.get_normalization_settings(df)
                 self.metadata_costum['norm_scale_value'] = norm_metadata
+                print('norm_metadata', norm_metadata)
             else:
                 self.metadata_costum['norm_scale_value'] = []
+            print('norm_volume', norm_volume)
             if norm_volume:
+                print('entro in volume')
                 # Estrazione altri metadata per la normalizzazione di volumi da un file Jaison
                 volume_metadata = self.get_normalization_settings(df, file_name='volume_values_settings.json')
                 self.metadata_costum['volume_norm_values'] = volume_metadata
+                print('volume_metadata', volume_metadata)
             else:
                 self.metadata_costum['volume_norm_values'] = []
         else:
@@ -1233,24 +1224,29 @@ class DataCleaner:
         return filtered_settings
 
     
-    def get_volumes_total(self, df: pd.DataFrame, file_code: str, prefix: str = 'raw') -> pd.DataFrame:
+    def get_volumes_total(self, df: pd.DataFrame, file_code: str) -> pd.DataFrame:
         # Filter the support file for the current file code
         support_file_for_file = self.support_file[self.support_file['file_code'] == file_code]
-        
         # Get the volumes columns
         volume_original_columns = support_file_for_file[support_file_for_file['metadati_normalizzazione'] == 'volume']['variable_code'].tolist()
+        
         # lista di volumi già 'totali' quindi da tenere
         volume_list = [x for x in volume_original_columns if x[0] not in ['R', 'L']]
+        
         # lista di volumi da sommare per ottenere il volume totale, la label però resta generica, seza R e L così da sapere già come nominare la nuova colonna
         vol_tot_labels = list({x[1:] for x in volume_original_columns if x and x[0] in ["R","L"]})
+        
         # lista di volumi da rimuovere dal df
         volumes_to_remove = []
         for label in vol_tot_labels:
-            if ['R'+label, 'L'+label] in volume_original_columns:
+            # verifica che entrambi i volumi R e L siano presenti nel df
+            if 'R'+label in volume_original_columns and 'L'+label in volume_original_columns:
+                # somma i due volumi per ottenere il volume totale
                 df[label] = df['R'+label] + df['L'+label]
                 volume_list.append(label)
                 volumes_to_remove += ['R'+label,'L'+label]
-        
+            else:
+                print(f"Attenzione: per il file_code {file_code} non sono presenti entrambi i volumi R e L per la label {label}.")
         # rimozione dei volumi da rimuovere dal df
         df_processed = df.drop(columns=volumes_to_remove)
 
@@ -1268,6 +1264,8 @@ class DataCleaner:
         if len(volumes_columns) > 0 and 'ICV' in df.columns:
             for col in volumes_columns:
                 df[col+'%ICV'] = (df[col] / df['ICV']) * 100
+            # Rimuovi le colonne originali dei volumi in mm3
+            df = df.drop(columns=volumes_columns)
         else:
             print(f"No volumes columns found for file code {file_code}")
 

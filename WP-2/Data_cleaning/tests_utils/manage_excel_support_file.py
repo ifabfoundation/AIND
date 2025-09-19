@@ -26,7 +26,6 @@ def create_new_support_file(support_file, support_file_path, new_name=None, rena
     aggiunto all'inizio del nome del file.
     """
     support_file = support_file.copy(deep=True)
-    support_file['del'] = support_file['del'].astype(bool)
     new_support_file = support_file.copy(deep=True)
     
     # Trova la posizione della colonna 'variable_code'
@@ -184,7 +183,7 @@ class InfoSupportFile:
                             'valid_values': None,
                             'missing_values': None,
                             'missing_pop': None,
-                            'del': False,
+                            'del': 'keep',
                         })
                         support_file_new = pd.concat([
                             self.support_file.iloc[:index],
@@ -291,12 +290,12 @@ class InfoSupportFile:
         
         if n_tot > 0:
             if n_valid / n_tot <= 0.65:
-                self.support_file['del'][index] = 'True'
+                self.support_file['del'][index] = 'drop'
             else:
-                self.support_file['del'][index] = 'False'
+                self.support_file['del'][index] = 'keep'
         else:
             # Se n_tot è 0, la colonna è vuota, quindi la marchiamo per l'eliminazione
-            self.support_file['del'][index] = 'True'
+            self.support_file['del'][index] = 'drop'
             print('usata scappatoia')
 
         return self.support_file
