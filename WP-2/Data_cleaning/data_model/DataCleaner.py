@@ -44,10 +44,10 @@ def update_variables_support_file(df, support_file, file_code, variable_col='var
     updated_support_file = support_file.copy()
     
     # Filtra il support file per il file_code specificato
-    support_file_filtered = support_file[support_file['file_code'] == file_code]
+    support_file_filtered = updated_support_file[updated_support_file['file_code'] == file_code]
     # Trova le variabili del df che mancano nel support file filtrato
     missing_vars = [col for col in df.columns if col not in support_file_filtered[variable_col].values]
-    #print('missing_vars: ', missing_vars)
+
     # Se ci sono variabili mancanti, aggiungile al support file (con valori NaN tranne variable_code e file_code)
     if missing_vars:
         #print(missing_vars)
@@ -65,26 +65,30 @@ def update_variables_support_file(df, support_file, file_code, variable_col='var
             var_prefix = var.split('/')[0].split('%')[0]
             # Cerca se esiste una variabile nel support file che contiene il prefisso nel suo nome
             matching_vars = support_file_filtered[support_file_filtered[variable_col].str.contains(var_prefix, na=False)]
+            #print('var_prefix: ', var_prefix)
+            #print('matching_vars: ', matching_vars[variable_col].tolist())
             if not matching_vars.empty:
                 # Prendi la prima variabile che corrisponde al prefisso
                 reference_var = matching_vars.iloc[0]
+                new_row['parameter'] = reference_var['parameter']
+                new_row['orig_variable_code'] = matching_vars['orig_variable_code'].tolist()
+
                 # Copia i metadati dalla variabile di riferimento
                 if 'metadati_fattori' in reference_var and pd.notna(reference_var['metadati_fattori']):
                     new_row['metadati_fattori'] = reference_var['metadati_fattori']
                 if 'metadati_normalizzazione' in reference_var and pd.notna(reference_var['metadati_normalizzazione']):
                     new_row['metadati_normalizzazione'] = reference_var['metadati_normalizzazione']
-            
-            #print(new_row)
+                
             rows.append(new_row)
                 
         rows_to_add = pd.DataFrame(rows)
         support_file_filtered = pd.concat([support_file_filtered, rows_to_add], ignore_index=True)
         # Ora aggiorna il support file originale con le nuove righe (solo se ci sono variabili mancanti)
         # trovo l'indice a cui termina il file_code corrente nel support file originale
-        index = support_file[support_file['file_code'] == file_code].index[-1]+1
+        index = updated_support_file[updated_support_file['file_code'] == file_code].index[-1]+1
         # divisione del support file originale in due parti dopo l'indice trovato
-        df_up = support_file.iloc[:index]
-        df_down = support_file.iloc[index:]
+        df_up = updated_support_file.iloc[:index]
+        df_down = updated_support_file.iloc[index:]
         # Aggiungi il le nuove righe tra le due parti del support file originale ==> support file aggiornato
         updated_support_file = pd.concat([df_up, rows_to_add, df_down], ignore_index=True)
     
@@ -105,17 +109,24 @@ def update_variables_support_file(df, support_file, file_code, variable_col='var
 
     return updated_support_file
 
+    
 
 class DataCleaner:
     def __init__(self, support_file_path=None, support_file=pd.DataFrame()):
         self.client = DatalakeClient()
         if support_file_path:
             self.support_file = pd.read_excel(support_file_path)
+            self.support_file['del'] = self.support_file['del'].astype(bool)
         elif not support_file.empty:
             self.support_file = support_file
+            self.support_file['del'] = self.support_file['del'].astype(bool)
         else:
             print('Need to give as imput either the file path or the file its self')
 
+    def update_self_support_file(self, support_file):
+        self.support_file = support_file
+        self.support_file['del'] = self.support_file['del'].astype(bool)
+        return self.support_file
 
     def get_file_code_metadata(self, file_name, prefix='raw'):
         metadata = self.client.get_metadata(
@@ -950,7 +961,6 @@ class DataCleaner:
             support_file_for_file = boolenaizer(support_file_for_file, column_list=[flag_col])
         
         variables_to_remove = support_file_for_file[support_file_for_file[flag_col] == True]['variable_code'].tolist()
-        #print('variable removed',variables_to_remove)
 
         # Step 4: rimuovere dal df dato in input le colonne che corrispondono alle stringhe della lista appena creata
         df_cleaned = df.drop(columns=[col for col in variables_to_remove if col in df.columns], errors='ignore')
@@ -1031,7 +1041,7 @@ class DataCleaner:
         norm_scala = []
         norm_intervallo = []
         norm_volume = []
-        if updated_support_file:
+        if updated_support_file is not None:
             self.support_file = updated_support_file
         
         if file_name and prefix:
@@ -1257,7 +1267,7 @@ class DataCleaner:
         # Transform the volumes as ICV percentage
         if len(volumes_columns) > 0 and 'ICV' in df.columns:
             for col in volumes_columns:
-                df[col] = (df[col] / df['ICV']) * 100
+                df[col+'%ICV'] = (df[col] / df['ICV']) * 100
         else:
             print(f"No volumes columns found for file code {file_code}")
 

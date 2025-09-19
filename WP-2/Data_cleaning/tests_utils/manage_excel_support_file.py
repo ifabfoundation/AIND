@@ -25,6 +25,8 @@ def create_new_support_file(support_file, support_file_path, new_name=None, rena
     Il nuovo file viene salvato nella stessa directory dell'originale, con 'new_' 
     aggiunto all'inizio del nome del file.
     """
+    support_file = support_file.copy(deep=True)
+    support_file['del'] = support_file['del'].astype(bool)
     new_support_file = support_file.copy(deep=True)
     
     # Trova la posizione della colonna 'variable_code'
