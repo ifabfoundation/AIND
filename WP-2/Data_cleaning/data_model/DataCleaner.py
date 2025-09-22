@@ -939,7 +939,7 @@ class DataCleaner:
         self.file_code, self.metadata_costum = self.get_file_code_metadata(file_name, prefix)
 
         # Step 2: filtraggio file_supporto per il codice del file
-        support_file_for_file = self.support_file[self.support_file['file_code'] == self.file_code]
+        support_file_for_file = self.support_file[self.support_file['file_code'] == self.file_code].copy(deep=True)
 
         # Step 3: in questo sottogruppo identificare i variable_code che hanno True nella colonna specificata
         if flag_col not in support_file_for_file.columns:
@@ -1028,8 +1028,11 @@ class DataCleaner:
         norm_intervallo = []
         norm_volume = []
         if updated_support_file is not None:
+            #print('in EXTRACT_METADATA_FROM_SUPPORT il self.support_file è stato aggiornato')
             self.support_file = updated_support_file
-        
+        #else:
+            #print('in EXTRACT_METADATA_FROM_SUPPORT il self.support_file non è stato aggiornato')
+
         if file_name and prefix:
             self.file_code, self.metadata_costum = self.get_file_code_metadata(file_name, prefix)
         elif not hasattr(self, 'metadata_costum') or not self.metadata_costum:
@@ -1038,7 +1041,7 @@ class DataCleaner:
             raise ValueError("L'attributo 'file_code' non è stato impostato. Inserire come input il file_code. Oppure eseguire prima una funzione come 'remove_param_few_subjects'.")
 
         # 1. Filtraggio file supporto sulla base del file_code
-        support_filtered = self.support_file[self.support_file['file_code'] == self.file_code]
+        support_filtered = self.support_file[self.support_file['file_code'] == self.file_code].copy(deep=True)
 
         if support_filtered.empty:
             print(f"Attenzione: nessun dato trovato nel file di supporto per il file_code '{self.file_code}'.")
@@ -1048,8 +1051,8 @@ class DataCleaner:
         if 'metadati_fattori' in support_filtered.columns:
             cofattori = support_filtered[support_filtered['metadati_fattori']=='cofattore']['variable_code'].tolist()
             predittori = support_filtered[support_filtered['metadati_fattori']=='predittore']['variable_code'].tolist()
-            self.metadata_costum['cofattori'] = [x for x in df.columns if x.split('/')[0] in cofattori]
-            self.metadata_costum['predittori'] = [x for x in df.columns if x.split('/')[0] in predittori]
+            self.metadata_costum['cofattori'] = cofattori                   #[x for x in df.columns if x.split('/')[0] in cofattori]
+            self.metadata_costum['predittori'] = predittori 
             #print('cofattori', cofattori, '\npredittori', predittori)
         else:
             print("Attenzione: la colonna 'metadati_fattori' non è stata trovata.")
@@ -1058,25 +1061,25 @@ class DataCleaner:
             norm_scala = support_filtered[support_filtered['metadati_normalizzazione']=='scala']['variable_code'].tolist()
             norm_intervallo = support_filtered[support_filtered['metadati_normalizzazione']=='intervallo']['variable_code'].tolist()
             norm_volume = support_filtered[support_filtered['metadati_normalizzazione']=='volume']['variable_code'].tolist()
-            self.metadata_costum['norm_scala'] = [x for x in df.columns if x.split('/')[0] in norm_scala]
-            self.metadata_costum['norm_intervallo'] = [x for x in df.columns if x.split('/')[0] in norm_intervallo]
-            self.metadata_costum['norm_volume'] = [x for x in df.columns if x.split('/')[0] in norm_volume]
+            self.metadata_costum['norm_scala'] = norm_scala
+            self.metadata_costum['norm_intervallo'] = norm_intervallo
+            self.metadata_costum['norm_volume'] = norm_volume
             #print('scala', norm_scala, '\nintervallo', norm_intervallo)
             if norm_scala or norm_intervallo:
-                print('entro in scala o intervallo')
+                #print('entro in scala o intervallo')
                 # Estrazione altri metadata per la normalizzazione da un file Jaison
                 norm_metadata =  self.get_normalization_settings(df)
                 self.metadata_costum['norm_scale_value'] = norm_metadata
-                print('norm_metadata', norm_metadata)
+                #print('norm_metadata', norm_metadata)
             else:
                 self.metadata_costum['norm_scale_value'] = []
-            print('norm_volume', norm_volume)
+            #print('norm_volume', norm_volume)
             if norm_volume:
-                print('entro in volume')
+                #print('entro in volume')
                 # Estrazione altri metadata per la normalizzazione di volumi da un file Jaison
                 volume_metadata = self.get_normalization_settings(df, file_name='volume_values_settings.json')
                 self.metadata_costum['volume_norm_values'] = volume_metadata
-                print('volume_metadata', volume_metadata)
+                #print('volume_metadata', volume_metadata)
             else:
                 self.metadata_costum['volume_norm_values'] = []
         else:
