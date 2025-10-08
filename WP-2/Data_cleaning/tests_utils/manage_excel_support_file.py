@@ -58,13 +58,16 @@ def create_new_support_file(support_file, support_file_path, new_name=None, rena
 
     save_df(new_support_file, new_output_path)     # si può rimuovere il return quando si vede che funziona in quanto mi interessa poi aprire l'excel inserire i nuovi nomi delle variabili
 
-def update_new_support_file(support_file, new_support_file_name):
+def update_new_support_file(support_file, new_support_file_name, processed_file=[]):
     """
     Aggiorna il file di supporto con i nuovi file
     """
     support = support_file.copy(deep=True)
     new_support_file = pd.read_excel(new_support_file_name+'.xlsx')
+    #file_code nuovi, presenti nel support file originale ma non nel nuovo support file
     new_file_code = [x for x in support['file_code'].unique() if x not in new_support_file['file_code'].unique()]
+    #filecode già presenti ma da riprocessare
+    to_restore = [x for x in processed_file if x in new_support_file['file_code'].unique()]
 
     # sezione del file originale di supporto da aggiungere al nuovo support file, in base ai file_code nuovi
     section_to_add = support[support['file_code'].isin(new_file_code)]
@@ -78,6 +81,32 @@ def update_new_support_file(support_file, new_support_file_name):
     # aggiunge la sezione al nuovo support file
     new_support_file = pd.concat([new_support_file, section_to_add], ignore_index=True)
     print(f'The {new_support_file_name} file has been updated with the new file_code: {new_file_code}\nOpen the file and verify it, if needed update the variables names and metadata')
+    
+    # se però sto rièorcessando un file di cui avevo gìà preso informazioni allora porto allo stato precedente le variabili per quel file
+    if to_restore:
+        s1 = new_support_file.loc[new_support_file['file_code']==to_restore[0], 'variable_code']
+        s2 = support.loc[support['file_code']==to_restore[0], 'variable_code']
+        code_restored = []
+        for file_code in to_restore:
+            if not s1.equals(s2):
+                code_restored.append(file_code)
+                # trova sezione del support file originale per il file_code corrente
+                reprocessed_file = support[support['file_code']== file_code]
+                for col in cols_to_empty:
+                    if col in reprocessed_file.columns:
+                        reprocessed_file[col] = np.nan
+                # trova gli indici per dividere il new support file originale in due parti e quindi reinserire la sezione del support file originale tra le due parti
+                index_up = new_support_file[new_support_file['file_code'] == file_code].index[0]
+                index_down = new_support_file[new_support_file['file_code'] == file_code].index[-1]+1
+                # divisione del support file originale in due parti dopo l'indice trovato
+                df_up = new_support_file.iloc[:index_up]
+                df_down = new_support_file.iloc[index_down:]
+                # Aggiungi il le nuove righe tra le due parti del support file originale ==> support file aggiornato
+                new_support_file = pd.concat([df_up, reprocessed_file, df_down], ignore_index=True)
+        print(f'The {new_support_file_name} file has restored the previous information of the file_code: {code_restored}\nOpen the file and verify it, if needed update the variables names and metadata')
+    
+
+    
 
     save_df(new_support_file, new_support_file_name)
 
