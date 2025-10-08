@@ -155,8 +155,18 @@ class DataCleaner:
         Specific for imaging datasets - FreeSurfer.
         This function filters the dataframe based on the value of the filter_col.
         '''
-        print('Segmentation Status: \n', df[filter_col].value_counts())
-        return df[df[filter_col] == 'complete'].reset_index(drop=True)
+        print('Segmentation Status: \n', df[filter_col].value_counts(), '\n', type(df[filter_col].unique()[0]))
+        return df[df[filter_col].isin(['complete', 1]) ].reset_index(drop=True)
+    
+    def convert_qcpass_values(self, df, col_name='QCPASS'):
+        '''
+        Converte i valori della colonna QCPASS da numerici a stringhe:
+        - 1 diventa 'complete'
+        - 0 diventa 'partial'
+        '''
+        df_copy = df.copy()
+        df_copy[col_name] = df_copy[col_name].map({1: 'complete', 0: 'partial'})
+        return df_copy
     
     def find_exam_code(self, df, date_column = 'EXAMDATE', viscode_refernce = 'VISCODE', patient_id_column = 'RID', essential_variables: list = []):
         '''
@@ -1206,7 +1216,11 @@ class DataCleaner:
         
         # Filter normalization settings to include only columns present in the dataframe
         filtered_settings = {key: value for key, value in normalization_settings.items() if key in df_columns}
-        
+        # se il file è volume_values_settings.json e contiene volumi laterali, rimuove i "doppioni" mantenendo solo il lato sinistro (L) come riferimento.
+        if file_name == 'volume_values_settings.json' and any(x[0] in ("R", "L") for x in filtered_settings):       ### ELIMIARE se si vogliono tenere i volumi laterali R e L
+            filtered_settings = {key: value for key, value in filtered_settings.items() if key[0] != 'R'}           ### ELIMIARE se si vogliono tenere i volumi laterali R e L
+            
+
         # Handle additional scales if provided
         if additional_scales is not None:
             # Add new scales to the filtered settings
