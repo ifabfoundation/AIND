@@ -184,60 +184,113 @@ class Downloader():
                     try:
                         population_data = pd.read_csv(population_csv_path, sep=';')
                         # Validate that the CSV has the required columns
-                        if 'file_code' not in population_data.columns or 'population' not in population_data.columns:
-                            print("Warning: population CSV should contain 'file_code' and 'population' columns")
+                        if 'file_name' not in population_data.columns or 'file_code' not in population_data.columns or 'population' not in population_data.columns:
+                            print("\nWarning: population CSV should contain 'file_name', 'file_code' and 'population' columns")
                             population_data = None
                     except Exception as e:
-                        print(f"Error reading population CSV: {e}")
+                        print(f"\nError: reading population CSV: {e}")
                         population_data = None
                 
                 if extract_and_upload_individual_files:
-                    # Create a temporary directory to extract files
-                    with tempfile.TemporaryDirectory() as temp_dir:
-                        # Save ZIP content to a temporary file
-                        temp_zip_path = os.path.join(temp_dir, "temp.zip")
-                        with open(temp_zip_path, "wb") as zip_file:
-                            zip_file.write(response.content)
-                        
-                        # Extract all files to the temporary directory
-                        with zipfile.ZipFile(temp_zip_path, 'r') as zip_ref:
-                            extract_dir = os.path.join(temp_dir, "extracted")
-                            os.makedirs(extract_dir, exist_ok=True)
-                            zip_ref.extractall(extract_dir)
-                        
-                        # Upload each file individually
-                        upload_results = []
-                        
-                        # Walk through all files in the extracted directory
-                        for root, _, files in os.walk(extract_dir):
-                            for filename in files:
-                                file_path = os.path.join(root, filename)
-                                relative_path = os.path.relpath(file_path, extract_dir)
-                                
-                                # Prepare metadata for this specific file
-                                file_metadata = base_metadata.copy()
-                                
-                                # Check if the filename contains any of the file_codes and add population metadata if it does
-                                if population_data is not None:
-                                    for _, row in population_data.iterrows():
-                                        file_code = str(row['file_code'])
-                                        if file_code and file_code in filename:
-                                            file_metadata['file_code'] = file_code
-                                            if pd.notna(row['population']):
-                                                file_metadata['population'] = row['population'].split(',')
-                                                print(f"Added population={row['population']} to metadata for file {filename}")
-                                            break
-                                
-                                # Upload the file
-                                result = self.datalake_client.upload_file(
-                                    file_path=file_path,
-                                    metadata=file_metadata,
-                                    prefix='raw'
-                                )
-                                upload_results.append(result)
-                                print(f"Uploaded file {relative_path} to datalake with ID: {result.get('metadata_id')}")
-                        
-                        return upload_results
+                    # Check if response is a ZIP file or a single file
+                    is_single_file = len(file_ids) == 1 or not download_link.endswith('.zip')
+
+                    if is_single_file:
+                        # Single file case - no extraction needed
+                        with tempfile.TemporaryDirectory() as temp_dir:
+                            # Extract filename from download_link
+                            filename = download_link.split('/')[-1]
+
+                            # Save file to temporary location
+                            temp_file_path = os.path.join(temp_dir, filename)
+                            with open(temp_file_path, "wb") as f:
+                                f.write(response.content)
+
+                            # Prepare metadata for this specific file
+                            file_metadata = base_metadata.copy()
+
+                            # Check if the filename contains any of the file_names and add population metadata if it does
+                            match_found = False
+                            if population_data is not None:
+                                for _, row in population_data.iterrows():
+                                    file_name_csv = str(row['file_name'])
+                                    if file_name_csv and file_name_csv in filename:
+                                        match_found = True
+                                        file_metadata['file_code'] = str(row['file_code'])
+                                        if pd.notna(row['population']):
+                                            file_metadata['population'] = row['population'].split(',')
+                                            print(f"\nMessage: Added population={row['population']} to metadata for file {filename}")
+                                        break
+
+                                # If no match found, skip this file
+                                if not match_found:
+                                    print(f"\nWarning: File {filename} skipped: no matching file_name found in CSV")
+                                    return []
+
+                            # Upload the file
+                            result = self.datalake_client.upload_file(
+                                file_path=temp_file_path,
+                                metadata=file_metadata,
+                                prefix='raw'
+                            )
+                            print(f"\nMessage: Uploaded file {filename} to datalake with file code: {file_metadata.get('file_code', 'N/A')}")
+                            return [result]
+
+                    else:
+                        # ZIP file case - extract and upload individual files
+                        # Create a temporary directory to extract files
+                        with tempfile.TemporaryDirectory() as temp_dir:
+                            # Save ZIP content to a temporary file
+                            temp_zip_path = os.path.join(temp_dir, "temp.zip")
+                            with open(temp_zip_path, "wb") as zip_file:
+                                zip_file.write(response.content)
+
+                            # Extract all files to the temporary directory
+                            with zipfile.ZipFile(temp_zip_path, 'r') as zip_ref:
+                                extract_dir = os.path.join(temp_dir, "extracted")
+                                os.makedirs(extract_dir, exist_ok=True)
+                                zip_ref.extractall(extract_dir)
+
+                            # Upload each file individually
+                            upload_results = []
+
+                            # Walk through all files in the extracted directory
+                            for root, _, files in os.walk(extract_dir):
+                                for filename in files:
+                                    file_path = os.path.join(root, filename)
+                                    relative_path = os.path.relpath(file_path, extract_dir)
+
+                                    # Prepare metadata for this specific file
+                                    file_metadata = base_metadata.copy()
+
+                                    # Check if the filename contains any of the file_names and add population metadata if it does
+                                    match_found = False
+                                    if population_data is not None:
+                                        for _, row in population_data.iterrows():
+                                            file_name_csv = str(row['file_name'])
+                                            if file_name_csv and file_name_csv in filename:
+                                                match_found = True
+                                                file_metadata['file_code'] = str(row['file_code'])
+                                                if pd.notna(row['population']):
+                                                    file_metadata['population'] = row['population'].split(',')
+                                                    print(f"\nMessage: Added population={row['population']} to metadata for file {filename}")
+                                                break
+
+                                        # If no match found, skip this file
+                                        if not match_found:
+                                            print(f"\nWarning: File {filename} skipped: no matching file_name found in CSV")
+                                            continue
+
+                                    # Upload the file
+                                    result = self.datalake_client.upload_file(
+                                        file_path=file_path,
+                                        metadata=file_metadata,
+                                        prefix='raw'
+                                    )
+                                    upload_results.append(result)
+                                    print(f"\nMessage: Uploaded file {relative_path} to datalake with file code: {file_metadata.get('file_code', 'N/A')}")
+
+                            return upload_results
                 else:
                     # Upload the entire ZIP file
                     
@@ -257,15 +310,15 @@ class Downloader():
                         # Clean up the temporary file
                         if os.path.exists(temp_path):
                             os.unlink(temp_path)
-                
-                print(f"File uploaded to datalake with ID: {result.get('metadata_id')}")
+
+                print(f"\nMessage: File zip uploaded to datalake")
                 return result
             else:
                 # Save ZIP in binary mode locally
                 with open(download_path, "wb") as file:
                     for chunk in response.iter_content(chunk_size=1024):
                         file.write(chunk)
-                print("File saved locally")
+                print("\nMessage: File saved locally")
         else:
-            print(f"There is a problem! HTTP status code: {response.status_code}")
+            print(f"\nError: There is a problem! HTTP status code: {response.status_code}")
             return None
