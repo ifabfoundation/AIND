@@ -218,7 +218,7 @@ class Downloader():
                                         match_found = True
                                         file_metadata['file_code'] = str(row['file_code'])
                                         if pd.notna(row['population']):
-                                            file_metadata['population'] = row['population'].split(',')
+                                            file_metadata['population'] = str(row['population']).split(',')
                                             print(f"\nMessage: Added population={row['population']} to metadata for file {filename}")
                                         break
 
@@ -272,7 +272,7 @@ class Downloader():
                                                 match_found = True
                                                 file_metadata['file_code'] = str(row['file_code'])
                                                 if pd.notna(row['population']):
-                                                    file_metadata['population'] = row['population'].split(',')
+                                                    file_metadata['population'] = str(row['population']).split(',')
                                                     print(f"\nMessage: Added population={row['population']} to metadata for file {filename}")
                                                 break
 
