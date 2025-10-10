@@ -1,5 +1,0 @@
-pandas==1.5.3
-numpy==1.26.4
-matplotlib==3.9.2
-seaborn==0.13.2
-leaspy==1.5.0
