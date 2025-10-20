@@ -94,7 +94,7 @@ mv /mnt/c/Users/key_name.pem ~/.ssh/   (if the key is the User Windows folder)
 chmod 600 ~/.ssh/key_name.pem
 ```
 
-### 2. Connect to the Loghin node
+### 2. Connect to the Login node
 Connect to the login node of the HPC environment through SSH command (<ROLE> is your institute, so sostitute it with the appropriate one among POLIBA / UNINA / IFAB):
 ```bash
 ssh -i ~/.ssh/key_name.pem <ROLE>@131.175.204.159
