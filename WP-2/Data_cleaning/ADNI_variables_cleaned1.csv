@@ -253,12 +253,46 @@ UCSF - Cross-Sectional FreeSurfer (6.0) [ADNI3],UCSFFSX6,Visit,,VISIT_MONTH,,<cl
 "UCSF - Longitudinal FreeSurfer (FreeSurfer Version 5.1) - Year 1 Base Image [ADNIGO,2]",UCSFFSL51Y1,Volume,ST88SV,RHippocampus,mm3,<class 'numpy.int64'>,,"5403.0, 1575.0",1356.0,0.0,"ADNI1, ADNI3, ADNI4",keep,predittore,volume
 "UCSF - Longitudinal FreeSurfer (FreeSurfer Version 5.1) - Year 1 Base Image [ADNIGO,2]",UCSFFSL51Y1,Volume,ST99CV,RMidTemp,mm3,<class 'numpy.int64'>,,"15752.0, 5044.0",1356.0,0.0,"ADNI1, ADNI3, ADNI4",keep,predittore,volume
 "UCSF - Longitudinal FreeSurfer (FreeSurfer Version 5.1) - Year 1 Base Image [ADNIGO,2]",UCSFFSL51Y1,Visit,,VISIT_MONTH,,<class 'numpy.int64'>,,"17.0, 0.0",1356.0,0.0,"ADNI1, ADNI3, ADNI4",keep,,
-UCSD - Derived Volumes [ADNI1],UCSDVOL,ID,RID,RID,,<class 'numpy.int64'>,None,"1435.0, 2.0",2597.0,0.0,pop not found,keep,,
-UCSD - Derived Volumes [ADNI1],UCSDVOL,Visit,EXAMDATE,EXAMDATE,,<class 'datetime.date'>,None,None,2597.0,0.0,pop not found,keep,,
-UCSD - Derived Volumes [ADNI1],UCSDVOL,Other,QCPASS,STATUS,,<class 'str'>,complete,None,2597.0,0.0,pop not found,keep,,
-UCSD - Derived Volumes [ADNI1],UCSDVOL,Volume,BRAIN,Brain,mm3,<class 'numpy.int64'>,None,"1361820.0, 644907.0",2597.0,0.0,pop not found,keep,predittore,volume
-UCSD - Derived Volumes [ADNI1],UCSDVOL,Volume,EICV,ICV,mm3,<class 'numpy.int64'>,None,"1951440.0, 1066310.0",2597.0,0.0,pop not found,keep,predittore,volume
-UCSD - Derived Volumes [ADNI1],UCSDVOL,Volume,VENTRICLES,Ventricles,mm3,<class 'numpy.float64'>,None,"156743.0, 7552.46",2597.0,0.0,pop not found,keep,predittore,volume
-UCSD - Derived Volumes [ADNI1],UCSDVOL,Volume,LHIPPOC,LHippocampus,mm3,<class 'numpy.float64'>,None,"5514.94, 1443.0",2597.0,0.0,pop not found,keep,predittore,volume
-UCSD - Derived Volumes [ADNI1],UCSDVOL,Volume,RHIPPOC,RHippocampus,mm3,<class 'numpy.float64'>,None,"5750.4, 1403.57",2597.0,0.0,pop not found,keep,predittore,volume
-UCSD - Derived Volumes [ADNI1],UCSDVOL,,,VISIT_MONTH,,<class 'numpy.int64'>,None,"42.0, 0.0",2597.0,0.0,pop not found,keep,,
+UCSD - Derived Volumes [ADNI1],UCSDVOL,ID,RID,RID,,<class 'numpy.int64'>,,"1435.0, 2.0",2597.0,0.0,pop not found,keep,,
+UCSD - Derived Volumes [ADNI1],UCSDVOL,Visit,EXAMDATE,EXAMDATE,,<class 'datetime.date'>,,,2597.0,0.0,pop not found,keep,,
+UCSD - Derived Volumes [ADNI1],UCSDVOL,Other,QCPASS,STATUS,,<class 'str'>,complete,,2597.0,0.0,pop not found,keep,,
+UCSD - Derived Volumes [ADNI1],UCSDVOL,Volume,BRAIN,Brain,mm3,<class 'numpy.int64'>,,"1361820.0, 644907.0",2597.0,0.0,pop not found,keep,predittore,volume
+UCSD - Derived Volumes [ADNI1],UCSDVOL,Volume,EICV,ICV,mm3,<class 'numpy.int64'>,,"1951440.0, 1066310.0",2597.0,0.0,pop not found,keep,predittore,volume
+UCSD - Derived Volumes [ADNI1],UCSDVOL,Volume,VENTRICLES,Ventricles,mm3,<class 'numpy.float64'>,,"156743.0, 7552.46",2597.0,0.0,pop not found,keep,predittore,volume
+UCSD - Derived Volumes [ADNI1],UCSDVOL,Volume,LHIPPOC,LHippocampus,mm3,<class 'numpy.float64'>,,"5514.94, 1443.0",2597.0,0.0,pop not found,keep,predittore,volume
+UCSD - Derived Volumes [ADNI1],UCSDVOL,Volume,RHIPPOC,RHippocampus,mm3,<class 'numpy.float64'>,,"5750.4, 1403.57",2597.0,0.0,pop not found,keep,predittore,volume
+UCSD - Derived Volumes [ADNI1],UCSDVOL,Visit,,VISIT_MONTH,,<class 'numpy.int64'>,,"42.0, 0.0",2597.0,0.0,pop not found,keep,,
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,ID,RID,RID,,<class 'numpy.int64'>,None,"5285.0, 42.0",422.0,0.0,"ADNI1, ADNIGO, ADNI2, ADNI3, ADNI4",keep,,
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,Visit,VISCODE2,VISCODE2,,<class 'str'>,"m60, m84, m108, m24, m36",None,422.0,0.0,"ADNI1, ADNIGO, ADNI2, ADNI3, ADNI4",keep,,
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,Visit,EXAMDATE,EXAMDATE,,<class 'datetime.date'>,None,None,422.0,0.0,"ADNI1, ADNIGO, ADNI2, ADNI3, ADNI4",keep,,
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,Cohort,STUDY,COHORT,,<class 'str'>,ADNI,None,422.0,0.0,"ADNI1, ADNIGO, ADNI2, ADNI3, ADNI4",keep,,
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,Visit,RUNDATE,RUNDATE,,<class 'str'>,"2017-10-30, 2017-10-20, 2017-11-09, 2017-10-27, 2017-10-23",None,422.0,0.0,"ADNI1, ADNIGO, ADNI2, ADNI3, ADNI4",keep,,
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,Abeta,ABETA,AB42,pg/ml,<class 'numpy.int64'>,None,"2982.0, 238.0",422.0,0.0,"ADNI1, ADNIGO, ADNI2, ADNI3, ADNI4",keep,predittore,intervallo
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,Abeta,AB40,AB40,pg/ml,<class 'numpy.int64'>,None,"37590.0, 5550.0",422.0,0.0,"ADNI1, ADNIGO, ADNI2, ADNI3, ADNI4",keep,predittore,intervallo
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,Tau,TAU,TTAU,pg/ml,<class 'numpy.int64'>,None,"946.0, 110.0",422.0,0.0,"ADNI1, ADNIGO, ADNI2, ADNI3, ADNI4",keep,predittore,intervallo
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,Tau,PTAU,PTAU,pg/ml,<class 'numpy.float64'>,None,"118.0, 8.0",421.0,1.0,"ADNI1, ADNIGO, ADNI2, ADNI3, ADNI4",keep,predittore,intervallo
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,Abeta,A4240,AB4240,pg/ml,<class 'numpy.float64'>,None,"0.10355987055016182, 0.019913686806411836",422.0,0.0,"ADNI1, ADNIGO, ADNI2, ADNI3, ADNI4",keep,predittore,intervallo
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,,,VISIT_MONTH,,<class 'numpy.int64'>,None,"108.0, 0.0",422.0,0.0,"ADNI1, ADNIGO, ADNI2, ADNI3, ADNI4",keep,,
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,,,TTAU_AB42,,<class 'numpy.float64'>,None,"2.367052023121387, 0.08039579468150897",422.0,0.0,"ADNI1, ADNIGO, ADNI2, ADNI3, ADNI4",keep,,
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,,,PTAU_AB42,,<class 'numpy.float64'>,None,"0.30346820809248554, 0.006747638326585695",421.0,1.0,"ADNI1, ADNIGO, ADNI2, ADNI3, ADNI4",keep,,
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,,,Apositive,,<class 'numpy.int64'>,"0, 1","1.0, 0.0",422.0,0.0,"ADNI1, ADNIGO, ADNI2, ADNI3, ADNI4",keep,,
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,,,Tpositive,,<class 'numpy.int64'>,"0, 1, <NA>","1.0, 0.0",421.0,1.0,"ADNI1, ADNIGO, ADNI2, ADNI3, ADNI4",keep,,
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,,,Npositive,,<class 'numpy.int64'>,"0, 1","1.0, 0.0",422.0,0.0,"ADNI1, ADNIGO, ADNI2, ADNI3, ADNI4",keep,,
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,,,VISIT_MONTH,,,,,,,,,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,ID,RID,RID,,<class 'numpy.int64'>,,"7073.0, 3.0",3172.0,0.0,ADNI4,keep,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,Visit,VISCODE2,VISCODE2,,<class 'str'>,"bl, m12, m24, m48, m60",,3172.0,0.0,ADNI4,keep,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,Visit,EXAMDATE,EXAMDATE,,<class 'datetime.date'>,,,3172.0,0.0,ADNI4,keep,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,Cohort,PHASE,COHORT,,<class 'str'>,"ADNI1, ADNIGO, ADNI2, ADNI3",,3172.0,0.0,ADNI4,keep,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,Visit,RUNDATE,RUNDATE,,<class 'str'>,"2016-12-14, 2017-01-09, 2016-11-22, 2017-01-06, 2016-11-17",,3172.0,0.0,ADNI4,keep,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,Abeta,ABETA40,AB40,pg/ml,<class 'numpy.float64'>,,"37480.0, 841.0",934.0,2238.0,ADNI4,drop,predittore,intervallo
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,Abeta,ABETA42,AB42,pg/ml,<class 'numpy.float64'>,,"4779.0, 203.0",3167.0,5.0,ADNI4,keep,predittore,intervallo
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,Tau,TAU,TTAU,pg/ml,<class 'numpy.float64'>,,"1018.0, 80.08",3159.0,13.0,ADNI4,keep,predittore,intervallo
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,Tau,PTAU,PTAU,pg/ml,<class 'numpy.float64'>,,"108.5, 8.0",3147.0,25.0,ADNI4,keep,predittore,intervallo
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,,,VISIT_MONTH,,<class 'numpy.int64'>,,"186.0, 0.0",3172.0,0.0,ADNI4,keep,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,,,AB4240,,<class 'numpy.float64'>,,"0.13484762979683973, 0.017801498127340824",931.0,2241.0,ADNI4,drop,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,,,TTAU_AB42,,<class 'numpy.float64'>,,"3.048989379924632, 0.06866995073891626",3154.0,18.0,ADNI4,keep,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,,,PTAU_AB42,,<class 'numpy.float64'>,,"0.3432682425488181, 0.005528625156707063",3143.0,29.0,ADNI4,keep,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,,,Apositive,,<class 'numpy.int64'>,"1, 0, <NA>","1.0, 0.0",3167.0,5.0,ADNI4,keep,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,,,Tpositive,,<class 'numpy.int64'>,"0, 1, <NA>","1.0, 0.0",3143.0,29.0,ADNI4,keep,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,,,Npositive,,<class 'numpy.int64'>,"1, 0, <NA>","1.0, 0.0",3154.0,18.0,ADNI4,keep,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,,,VISIT_MONTH,,,,,,,,,,

@@ -140,9 +140,10 @@ class DataCleaner:
         support_file = self.support_file[self.support_file['file_code']==file_code]
         # selection of the unique variable present in both the df and the support file
         support_list = list(support_file['variable_code'].unique())
-        new_list = new_var + support_list
+        new_list = support_list + new_var 
+        new_list = [x for x in list(set(new_list)) if not x in remove_var]
         
-        columns_to_keep = [x for x in new_list if x in list(df.columns) and x not in remove_var] 
+        columns_to_keep = [x for x in list(df.columns) if x in new_list] 
        
         # reduction of the the df to only selected variablees/columns
         df_new = df[columns_to_keep]
@@ -1287,3 +1288,64 @@ class DataCleaner:
             print(f"No volumes columns found for file code {file_code}")
 
         return df
+
+    def get_abeta_tau_ratios(self, df: pd.DataFrame) -> pd.DataFrame:
+        ratios_var = []
+        if 'AB42' in df.columns:
+            if 'AB40' in df.columns:
+                df['AB4240'] = df.apply(lambda row: row['AB42']/row['AB40'], axis=1)
+                ratios_var.append('AB4240')
+            if 'TTAU' in df.columns:
+                df['TTAU_AB42'] = df.apply(lambda row: row['TTAU']/row['AB42'], axis=1)
+                ratios_var.append('TTAU_AB42')
+            if 'PTAU' in df.columns:
+                df['PTAU_AB42'] = df.apply(lambda row: row['PTAU']/row['AB42'], axis=1)
+                ratios_var.append('PTAU_AB42')
+
+        return df, ratios_var
+    
+    def calculate_Apositive(self, row):
+        ab4240 = row.get('AB4240', np.nan)
+        ab42 = row.get('AB42', np.nan)
+        
+        # Se entrambi i valori sono NaN, restituisci NaN
+        if np.isnan(ab4240) and np.isnan(ab42):
+            return np.nan
+        
+        # Se AB4240 è disponibile, usa la logica basata su AB4240
+        if not np.isnan(ab4240):
+            if ab4240 < 0.059:
+                return 1
+            elif 0.059 <= ab4240 < 0.073:
+                # Se AB42 è disponibile, usa AB42 per decidere
+                if not np.isnan(ab42):
+                    return 1 if ab42 < 1100 else 0
+                else:
+                    return 0  # AB4240 nel range ma AB42 non disponibile
+            else:  # ab4240 >= 0.073
+                return 0
+        
+        # Se solo AB42 è disponibile, usa la logica originale
+        elif not np.isnan(ab42):
+            return 1 if ab42 <= 1100 else 0
+        
+        return np.nan
+            
+    
+    def get_ATN_profile(self, df: pd.DataFrame) -> pd.DataFrame:
+        ATN_var = []
+        if 'AB4240' in df.columns or 'AB42' in df.columns:
+            df['Apositive'] = df.apply(self.calculate_Apositive, axis=1)
+            # Converti automaticamente a interi mantenendo NaN
+            df['Apositive'] = df['Apositive'].astype('Int64')
+            ATN_var.append('Apositive')
+        if 'PTAU_AB42' in df.columns:
+            df['Tpositive'] = df['PTAU_AB42'].apply(lambda x: 1 if x >= 0.037 else 0 if not np.isnan(x) else np.nan)
+            df['Tpositive'] = df['Tpositive'].astype('Int64')
+            ATN_var.append('Tpositive')
+        if 'TTAU_AB42' in df.columns:
+            df['Npositive'] = df['TTAU_AB42'].apply(lambda x: 1 if x > 0.27 else 0 if not np.isnan(x) else np.nan)
+            df['Npositive'] = df['Npositive'].astype('Int64')
+            ATN_var.append('Npositive')
+        return df, ATN_var 
+        
