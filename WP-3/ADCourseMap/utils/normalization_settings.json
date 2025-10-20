@@ -1,0 +1,74 @@
+{
+    "norm_range": [
+        "Ventricles",
+        "Hippocampus",
+        "Entorhinal",
+        "Fusiform",
+        "MidTemp",
+        "ICV",
+        "CDRSB",
+        "ADAS11",
+        "ADAS13",
+        "MMSE",
+        "RAVLT_immediate",
+        "FAQ"
+    ],
+    "range_values": {
+        "ADAS11": [
+            0,
+            70,
+            "normal"
+          ],
+          "ADAS13": [
+            0,
+            70,
+            "normal"
+          ],
+          "CDRSB": [
+            0,
+            18,
+            "normal"
+          ],
+          "FAQ": [
+            0,
+            30,
+            "normal"
+          ],
+          "MMSE": [
+            0,
+            30,
+            "inverse"
+          ],
+          "RAVLT_immediate": [
+            0,
+            75,
+            "inverse"
+          ],
+          "Entorhinal": [
+            0.07,
+            0.39,
+            "inverse"
+          ],
+          "Fusiform": [
+            0.63,
+            1.62,
+            "inverse"
+          ],
+          "Hippocampus": [
+            0.22,
+            0.66,
+            "inverse"
+          ],
+          "MidTemp": [
+            0.7,
+            1.8,
+            "inverse"
+          ],
+          "Ventricles": [
+            0.11,
+            7.3,
+            "normal"
+          ]
+    },
+    "norm_min_max": []
+}
