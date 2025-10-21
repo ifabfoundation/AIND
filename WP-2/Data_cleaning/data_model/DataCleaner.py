@@ -800,7 +800,59 @@ class DataCleaner:
         
         return df
 
-
+    def convert_to_dummies_ATNC_profile(self, df, col_name):
+        """
+        Converte una colonna con profili ATNC (es. 'A+T-N-C+') in colonne dummy separate.
+        Crea una colonna per ciascun parametro presente nella stringa (Aprofile, Tprofile, Nprofile, Cprofile).
+        Popola le colonne con 1 per valori positivi (+) e 0 per valori negativi (-).
+        
+        Parameters
+        ----------
+        df : pandas.DataFrame
+            DataFrame contenente la colonna da convertire
+        col_name : str
+            Nome della colonna da convertire
+            
+        Returns
+        -------
+        pandas.DataFrame
+            DataFrame con le nuove colonne dummy aggiunte
+        """
+        # Crea una copia del dataframe per evitare di modificare l'originale
+        result_df = df.copy()
+        
+        # Parametri possibili
+        parameters = ['A', 'T', 'N', 'C']
+        
+        # Analizza tutti i valori non nulli per identificare quali parametri sono presenti
+        non_null_values = result_df[col_name].dropna().astype(str)
+        present_parameters = set()
+        
+        for value in non_null_values:
+            for param in parameters:
+                if f"{param}+" in value or f"{param}-" in value:
+                    present_parameters.add(param)
+        
+        profiles_var = []
+        # Crea colonne dummy per ciascun parametro presente
+        for param in present_parameters:
+            profile_col_name = f"{param}profile"
+            profiles_var.append(profile_col_name)
+            def extract_profile(value):
+                if pd.isna(value):
+                    return np.nan
+                
+                value_str = str(value)
+                if f"{param}+" in value_str:
+                    return 1
+                elif f"{param}-" in value_str:
+                    return 0
+                else:
+                    return np.nan  # Parametro non presente in questo valore
+            
+            result_df[profile_col_name] = result_df[col_name].apply(extract_profile)
+        
+        return result_df, profiles_var
 
     def convert_to_two_bit(self, df, col_name):
         """
