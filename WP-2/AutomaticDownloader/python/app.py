@@ -47,7 +47,7 @@ if __name__ == '__main__':
         if mode == 'T':
             downloader.download_table_by_url() # Download table
         else:
-            downloader.download_image_files_by_url() # Download study files
+            downloader.download_study_files_by_url() # Download study files
     except Exception as e:
         print(e)
     finally:

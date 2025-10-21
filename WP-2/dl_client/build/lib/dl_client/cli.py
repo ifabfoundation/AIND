@@ -39,7 +39,7 @@ class ProgressFileReader:
 
 
 @click.group()
-@click.option('--base-url', default='http://131.175.206.61:5000', help='Base URL of the Datalake API')
+@click.option('--base-url', default='https://datalake.ifabfoundation.it', help='Base URL of the Datalake API')
 @click.option('--bucket', default='aind', help='Default bucket to use')
 @click.option('--username', help='Username for authentication')
 @click.option('--password', help='Password for authentication')

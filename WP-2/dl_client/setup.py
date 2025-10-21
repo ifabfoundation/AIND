@@ -8,6 +8,7 @@ setup(
         "requests>=2.25.0",
         "click>=8.0.0",
         "tqdm>=4.60.0",
+        "pandas>=1.0.0",
     ],
     entry_points={
         'console_scripts': [

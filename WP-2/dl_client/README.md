@@ -384,8 +384,8 @@ print(f"File deleted: {result['success']}")
 # Search for files with specific metadata
 results = client.search_files(
     query={
-        "metadata.project": "genomics",
-        "metadata.tags": "experiment1"
+        "custom.project": "genomics",
+        "custom.tags": "experiment1"
     },
     bucket="research-data"
 )
@@ -402,8 +402,8 @@ for file in results['files']:
 # Query files and download as ZIP archive
 zip_path = client.query_files(
     query={
-        "metadata.project": "genomics",
-        "metadata.status": "approved"
+        "custom.project": "genomics",
+        "custom.status": "approved"
     },
     bucket="research-data",
     output_path="/local/downloads/approved_files.zip"
@@ -420,7 +420,7 @@ The library provides a comprehensive command-line interface for all operations.
 These options can be used with any command:
 
 ```bash
---base-url TEXT     Base URL of the Datalake API (default: http://131.175.206.61:5000)
+--base-url TEXT     Base URL of the Datalake API (default: https://datalake.ifabfoundation.it)
 --bucket TEXT       Default bucket to use (default: aind)
 --username TEXT     Username for authentication
 --password TEXT     Password for authentication
@@ -545,7 +545,7 @@ dl-client delete project/experiment1/dataset.csv --bucket research-data
 
 ```bash
 # Search for files by metadata using JSON string
-dl-client search --query '{"metadata.project": "genomics", "metadata.tags": "experiment1"}' \
+dl-client search --query '{"custom.project": "genomics", "custom.tags": "experiment1"}' \
     --bucket research-data
     
 # Search using a query from a JSON file
@@ -557,7 +557,7 @@ dl-client search --query-file search_criteria.json \
 
 ```bash
 # Query files using JSON string and download as ZIP
-dl-client query --query '{"metadata.project": "genomics", "metadata.status": "approved"}' \
+dl-client query --query '{"custom.project": "genomics", "custom.status": "approved"}' \
     --output /local/downloads/approved_files.zip \
     --bucket research-data
     

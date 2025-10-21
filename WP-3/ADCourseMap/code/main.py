@@ -1,7 +1,15 @@
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="torch")
+warnings.filterwarnings("ignore", message=".*set_default_tensor_type.*")
+warnings.filterwarnings("ignore", category=FutureWarning)
+
 from utils import *
 from loader import loader
 from model import LeaspyModel
 from loss import MAE_CI
+from train_val import train_and_validate
+from prediction import make_predictions
+from simulation import simulate_data
 
 
 parser = argparse.ArgumentParser()
@@ -17,8 +25,17 @@ parser.add_argument('--gpu_ids', type=int, default=0, help='ids of GPUs to use')
 parser.add_argument('--sub_data', type=bool, default=False, help='True if you want to use a subset of the entire dataset')
 parser.add_argument('--sub_n', type=str, default='100000', help='If sub_data is true, you can choose the number of patients')
 parser.add_argument('--manual_seed', type=int, help="Manual Seed. Set to 0 for reproducibility")
+parser.add_argument('--dummy', type=bool, default=False, help='True if you want to convert cofactors into dummy variables')
+parser.add_argument('--data', type=str, default='data.csv', help='Indicate the dataset name from which the model will be trained')
+parser.add_argument('--prediction', type=bool, default=False, help='True if you want to predict new data based on the model')
+parser.add_argument('--prediction_timepoints_start', type=int, default=0, help='Indicate the start timepoint for predictions')
+parser.add_argument('--prediction_timepoints_end', type=int, default=100, help='Indicate the end timepoint for predictions')
+parser.add_argument('--prediction_timepoints_step', type=int, default=1, help='Indicate the step for predictions')
 parser.add_argument('--simulation', type=bool, default=False, help='True if you want to simulate new date based on another dataset distribution')
-parser.add_argument('--sim_data', type=str, help='Indicate the dataset path from which to sample the distribution of the dataset to be generated. If empty, a part of the original dataset will be used')
+parser.add_argument('--merge_generations', type=bool, default=False, help='True if you want to merge all generations into a single dataset')
+parser.add_argument('--n_gen_sub', type=int, default=1000, help='Number of subjects to generate')
+parser.add_argument('--n_gen_visit', type=int, default=10, help='Number of visits per patient')
+parser.add_argument('--n_gen_std', type=float, default=2.3, help='Standard deviation of the number of visits per patient')
 
 opt = parser.parse_args()
 opt.algo_setting_personalization = 'scipy_minimize'
@@ -35,7 +52,7 @@ if opt.device == "cuda" and torch.cuda.is_available():
 # Path
 base_path = "../"
 data_path = base_path + 'datasets/' # Data path
-cognitive_scores_data = data_path + 'cognitive_scores.csv'
+cognitive_scores_data = data_path + opt.data
 
 # Used to create different folders in case of the same runs on the same day
 now = datetime.now()
@@ -45,14 +62,20 @@ result_path = base_path + f'results/experiment_{opt.sub_n}_{opt.n_iter}_{data}/'
 logs_path = result_path + 'logs/' # Logs folder
 image_path = result_path + 'images/' # Path of image results
 gen_path = result_path + 'synthetic_data/' # Folder to save generated data
+validation_path = result_path + 'validation/predictions/' # Folder to save validation results
 model_path = base_path + f'weights/experiment_{opt.sub_n}_{opt.n_iter}_{data}/' # Folder to save models
 settings_path = base_path + 'utils/' # Folder of configuration files
+pretrained_model_path = base_path + 'saved_models/model_parameters.json'
+predictions_path = result_path + f'predictions/experiment_{opt.sub_n}_{opt.n_iter}_{data}/'
+
 
 os.makedirs(logs_path, exist_ok=True)
 os.makedirs(image_path, exist_ok=True)
 os.makedirs(model_path, exist_ok=True)
 os.makedirs(gen_path, exist_ok=True)
 os.makedirs(settings_path, exist_ok=True)
+os.makedirs(predictions_path, exist_ok=True)
+os.makedirs(validation_path, exist_ok=True)
 
 # Creates a json containing the calibration configuration
 make_json_calibration_settings_dict(opt, settings_path)
@@ -60,83 +83,32 @@ make_json_calibration_settings_dict(opt, settings_path)
 # Evaluation Metrics
 mae_metric = MAE_CI() # MAE with Confidence interval
 
-# Leaspy Custom Model
-model = LeaspyModel(opt, logs_path, model_path, image_path, settings_path)
-
 # Datasets
 dataset = loader(opt, cognitive_scores_data) # Read csv
-df_train, df_val, df_pers, df_to_pred = split_dataset_in_train_val(dataset, 0.8) # Split dataset in train and validation, df_to_pred is used to validate predictions
 
-print('TRAIN SAMPLES: ' + str(len(df_train)))
-print('PERSONALIZATION SAMPLES: ' + str(len(df_pers)))
-print('VALIDATION SAMPLES: ' + str(len(df_to_pred)))
+# Leaspy Custom Model
+if opt.prediction or opt.simulation:
+    # Load pretrained model for prediction/simulation
+    model = LeaspyModel(opt, logs_path, model_path, image_path, settings_path, pretrained_model_path)
+else:
+    # Create new model for training
+    model = LeaspyModel(opt, logs_path, model_path, image_path, settings_path)
 
+if not opt.prediction and not opt.simulation:
+    # Train and validate using the separated module
+    parameters, source_dimension, noise_std, mae = train_and_validate(
+        dataset, model, opt, logs_path, model_path, validation_path, settings_path
+    )
 
+if opt.prediction:
+    # Make predictions using the separated module
+    predictions = make_predictions(dataset, opt, pretrained_model_path, predictions_path)
 
-# Create Data Object to use the dataset with leaspy
-print('LEASPY TRAIN DATASET CREATION...')
-data_train = Data.from_dataframe(df_train)
-print('LEASPY PERSONALIZATION DATASET CREATION...')
-data_pers = Data.from_dataframe(df_pers)
-
-print('TRAIN\n')
-
-# Train data and save population curves
-parameters, source_dimension, noise_std = model.forward(data_train)
-
-# Get fitting (average) parameters
-mean_xi = parameters['xi_mean'].tolist()
-mean_tau = parameters['tau_mean'].tolist()
-mean_source = parameters['sources_mean'].tolist()
-number_of_sources = source_dimension
-mean_sources = [mean_source]*number_of_sources
-
-average_parameters = {
-    'xi': mean_xi,
-    'tau': mean_tau,
-    'sources': mean_sources,
-}
-
-# Create an Individual Parameters Object to estimate biomarkers for a 'mean patient'
-ip_average = IndividualParameters()
-ip_average.add_individual_parameters('average', average_parameters)
-
-# Save fitting parameters
-ip_average.save(model_path + 'average_parameters.json')
-
-# Save training noise results
-for idx, col in enumerate(df_train.columns):
-    col_noise = round(noise_std[idx] * 100, 2)
-    with open(logs_path + '/train_noise.txt', 'a') as file:
-        file.write(col + ': ' + str(col_noise) + '%\n') 
-
-print('VALIDATION\n')
-
-# Performance evaluation
-df_predictions = model.estimate(data_pers, df_to_pred) # Personalize and predict
-mae = mae_metric.calculate(df_to_pred, df_predictions)
-
-# Save validation MAE
-for name in mae.keys():
-    print(name +' - MAE: ' + str(round(mae[name]['mae'], 4))+ ' ± ' + str(round(mae[name]['ci'],3)))
-    with open(logs_path + '/validation_results.txt', 'a', encoding='utf-8') as file:
-        file.write(name +' - MAE: ' + str(round(mae[name]['mae'], 4))+ ' ± ' + str(round(mae[name]['ci'],3)) + '\n')
 
 # Generate new data
 if opt.simulation:
-
-    print('SIMULATION\n')
-
-    if opt.sim_data is not None:
-        df_sim = pd.read_csv(opt.sim_data)
-    else:
-        df_sim = df_val.copy()
-
-    # Generate new data
-    df_simu = model.generate_virtual_data(df_sim)
-
-    # Save new data
-    df_simu.to_csv(gen_path + 'synthetic_data.csv')
+    # Generate synthetic data using the separated module
+    df_simu = simulate_data(model, dataset, gen_path, opt)
 
 
 

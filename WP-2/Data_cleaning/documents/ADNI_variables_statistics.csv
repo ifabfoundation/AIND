@@ -1,0 +1,586 @@
+file_name,file_code,parameter,population,variable_code,type_variable,classes,range,valid_values,missing_values,missing_pop,del
+Key ADNI tables merged into one table,ADNIMERGE,ID,"1,GO,2,3",PTID,<class 'str'>,"011_S_0002, 011_S_0003, 022_S_0004, 011_S_0005, 100_S_0006",,16421.0,0.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,ID,"1,GO,2,3",RID,<class 'numpy.int64'>,,"7125.0, 2.0",16421.0,0.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,Cohort,"1,GO,2,3",COLPROT,<class 'str'>,"ADNI1, ADNI2, ADNIGO, ADNI3",,16421.0,0.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,visit,"1,GO,2,3",VISCODE,<class 'str'>,"bl, m06, m12, m24, m18",,16421.0,0.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,visit,"1,GO,2,3",EXAMDATE,<class 'str'>,"2005-09-08, 2005-09-12, 2006-03-13, 2006-09-12, 2007-09-12",,16421.0,0.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,Age,"1,GO,2,3",AGE,<class 'numpy.float64'>,,"91.4, 50.4",16412.0,9.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,Sex,"1,GO,2,3",PTGENDER,<class 'str'>,"Male, Female",,16421.0,0.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,Education,"1,GO,2,3",PTEDUCAT,<class 'numpy.int64'>,,"20.0, 4.0",16421.0,0.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,Ethnicity,"1,GO,2,3",PTETHCAT,<class 'str'>,"Not Hisp/Latino, Hisp/Latino, Unknown",,16421.0,0.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,Ethnicity,"1,GO,2,3",PTRACCAT,<class 'str'>,"White, More than one, Black, Asian, Am Indian/Alaskan, Unknown, Hawaiian/Other PI",,16421.0,0.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,Marry,"1,GO,2,3",PTMARRY,<class 'str'>,"Married, Divorced, Widowed, Never married, Unknown, nan",,16420.0,1.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,APOE,"1,GO,2,3",APOE4,<class 'numpy.float64'>,"0.0, 1.0, 2.0, nan","2.0, 0.0",16056.0,365.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,Abeta,"1,GO,2,3",PIB,<class 'numpy.float64'>,,"2.9275, 1.095",223.0,16198.0,"ADNIGO, ADNI2, ADNI3, ADNI4",1.0
+Key ADNI tables merged into one table,ADNIMERGE,Abeta,"1,GO,2,3",AV45,<class 'numpy.float64'>,,"2.6866, 0.809",3080.0,13341.0,"ADNI1, ADNI4",1.0
+Key ADNI tables merged into one table,ADNIMERGE,CDR,"1,GO,2,3",CDRSB,<class 'numpy.float64'>,,"18.0, 0.0",11747.0,4674.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,ADAS,"1,GO,2,3",ADAS11,<class 'numpy.float64'>,,"70.0, 0.0",11431.0,4990.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,ADAS,"1,GO,2,3",ADAS13,<class 'numpy.float64'>,,"85.0, 0.0",11330.0,5091.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,MMSE,"1,GO,2,3",MMSE,<class 'numpy.float64'>,,"30.0, 0.0",11469.0,4952.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,RAVLT ,"1,GO,2,3",RAVLT_immediate,<class 'numpy.float64'>,,"75.0, 0.0",11346.0,5075.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,FAQ,"1,GO,2,3",FAQ,<class 'numpy.float64'>,,"30.0, 0.0",11743.0,4678.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,MOCA,"1,GO,2,3",MOCA,<class 'numpy.float64'>,,"30.0, 0.0",7426.0,8995.0,"ADNI1, ADNI4",1.0
+Key ADNI tables merged into one table,ADNIMERGE,Volume,"1,GO,2,3",Ventricles,<class 'numpy.float64'>,,"162729.0, 5650.0",9468.0,6953.0,ADNI4,1.0
+Key ADNI tables merged into one table,ADNIMERGE,Volume,"1,GO,2,3",Hippocampus,<class 'numpy.float64'>,,"11207.0, 2219.0",8853.0,7568.0,ADNI4,1.0
+Key ADNI tables merged into one table,ADNIMERGE,Volume,"1,GO,2,3",Entorhinal,<class 'numpy.float64'>,,"7062.0, 976.0",8440.0,7981.0,ADNI4,1.0
+Key ADNI tables merged into one table,ADNIMERGE,Volume,"1,GO,2,3",Fusiform,<class 'numpy.float64'>,,"29950.0, 7739.0",8440.0,7981.0,ADNI4,1.0
+Key ADNI tables merged into one table,ADNIMERGE,Volume,"1,GO,2,3",MidTemp,<class 'numpy.float64'>,,"32324.0, 8044.0",8440.0,7981.0,ADNI4,1.0
+Key ADNI tables merged into one table,ADNIMERGE,Volume,"1,GO,2,3",ICV,<class 'numpy.float64'>,,"3500150.0, 708913.0",10115.0,6306.0,ADNI4,1.0
+Key ADNI tables merged into one table,ADNIMERGE,Diagnosi,"1,GO,2,3",DX,<class 'str'>,"CN, Dementia, MCI, nan",,11458.0,4963.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,Diagnosi,"1,GO,2,4",DX_bl,<class 'str'>,"CN, AD, LMCI, SMC, EMCI, nan",,16410.0,11.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,Visit,"1,GO,2,3",EXAMDATE_bl,<class 'str'>,"2005-09-08, 2005-09-12, 2005-11-08, 2005-09-07, 2005-11-29",,16421.0,0.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,CDR,"1,GO,2,3",CDRSB_bl,<class 'numpy.float64'>,,"10.0, 0.0",16421.0,0.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,ADAS,"1,GO,2,3",ADAS11_bl,<class 'numpy.float64'>,,"42.67, 0.0",16381.0,40.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,ADAS,"1,GO,2,3",ADAS13_bl,<class 'numpy.float64'>,,"54.67, 0.0",16309.0,112.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,MMSE,"1,GO,2,3",MMSE_bl,<class 'numpy.float64'>,,"30.0, 16.0",16419.0,2.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,RAVLT ,"1,GO,2,3",RAVLT_immediate_bl,<class 'numpy.float64'>,,"71.0, 0.0",16380.0,41.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,FAQ,"1,GO,2,3",FAQ_bl,<class 'numpy.float64'>,,"30.0, 0.0",16335.0,86.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,Volume,"1,GO,2,3",Ventricles_bl,<class 'numpy.float64'>,,"157713.0, 5650.0",15643.0,778.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,Volume,"1,GO,2,3",Hippocampus_bl,<class 'numpy.float64'>,,"10769.0, 2991.0",14272.0,2149.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,Volume,"1,GO,2,3",WholeBrain_bl,<class 'numpy.float64'>,,"1486040.0, 521287.0",15945.0,476.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,Volume,"1,GO,2,3",Entorhinal_bl,<class 'numpy.float64'>,,"6273.0, 1106.0",14111.0,2310.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,Volume,"1,GO,2,3",Fusiform_bl,<class 'numpy.float64'>,,"29950.0, 8991.0",14111.0,2310.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,Volume,"1,GO,2,3",MidTemp_bl,<class 'numpy.float64'>,,"32324.0, 9375.0",14111.0,2310.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,Volume,"1,GO,2,3",ICV_bl,<class 'numpy.float64'>,,"3315210.0, 882242.0",16158.0,263.0,ADNI4,0.0
+Key ADNI tables merged into one table,ADNIMERGE,MOCA,"1,GO,2,3",MOCA_bl,<class 'numpy.float64'>,,"30.0, 4.0",8998.0,7423.0,"ADNI1, ADNI4",1.0
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,ID,"1,GO,2",RID,<class 'numpy.int64'>,,"5296.0, 3.0",1247.0,0.0,"ADNI3, ADNI4",0.0
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Cohort,,PHASE,<class 'str'>,"ADNI1, ADNIGO, ADNI2",,1247.0,0.0,"ADNI3, ADNI4",0.0
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Visit,"1,GO,1",VISCODE 2,<class 'str'>,"m12', 'm60', 'm24', 'bl', 'm84', 'm48', 'm72', 'm36'",,1247.0,0.0,"ADNI3, ADNI5",0.0
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Visit,"1,GO,2",VISCODE,<class 'str'>,"m12, m60, m24, bl, v21, m48, v06, v11, m36, v03",,1247.0,0.0,"ADNI3, ADNI4",0.0
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Education,"1,GO,2",PHC_Education,<class 'numpy.int64'>,,"20.0, 4.0",1247.0,0.0,"ADNI3, ADNI4",0.0
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Ethnicity,"1,GO,2",PHC_Ethnicity,<class 'numpy.float64'>,"2.0, 1.0, nan","2.0, 1.0",1240.0,7.0,"ADNI3, ADNI4",0.0
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Ethnicity,"1,GO,2",PHC_Race,<class 'numpy.int64'>,"5, 3, 2, 6, 1, 4","6.0, 1.0",1247.0,0.0,"ADNI3, ADNI4",0.0
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Sex,"1,GO,2",PHC_Sex,<class 'numpy.int64'>,"1, 2","2.0, 1.0",1247.0,0.0,"ADNI3, ADNI4",0.0
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Tau,"1,GO,2",PHC_Tau,<class 'numpy.float64'>,,"2.66834693328626, -2.75390285653023",1214.0,33.0,"ADNI3, ADNI4",0.0
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Visit,"1,GO,2",PHC_Visit,<class 'numpy.float64'>,,"10.0, 1.0",1245.0,2.0,"ADNI3, ADNI4",0.0
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Education,"1,GO,2",PTEDUCAT,,,,,,,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Ethnicity,"1,GO,2",PTETHCAT,,,,,,,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Sex,"1,GO,2",PTGENDER,,,,,,,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Ethnicity,"1,GO,2",PTRACCAT,,,,,,,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Tau,"1,GO,2",PHC_pTau,<class 'numpy.float64'>,,"2.95236525879149, -2.97667099545672",1240.0,7.0,"ADNI3, ADNI4",0.0
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Diagnosi,"1,GO,2",PHC_DX,,,,,,,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Diagnosi,"1,GO,2",PHC_Diagnosis,<class 'numpy.float64'>,"3.0, 2.0, 1.0, nan","3.0, 1.0",1245.0,2.0,"ADNI3, ADNI4",0.0
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Abeta,"1,GO,2",PHC_AB42,<class 'numpy.float64'>,,"2.62575583932457, -2.50491980032413",1244.0,3.0,"ADNI3, ADNI4",0.0
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Age,"1,GO,2",PHC_Age,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,ID,"1,GO,2",RID,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,visit,"1,GO,2",VISCODE,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Age,"1,GO,2",BIRTHYR,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,"1,GO,2",CDRGLOB,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,"1,GO,2",CDRSUM,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,"1,GO,2",CDR_BASELINE,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Other,"1,GO,2",CORT,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Visit,"1,GO,2",CSFDATE,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,"1,GO,2",CSF_CDRSB_BL,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,"1,GO,2",CSF_CDR_BL,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Other,"1,GO,2",CSF_DATE_BL,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Abeta,"1,GO,2",CSF_ELC_AB40,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Abeta,"1,GO,2",CSF_ELC_AB42,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Abeta,"1,GO,2",CSF_ELC_AB4240,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Tau,"1,GO,2",CSF_ELC_PTAU,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Tau,"1,GO,2",CSF_ELC_TAU,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,APOE,"1,GO,2",DIAN_APOE,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,"1,GO,2",DIAN_CDRSB_BL,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,MMSE,"1,GO,2",DIAN_MMSE,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Age,"1,GO,2",DIAN_YEARS_BL,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Sex,"1,GO,2",GENDER,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Visit,"1,GO,2",LAST_VISIT_DATE,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Marry,"1,GO,2",MARISTAT,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,"1,GO,2",MRI_CDRSB_BL,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,"1,GO,2",MRI_CDR_BL,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Visit,"1,GO,2",MRI_DATE_BL,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Visit,"1,GO,2",MRI_SCANDATE,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Volume,"1,GO,2",MR_TOTT_PRECUNEUS,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Volume,"1,GO,2",MR_TOTV_HIPPOCAMPUS,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Volume,"1,GO,2",MR_TOTV_INTRACRANIAL,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Volume,"1,GO,2",MR_TOTV_WMHYPOINTENSITIES,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,"1,GO,2",PET_CDRSB_BL,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,"1,GO,2",PET_CDR_BL,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Visit,"1,GO,2",PET_DATE_BL,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Visit,"1,GO,2",PET_SCANDATE,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Other,"1,GO,2",PET_TYPE,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Abeta,"1,GO,2",PIB_FSUVR_RSF_TOT_CORTMEAN,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Abeta,"1,GO,2",PIB_FSUVR_RSF_TOT_CTX_PRECUNEUS,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Abeta,"1,GO,2",PIB_FSUVR_RSF_TOT_HIPPOCAMPUS,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Abeta,"1,GO,2",PIB_MSUVR_TOT_CORTMEAN,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Abeta,"1,GO,2",PIB_MSUVR_TOT_PRECUNEUS,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Ethnicity,"1,GO,2",RACE,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Age,"1,GO,2",VISITAGE,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,visit,"1,GO,2",VISIT_DATE_BL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,ID,"1,GO,2,3",PTID,<class 'str'>,"003_S_4892, 005_S_0448, 005_S_0610, 005_S_4910, 006_S_4546",,121.0,0.0,pop not found,0.0
+NACC Neuropathology Data Form,NEUROPATH,Diagnosi,"1,GO,2,3",NPADRDA,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,APOE,"1,GO,2,3",NPAPOE,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPART,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Diagnosi,"1,GO,2,3",NPCAD,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPCFTLD,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPCHIPP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPCHROM,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPCJ,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPCLEWY,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPCNORM,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPCOTH1,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPCOTH2,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPCOTH3,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPCPRION,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPCVASC,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPDODMO,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPFHSPEC,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPFRONT,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPFTD,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPFTDNO,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPFTDSPC,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPGENE,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPGROSS,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPHEM,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPLAC,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPLEWY,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPLEWYCS,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",NPLINF,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPMAJOR,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",NPMICRO,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPMPATH1,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPMPATH2,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPMPATH3,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPPAD,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPPADP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPPFTLD,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPPHIPP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPPLEWY,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPPNORM,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPPOTH1,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPPOTH2,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPPOTH3,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPPPRION,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPPRION,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPPVASC,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",NPSCL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Sex,"1,GO,2,3",NPSEX,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPTAU,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPTAUHAP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPVASC,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPVOTH,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Amiloid,"1,GO,2,3",NACCAMY,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NACCARTE,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NACCCBD,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Amiloid,"1,GO,2,3",NACCDIFF,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NACCDOWN,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",NACCHEM,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",NACCINF,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NACCLEWY,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",NACCNBRN,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NACCOTHP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NACCVASC,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NACCYOD,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",THAL_AB_DX,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Ethnicity,"1,GO,2,3",RACE_OTH,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Ethnicity,"1,GO,2,3",RACE,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",CAUSE_DEATH,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",CAUSE_DEATH_OTH,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",CERAD_DX,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Diagnosi,"1,GO,2,3",DIAG1,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",DIAG2,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",DIAG3,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",DIAG4,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",DIAG5,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",DIAG6,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L11LC_AB_CAA,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L11LC_AB_CP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L11LC_AB_DP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L11LC_ARTERSCL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L11LC_NEURON_LOSS,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L11LC_PASYN_GCI,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L11LC_PASYN_LB,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L11LC_TAU_GLIAL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L11LC_TAU_NFT,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L11LC_TAU_NP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L11PONS_AB_CAA,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L11PONS_AB_CP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L11PONS_AB_DP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L11PONS_ARTERSCL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L11PONS_NEURON_LOSS,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L11PONS_PASYN_GCI,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L11PONS_PASYN_LB,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L11PONS_TAU_GLIAL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L11PONS_TAU_NFT,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L11PONS_TAU_NP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L12MED_AB_CAA,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L12MED_AB_CP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L12MED_AB_DP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L12MED_ARTERSCL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L12MED_NEURON_LOSS,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L12MED_PASYN_GCI,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L12MED_PASYN_LB,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L12MED_TAU_GLIAL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L12MED_TAU_NFT,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L12MED_TAU_NP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L13SC_AB_CAA,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L13SC_AB_CP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L13SC_AB_DP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L13SC_ARTERSCL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L13SC_NEURON_LOSS,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L13SC_PASYN_GCI,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L13SC_PASYN_LB,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L13SC_TAU_GLIAL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L13SC_TAU_NFT,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L13SC_TAU_NP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L14CBM_AB_CAA,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L14CBM_AB_CP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L14CBM_AB_DP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L14CBM_ARTERSCL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L14CBM_NEURON_LOSS,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L14CBM_PASYN_GCI,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L14CBM_PASYN_LB,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L14CBM_TAU_GLIAL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L14CBM_TAU_NFT,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L14CBM_TAU_NP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L17GP_AB_CAA,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L17GP_AB_CP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L17GP_AB_DP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L17GP_ARTERSCL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L17GP_NEURON_LOSS,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L17GP_PASYN_GCI,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L17GP_PASYN_LB,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L17GP_TAU_GLIAL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L17GP_TAU_NFT,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L17GP_TAU_NP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L17NBM_AB_CAA,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L17NBM_AB_CP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L17NBM_AB_DP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L17NBM_ARTERSCL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L17NBM_NEURON_LOSS,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L17NBM_PASYN_GCI,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L17NBM_PASYN_LB,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L17NBM_TAU_GLIAL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L17NBM_TAU_NFT,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L17NBM_TAU_NP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L19CING_AB_CAA,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L19CING_AB_CP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L19CING_AB_DP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L19CING_ARTERSCL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L19CING_NEURON_LOSS,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L19CING_PASYN_GCI,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L19CING_PASYN_LB,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L19CING_TAU_GLIAL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L19CING_TAU_NFT,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L19CING_TAU_NP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L1MFG_AB_CAA,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L1MFG_AB_CP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L1MFG_AB_DP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L1MFG_ARTERSCL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L1MFG_NEURON_LOSS,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L1MFG_PASYN_GCI,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L1MFG_PASYN_LB,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L1MFG_TAU_GLIAL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L1MFG_TAU_NFT,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L1MFG_TAU_NP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L21MX_AB_CAA,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L21MX_AB_CP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L21MX_AB_DP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L21MX_ARTERSCL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L21MX_NEURON_LOSS,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L21MX_PASYN_GCI,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L21MX_PASYN_LB,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L21MX_TAU_GLIAL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L21MX_TAU_NFT,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L21MX_TAU_NP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L23AMYG_AB_CAA,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L23AMYG_AB_CP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L23AMYG_AB_DP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L23AMYG_ARTERSCL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L23AMYG_NEURON_LOSS,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L23AMYG_PASYN_GCI,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L23AMYG_PASYN_LB,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L23AMYG_TAU_GLIAL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L23AMYG_TAU_NFT,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L23AMYG_TAU_NP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L23ENTX_AB_CAA,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L23ENTX_AB_CP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L23ENTX_AB_DP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L23ENTX_ARTERSCL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L23ENTX_NEURON_LOSS,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L23ENTX_PASYN_GCI,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L23ENTX_PASYN_LB,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L23ENTX_TAU_GLIAL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L23ENTX_TAU_NFT,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L23ENTX_TAU_NP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L2STG_AB_CAA,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L2STG_AB_CP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L2STG_AB_DP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L2STG_ARTERSCL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L2STG_NEURON_LOSS,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L2STG_PASYN_GCI,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L2STG_PASYN_LB,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L2STG_TAU_GLIAL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L2STG_TAU_NFT,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L2STG_TAU_NP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L3IPL_AB_CAA,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L3IPL_AB_CP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L3IPL_AB_DP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L3IPL_ARTERSCL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L3IPL_NEURON_LOSS,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L3IPL_PASYN_GCI,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L3IPL_PASYN_LB,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L3IPL_TAU_GLIAL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L3IPL_TAU_NFT,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L3IPL_TAU_NP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L4OL_AB_CAA,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L4OL_AB_CP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L4OL_AB_DP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L4OL_ARTERSCL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L4OL_NEURON_LOSS,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L4OL_PASYN_GCI,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L4OL_PASYN_LB,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L4OL_TAU_GLIAL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L4OL_TAU_NFT,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L4OL_TAU_NP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L5CA1_AB_CAA,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L5CA1_AB_CP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L5CA1_AB_DP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L5CA1_ARTERSCL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L5CA1_OTHER,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L5CA1_PASYN_GCI,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L5CA1_PASYN_LB,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L5CA1_TAU_GLIAL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L5CA1_TAU_NFT,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L5CA1_TAU_NP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L5DG_AB_CAA,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L5DG_AB_CP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L5DG_AB_DP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L5DG_ARTERSCL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L5DG_NEURON_LOSS,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L5DG_PASYN_GCI,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L5DG_PASYN_LB,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L5DG_TAU_GLIAL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L5DG_TAU_NFT,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L5DG_TAU_NP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L5PHG_AB_CAA,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L5PHG_AB_CP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L5PHG_AB_DP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L5PHG_ARTERSCL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L5PHG_NEURON_LOSS,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L5PHG_PASYN_GCI,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L5PHG_PASYN_LB,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L5PHG_TAU_GLIAL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L5PHG_TAU_NFT,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L5PHG_TAU_NP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L6OLFX_AB_CAA,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L6OLFX_AB_CP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L6OLFX_AB_DP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L6OLFX_ARTERSCL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L6OLFX_NEURON_LOSS,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L6OLFX_PASYN_GCI,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L6OLFX_PASYN_LB,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L6OLFX_TAU_GLIAL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L6OLFX_TAU_NFT,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L6OLFX_TAU_NP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L6PUTC_AB_CAA,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L6PUTC_AB_CP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L6PUTC_AB_DP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L6PUTC_ARTERSCL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L6PUTC_NEURON_LOSS,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L6PUTC_PASYN_GCI,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L6PUTC_PASYN_LB,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L6PUTC_TAU_GLIAL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L6PUTC_TAU_NFT,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L6PUTC_TAU_NP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L8THAL_AB_CAA,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L8THAL_AB_CP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L8THAL_AB_DP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L8THAL_ARTERSCL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L8THAL_NEURON_LOSS,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L8THAL_PASYN_GCI,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L8THAL_PASYN_LB,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L8THAL_TAU_GLIAL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L8THAL_TAU_NFT,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L8THAL_TAU_NP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L9SN_AB_CAA,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L9SN_AB_CP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Abeta,"1,GO,2,3",L9SN_AB_DP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L9SN_ARTERSCL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Brain_damage,"1,GO,2,3",L9SN_NEURON_LOSS,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L9SN_PASYN_GCI,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,A-Syn,"1,GO,2,3",L9SN_PASYN_LB,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L9SN_TAU_GLIAL,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L9SN_TAU_NFT,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Tau,"1,GO,2,3",L9SN_TAU_NP,,,,,,,
+NACC Neuropathology Data Form,NEUROPATH,Other,"1,GO,2,3",NPDOD,,,,,,,
+Diagnostic Summary - Baseline Changes,BLCHANGE,ID,1,PTID,<class 'str'>,"022_S_0007, 100_S_0015, 023_S_0030, 023_S_0031, 022_S_0014",,15244.0,0.0,,0.0
+Diagnostic Summary - Baseline Changes,BLCHANGE,Cohort,,PHASE,<class 'str'>,"ADNI1, ADNIGO, ADNI2, ADNI3, ADNI4",,15244.0,0.0,,0.0
+Diagnostic Summary - Baseline Changes,BLCHANGE,ID,1,RID,<class 'numpy.int64'>,,"10813.0, 2.0",15244.0,0.0,,0.0
+Diagnostic Summary - Baseline Changes,BLCHANGE,Visit,1,VISCODE,<class 'str'>,"bl, m06, m12, uns1, m18",,15244.0,0.0,,0.0
+Diagnostic Summary - Baseline Changes,BLCHANGE,Visit,1,VISCODE2,<class 'str'>,"bl', 'm06', 'm12', 'uns1', 'm18', 'm24', 'm36', 'm48', 'm60','m72', 'sc', 'm84',",,15244.0,0.0,,0.0
+Diagnostic Summary - Baseline Changes,BLCHANGE,Visit,1,EXAMDATE,<class 'str'>,"2005-10-06, 2005-10-19, 2005-10-20, 2005-10-24, 2005-11-04",,15103.0,141.0,,0.0
+Diagnostic Summary - Baseline Changes,BLCHANGE,Diagnosi,1,BCPREDX,<class 'numpy.float64'>,"-4.0, 2.0, 1.0, 3.0, nan","3.0, -4.0",4217.0,11027.0,"ADNI2, ADNI3, ADNI4",1.0
+Diagnostic Summary - Baseline Changes,BLCHANGE,ADAS,1,BCADAS,<class 'numpy.float64'>,"-4.0, 0.0, 1.0, -1.0, nan","1.0, -4.0",10184.0,5060.0,,0.0
+Diagnostic Summary - Baseline Changes,BLCHANGE,MMSE,1,BCMMSE,<class 'numpy.float64'>,"-4.0, 1.0, 0.0, -1.0, nan","1.0, -4.0",10202.0,5042.0,,0.0
+Diagnostic Summary - Baseline Changes,BLCHANGE,MMSE,1,BCMMSREC,<class 'numpy.float64'>,"-4.0, 1.0, 0.0, -1.0, nan","1.0, -4.0",10200.0,5044.0,,0.0
+Diagnostic Summary - Baseline Changes,BLCHANGE,MMSE,1,BCNMMMS,<class 'numpy.float64'>,"-4.0, 1.0, 0.0, -1.0, nan","1.0, -4.0",10197.0,5047.0,,0.0
+Diagnostic Summary - Baseline Changes,BLCHANGE,Other,1,BCNEUPSY,<class 'numpy.float64'>,"-4.0, 1.0, 0.0, -1.0, nan","1.0, -4.0",10195.0,5049.0,,0.0
+Diagnostic Summary - Baseline Changes,BLCHANGE,Other,1,BCNONMEM,<class 'numpy.float64'>,"-4.0, 0.0, 1.0, -1.0, nan","1.0, -4.0",10193.0,5051.0,,0.0
+Diagnostic Summary - Baseline Changes,BLCHANGE,FAQ,1,BCFAQ,<class 'numpy.float64'>,"-4.0, 0.0, 1.0, -1.0, nan","1.0, -4.0",10210.0,5034.0,,0.0
+Diagnostic Summary - Baseline Changes,BLCHANGE,Other,1,BCDEPRES,<class 'numpy.float64'>,"-4.0, 0.0, 1.0, nan","1.0, -4.0",10263.0,4981.0,,0.0
+Diagnostic Summary - Baseline Changes,BLCHANGE,Other,1,BCSTROKE,<class 'numpy.float64'>,"-4.0, 0.0, 1.0, nan","1.0, -4.0",12120.0,3124.0,,0.0
+Diagnostic Summary - Baseline Changes,BLCHANGE,CDR,1,BCCDR,<class 'numpy.float64'>,"-4.0, 1.0, 0.0, -1.0, nan","1.0, -4.0",10175.0,5069.0,,0.0
+Diagnostic Summary - Baseline Changes,BLCHANGE,ID,1,ID,<class 'numpy.int64'>,,"186866.0, 2.0",15244.0,0.0,,0.0
+Participant Demographic Information,PTDEMOG,ID,1,PTID,<class 'str'>,"011_S_0002, 022_S_0001, 011_S_0003, 022_S_0004, 011_S_0005",,6047.0,0.0,,0.0
+Participant Demographic Information,PTDEMOG,Cohort,,PHASE,<class 'str'>,"ADNI1, ADNIGO, ADNI2, ADNI3, ADNI4",,6047.0,0.0,,0.0
+Participant Demographic Information,PTDEMOG,ID,1,RID,<class 'numpy.int64'>,,"10816.0, 1.0",6047.0,0.0,,0.0
+Participant Demographic Information,PTDEMOG,Visit,1,VISCODE,<class 'str'>,"sc, f, m06, bl, m12",,6047.0,0.0,,0.0
+Participant Demographic Information,PTDEMOG,Visit,1,EXAMDATE,,,,,,,
+Participant Demographic Information,PTDEMOG,Visit,1,VISDATE,<class 'str'>,"2005-08-17, 2005-08-18, 2005-08-23, 2005-08-25, 2005-08-26",,6038.0,9.0,,0.0
+Participant Demographic Information,PTDEMOG,Sex,1,PTGENDER,<class 'numpy.float64'>,"1.0, 2.0, -4.0, nan","2.0, -4.0",5919.0,128.0,,0.0
+Participant Demographic Information,PTDEMOG,Age,1,PTDOB,<class 'str'>,"04/1931, 12/1944, 05/1924, 01/1938, 12/1931",,5860.0,187.0,,0.0
+Participant Demographic Information,PTDEMOG,Marry,1,PTMARRY,<class 'numpy.float64'>,"1.0, 2.0, 3.0, 4.0, 5.0, -4.0, nan, 6.0","6.0, -4.0",6032.0,15.0,,0.0
+Participant Demographic Information,PTDEMOG,Education,1,PTEDUCAT,<class 'numpy.float64'>,,"20.0, -4.0",5900.0,147.0,,0.0
+Participant Demographic Information,PTDEMOG,Other,1,PTADBEG,<class 'numpy.float64'>,,"2010.0, -4.0",1512.0,4535.0,"ADNI2, ADNI3, ADNI4",1.0
+Participant Demographic Information,PTDEMOG,Ethnicity,1,PTETHCAT,<class 'numpy.float64'>,"2.0, -4.0, 1.0, 3.0, nan","3.0, -4.0",5920.0,127.0,,0.0
+Participant Demographic Information,PTDEMOG,Ethnicity,1,PTRACCAT,<class 'str'>,"5, -4, 6, 4, 2",,5919.0,128.0,,0.0
+Participant Demographic Information,PTDEMOG,ID,1,ID,<class 'numpy.int64'>,,"186128.0, 12.0",6047.0,0.0,,0.0
+Participant Demographics,PTDEMOG,Visit,GO,VISCODE2,<class 'str'>,"sc, f, m06, bl, m12",,6037.0,10.0,,0.0
+Participant Demographics,PTDEMOG,Age,GO,PTDOBYY,<class 'numpy.float64'>,,"1971.0, 1915.0",5860.0,187.0,,0.0
+Participant Demographics,PTDEMOG,Other,2,PTCOGBEG,<class 'numpy.float64'>,,"9999.0, 1980.0",4275.0,1772.0,ADNI1,0.0
+Participant Demographics,PTDEMOG,Diagnosi,2,PTADDX,<class 'numpy.float64'>,,"9999.0, 1980.0",3816.0,2231.0,"ADNI1, ADNIGO",1.0
+Participant Demographics,PTDEMOG,Ethnicity,4,PTASIAN,<class 'str'>,"nan, 2, 6, 1, 3",,72.0,5975.0,"ADNI1, ADNIGO, ADNI2, ADNI3",1.0
+Participant Demographics,PTDEMOG,Ethnicity,4,PTETHCATH,<class 'str'>,"nan, 4, 3, 1, 2",,121.0,5926.0,"ADNI1, ADNIGO, ADNI2, ADNI3",1.0
+Participant Demographics,PTDEMOG,Ethnicity,4,PTOPI,<class 'numpy.float64'>,"nan, 3.0","3.0, 3.0",2.0,6045.0,"ADNI1, ADNIGO, ADNI2, ADNI3",1.0
+Mini Mental State Exam,MMSE,ID,1,PTID,<class 'str'>,"011_S_0002, 022_S_0001, 011_S_0003, 022_S_0004, 011_S_0005",,14337.0,0.0,,0.0
+Mini Mental State Exam,MMSE,Cohort,,PHASE,<class 'str'>,"ADNI1, ADNIGO, ADNI2, ADNI3, ADNI4",,14337.0,0.0,,0.0
+Mini Mental State Exam,MMSE,ID,1,RID,<class 'numpy.int64'>,,"10816.0, 1.0",14337.0,0.0,,0.0
+Mini Mental State Exam,MMSE,Visit,1,VISCODE,<class 'str'>,"sc, f, m06, m12, m18",,14337.0,0.0,,0.0
+Mini Mental State Exam,MMSE,Visit,1,EXAMDATE,,,,,,,
+Mini Mental State Exam,MMSE,Visit,1,VISDATE,<class 'str'>,"2005-08-17, 2005-08-18, 2005-08-23, 2005-08-26, 2005-08-25",,14320.0,17.0,,0.0
+Mini Mental State Exam,MMSE,MMSE,1,MMSCORE,<class 'numpy.float64'>,,"30.0, -1.0",14195.0,142.0,,0.0
+Mini Mental State Exam,MMSE,ID,1,ID,<class 'numpy.int64'>,,"186746.0, 10.0",14337.0,0.0,,0.0
+Mini Mental State Exam,MMSE,Visit,GO,VISCODE2,<class 'str'>,"sc, f, m06, m12, m18",,14319.0,18.0,,0.0
+Diagnostic Summary,DXSUM,ID,1,PTID,<class 'str'>,"011_S_0002, 011_S_0003, 011_S_0005, 011_S_0008, 022_S_0007",None,15242.0,0.0,,False
+Diagnostic Summary,DXSUM,Cohort,,PHASE,<class 'str'>,"ADNI1, ADNIGO, ADNI2, ADNI3, ADNI4",None,15242.0,0.0,,False
+Diagnostic Summary,DXSUM,ID,1,RID,<class 'numpy.int64'>,None,"10813.0, 2.0",15242.0,0.0,,False
+Diagnostic Summary,DXSUM,Visit,1,VISCODE,<class 'str'>,"bl, m06, m12, uns1, m36",None,15242.0,0.0,,False
+Diagnostic Summary,DXSUM,Visit,1,EXAMDATE,<class 'str'>,"2005-09-29, 2005-09-30, 2005-10-06, 2005-10-18, 2005-10-20",None,15144.0,98.0,,False
+Diagnostic Summary,DXSUM,Diagnosi,1,DXCURREN,,,,,,,
+Diagnostic Summary,DXSUM,Diagnosi,1,DXCONV,,,,,,,
+Diagnostic Summary,DXSUM,Diagnosi,1,DXCONTYP,,,,,,,
+Diagnostic Summary,DXSUM,Diagnosi,1,DXREV,,,,,,,
+Diagnostic Summary,DXSUM,Other,1,DXNORM,<class 'numpy.float64'>,"1.0, -4.0, nan","1.0, -4.0",3868.0,11374.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True
+Diagnostic Summary,DXSUM,Other,1,DXNODEP,<class 'numpy.float64'>,"-4.0, 1.0, nan","1.0, -4.0",3868.0,11374.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True
+Diagnostic Summary,DXSUM,Other,1,DXMCI,<class 'numpy.float64'>,"-4.0, 1.0, nan","1.0, -4.0",3868.0,11374.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True
+Diagnostic Summary,DXSUM,Other,1,DXMDES,<class 'str'>,"-4, 1, 1|02, 2, 1|2, nan",None,11770.0,3472.0,,False
+Diagnostic Summary,DXSUM,Other,1,DXMPTR1,<class 'numpy.float64'>,"-4.0, 1.0, 0.0, nan","1.0, -4.0",8517.0,6725.0,,True
+Diagnostic Summary,DXSUM,Other,1,DXMPTR2,<class 'numpy.float64'>,"-4.0, 1.0, 0.0, nan","1.0, -4.0",8504.0,6738.0,,True
+Diagnostic Summary,DXSUM,Other,1,DXMPTR3,<class 'numpy.float64'>,"-4.0, 1.0, 2.0, 0.0, nan","2.0, -4.0",8510.0,6732.0,,True
+Diagnostic Summary,DXSUM,Other,1,DXMPTR4,<class 'numpy.float64'>,"-4.0, 1.0, 2.0, 0.0, nan","2.0, -4.0",8516.0,6726.0,,True
+Diagnostic Summary,DXSUM,Other,1,DXMPTR5,<class 'numpy.float64'>,"-4.0, 1.0, 0.0, nan","1.0, -4.0",8510.0,6732.0,,True
+Diagnostic Summary,DXSUM,Other,1,DXMPTR6,<class 'numpy.float64'>,"-4.0, 1.0, 0.0, nan","1.0, -4.0",8512.0,6730.0,,True
+Diagnostic Summary,DXSUM,Diagnosi,1,DXMDUE,<class 'numpy.float64'>,"-4.0, 1.0, 2.0, nan","2.0, -4.0",8552.0,6690.0,,True
+Diagnostic Summary,DXSUM,Other,1,DXMOTHET,<class 'str'>,"-4, 9, 14, 1, 9|14",None,10215.0,5027.0,,False
+Diagnostic Summary,DXSUM,Diagnosi,1,DXAD,<class 'numpy.float64'>,"-4.0, 1.0, nan","1.0, -4.0",3868.0,11374.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True
+Diagnostic Summary,DXSUM,Other,1,DXADES,,,,,,,
+Diagnostic Summary,DXSUM,Other,1,DXAPP,<class 'numpy.float64'>,"-4.0, 1.0, 2.0, nan","2.0, -4.0",5546.0,9696.0,,True
+Diagnostic Summary,DXSUM,Other,1,DXAPROB,<class 'str'>,"-4, 1, 3, 2, 5",None,3868.0,11374.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True
+Diagnostic Summary,DXSUM,Other,1,DXAMETASP,,,,,,,
+Diagnostic Summary,DXSUM,Other,1,DXAPOSS,<class 'str'>,"-4, 3, 1|03|05, 7, 3|06",None,10046.0,5196.0,,False
+Diagnostic Summary,DXSUM,Other,1,DXAMETSP,,,,,,,
+Diagnostic Summary,DXSUM,Other,1,DXPARK,<class 'numpy.float64'>,"-4.0, 1.0, 0.0, nan","1.0, -4.0",15098.0,144.0,,False
+Diagnostic Summary,DXSUM,Other,1,DXPDES,<class 'numpy.float64'>,"-4.0, 3.0, 4.0, nan","4.0, -4.0",3868.0,11374.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True
+Diagnostic Summary,DXSUM,Other,1,DXPCOG,<class 'numpy.float64'>,"-4.0, 4.0, 3.0, nan","4.0, -4.0",3868.0,11374.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True
+Diagnostic Summary,DXSUM,Other,1,DXPATYP,<class 'numpy.float64'>,"-4.0, 7.0, 5.0, nan","7.0, -4.0",3868.0,11374.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True
+Diagnostic Summary,DXSUM,Other,1,DXOTHDEM,<class 'numpy.float64'>,"-4.0, 1.0, nan","1.0, -4.0",3868.0,11374.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True
+Diagnostic Summary,DXSUM,Other,1,DXODES,<class 'numpy.float64'>,"-4.0, 14.0, 1.0, nan, 4.0, 12.0, 6.0, 9.0","14.0, -4.0",3912.0,11330.0,,True
+Diagnostic Summary,DXSUM,Diagnosi,1,DXCONFID,<class 'numpy.float64'>,"4.0, 3.0, 1.0, 2.0, nan","4.0, 1.0",3868.0,11374.0,"ADNIGO, ADNI2, ADNI3, ADNI4",True
+Diagnostic Summary,DXSUM,ID,1,ID,<class 'numpy.int64'>,None,"186867.0, 2.0",15242.0,0.0,,False
+Diagnostic Summary,DXSUM,ID,GO,PTID,,,,,,,
+Diagnostic Summary,DXSUM,ID,GO,RID,,,,,,,
+Diagnostic Summary,DXSUM,Visit,GO,VISCODE,,,,,,,
+Diagnostic Summary,DXSUM,Visit,GO,VISCODE2,<class 'str'>,"bl, m06, m12, uns1, m36",None,15227.0,15.0,,False
+Diagnostic Summary,DXSUM,Visit,GO,EXAMDATE,,,,,,,
+Diagnostic Summary,DXSUM,Diagnosi,GO,DXCHANGE,,,,,,,
+Diagnostic Summary,DXSUM,Diagnosi,GO,DXMDES,,,,,,,
+Diagnostic Summary,DXSUM,Other,GO,DXMPTR1,,,,,,,
+Diagnostic Summary,DXSUM,Other,GO,DXMPTR2,,,,,,,
+Diagnostic Summary,DXSUM,Other,GO,DXMPTR3,,,,,,,
+Diagnostic Summary,DXSUM,Other,GO,DXMPTR4,,,,,,,
+Diagnostic Summary,DXSUM,Other,GO,DXMPTR5,,,,,,,
+Diagnostic Summary,DXSUM,Other,GO,DXMPTR6,,,,,,,
+Diagnostic Summary,DXSUM,Other,GO,DXMDUE,,,,,,,
+Diagnostic Summary,DXSUM,Other,GO,DXDSEV,<class 'numpy.float64'>,"-4.0, 2.0, 1.0, 3.0, nan","3.0, -4.0",5639.0,9603.0,,True
+Diagnostic Summary,DXSUM,Other,GO,DXDDUE,<class 'numpy.float64'>,"nan, 1.0, 2.0","2.0, 1.0",1772.0,13470.0,ADNI1,True
+Diagnostic Summary,DXSUM,Diagnosi,GO,DXAPP,,,,,,,
+Diagnostic Summary,DXSUM,Diagnosi,GO,DXAPOSS,,,,,,,
+Diagnostic Summary,DXSUM,Other,GO,DXAATYSP,,,,,,,
+Diagnostic Summary,DXSUM,Other,GO,DXAMETSP,,,,,,,
+Diagnostic Summary,DXSUM,Other,GO,DXODES,,,,,,,
+Diagnostic Summary,DXSUM,Other,GO,DXDEP,<class 'numpy.float64'>,"nan, 0.0, 1.0","1.0, 0.0",10759.0,4483.0,"ADNI1, ADNIGO",False
+Diagnostic Summary,DXSUM,Other,GO,DXPARK,,,,,,,
+Diagnostic Summary,DXSUM,ID,GO,ID,,,,,,,
+Diagnostic Summary,DXSUM,ID,2,PTID,,,,,,,
+Diagnostic Summary,DXSUM,ID,2,RID,,,,,,,
+Diagnostic Summary,DXSUM,Visit,2,VISCODE,,,,,,,
+Diagnostic Summary,DXSUM,Visit,2,VISCODE2,,,,,,,
+Diagnostic Summary,DXSUM,Visit,2,EXAMDATE,,,,,,,
+Diagnostic Summary,DXSUM,Other,2,DXPARK,,,,,,,
+Diagnostic Summary,DXSUM,Other,2,DXMPTR6,,,,,,,
+Diagnostic Summary,DXSUM,Other,2,DXODES,,,,,,,
+Diagnostic Summary,DXSUM,Other,2,DXMPTR5,,,,,,,
+Diagnostic Summary,DXSUM,Other,2,DXMPTR2,,,,,,,
+Diagnostic Summary,DXSUM,Diagnosi,2,DXMPTR1,,,,,,,
+Diagnostic Summary,DXSUM,Diagnosi,2,DXMOTHET,,,,,,,
+Diagnostic Summary,DXSUM,Other,2,DXDEP,,,,,,,
+Diagnostic Summary,DXSUM,Other,2,DXDDUE,,,,,,,
+Diagnostic Summary,DXSUM,Diagnosi,2,DXCHANGE,,,,,,,
+Diagnostic Summary,DXSUM,Other,2,DXAPP,,,,,,,
+Diagnostic Summary,DXSUM,Other,2,DXAPOSS,,,,,,,
+Diagnostic Summary,DXSUM,Other,2,DXAMETSP,,,,,,,
+Diagnostic Summary,DXSUM,Other,2,DXAATYSP,,,,,,,
+Diagnostic Summary,DXSUM,Other,2,DXMPTR4,,,,,,,
+Diagnostic Summary,DXSUM,Other,2,DXMPTR3,,,,,,,
+Diagnostic Summary,DXSUM,Other,2,DXMDUE,,,,,,,
+Diagnostic Summary,DXSUM,Other,2,DXMDES,,,,,,,
+Diagnostic Summary,DXSUM,Diagnosi,2,DXDSEV,,,,,,,
+Diagnostic Summary,DXSUM,ID,2,ID,,,,,,,
+Diagnostic Summary,DXSUM,ID,3,PTID,,,,,,,
+Diagnostic Summary,DXSUM,ID,3,RID,,,,,,,
+Diagnostic Summary,DXSUM,Visit,3,VISCODE,,,,,,,
+Diagnostic Summary,DXSUM,Visit,3,VISCODE2,,,,,,,
+Diagnostic Summary,DXSUM,Visit,3,EXAMDATE,,,,,,,
+Diagnostic Summary,DXSUM,Other,3,DXPARK,,,,,,,
+Diagnostic Summary,DXSUM,Other,3,DXDEP,,,,,,,
+Diagnostic Summary,DXSUM,Other,3,DXODES,,,,,,,
+Diagnostic Summary,DXSUM,Other,3,DXAMETSP,,,,,,,
+Diagnostic Summary,DXSUM,Other,3,DXAATYSP,,,,,,,
+Diagnostic Summary,DXSUM,Diagnosi,3,DXAPOSS,,,,,,,
+Diagnostic Summary,DXSUM,Diagnosi,3,DXAPP,,,,,,,
+Diagnostic Summary,DXSUM,Diagnosi,3,DXDSEV,,,,,,,
+Diagnostic Summary,DXSUM,Diagnosi,3,DXDDUE,,,,,,,
+Diagnostic Summary,DXSUM,Other,3,DXMOTHET,,,,,,,
+Diagnostic Summary,DXSUM,Other,3,DXMPTR6,,,,,,,
+Diagnostic Summary,DXSUM,Diagnosi,3,DXMDUE,,,,,,,
+Diagnostic Summary,DXSUM,Other,3,DXMPTR5,,,,,,,
+Diagnostic Summary,DXSUM,Other,3,DXMPTR4,,,,,,,
+Diagnostic Summary,DXSUM,Other,3,DXMPTR1,,,,,,,
+Diagnostic Summary,DXSUM,Other,3,DXMPTR2,,,,,,,
+Diagnostic Summary,DXSUM,Other,3,DXMPTR3,,,,,,,
+Diagnostic Summary,DXSUM,Other,3,DXMDES,,,,,,,
+Diagnostic Summary,DXSUM,Diagnosi,3,DIAGNOSIS,<class 'numpy.float64'>,"1.0, 3.0, 2.0, nan","3.0, 1.0",15203.0,39.0,,False
+Diagnostic Summary,DXSUM,ID,3,ID,,,,,,,
+Diagnostic Summary,DXSUM,ID,4,PTID,,,,,,,
+Diagnostic Summary,DXSUM,ID,4,RID,,,,,,,
+Diagnostic Summary,DXSUM,Visit,4,VISCODE,,,,,,,
+Diagnostic Summary,DXSUM,Visit,4,VISCODE2,,,,,,,
+Diagnostic Summary,DXSUM,Visit,4,EXAMDATE,,,,,,,
+Diagnostic Summary,DXSUM,Diagnosi,4,DIAGNOSIS,,,,,,,
+Diagnostic Summary,DXSUM,Other,4,DXAATYSP,,,,,,,
+Diagnostic Summary,DXSUM,Other,4,DXAMETSP,,,,,,,
+Diagnostic Summary,DXSUM,Diagnosi,4,DXAPOSS,,,,,,,
+Diagnostic Summary,DXSUM,Diagnosi,4,DXAPP,,,,,,,
+Diagnostic Summary,DXSUM,Other,4,DXDDUE,,,,,,,
+Diagnostic Summary,DXSUM,Other,4,DXDEP,,,,,,,
+Diagnostic Summary,DXSUM,Other,4,DXDSEV,,,,,,,
+Diagnostic Summary,DXSUM,Diagnosi,4,DXMDES,,,,,,,
+Diagnostic Summary,DXSUM,Diagnosi,4,DXMDUE,,,,,,,
+Diagnostic Summary,DXSUM,Other,4,DXMPTR1,,,,,,,
+Diagnostic Summary,DXSUM,Other,4,DXMPTR2,,,,,,,
+Diagnostic Summary,DXSUM,Other,4,DXMPTR3,,,,,,,
+Diagnostic Summary,DXSUM,Other,4,DXMPTR4,,,,,,,
+Diagnostic Summary,DXSUM,Other,4,DXMPTR5,,,,,,,
+Diagnostic Summary,DXSUM,Other,4,DXMPTR6,,,,,,,
+Diagnostic Summary,DXSUM,Other,4,DXPARK,,,,,,,
+Diagnostic Summary,DXSUM,ID,4,ID,,,,,,,

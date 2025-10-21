@@ -23,6 +23,9 @@
 const puppeteer = require("puppeteer");
 const fs = require("fs");
 
+const username = 'username@prova.com';
+const password = 'password123';
+
 (async () => {
     // Avvia il browser (cambia headless a false se vuoi vedere il browser in azione)
     const browser = await puppeteer.launch({ headless: false });
@@ -54,10 +57,10 @@ const fs = require("fs");
 
     // Fill email and password fields
     await page.waitForSelector('[name="userEmail"]');
-    await page.type('[name="userEmail"]', "raimondo.reggio@ifabfoundation.org");
+    await page.type('[name="userEmail"]', username);
 
     await page.waitForSelector('[name="userPassword"]');
-    await page.type('[name="userPassword"]', "DTV4B!!bQCSVeYk5");
+    await page.type('[name="userPassword"]', password);
     
     // Submit
     await page.keyboard.press("Enter");
