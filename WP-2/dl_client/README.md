@@ -367,7 +367,7 @@ The library provides a comprehensive command-line interface for all operations.
 These options can be used with any command:
 
 ```bash
---base-url TEXT     Base URL of the Datalake API (default: http://131.175.206.61:5000)
+--base-url TEXT     Base URL of the Datalake API (default: https://datalake.ifabfoundation.it)
 --bucket TEXT       Default bucket to use (default: aind)
 --username TEXT     Username for authentication
 --password TEXT     Password for authentication

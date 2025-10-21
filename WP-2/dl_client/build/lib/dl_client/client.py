@@ -18,7 +18,7 @@ import zipfile
 class DatalakeClient:
     """Client for interacting with the AIND Datalake API."""
 
-    def __init__(self, base_url: str = "http://131.175.206.61:5000", default_bucket: str = "aind", username: str = None, password: str = None, config_file: str = None):
+    def __init__(self, base_url: str = "https://datalake.ifabfoundation.it", default_bucket: str = "aind", username: str = None, password: str = None, config_file: str = None):
         """
         Initialize the Datalake client.
 
