@@ -558,7 +558,7 @@ class DataCleaner:
         result_df = result_df.drop(rows_to_drop)
         
         return result_df
-############## MODIFICATO ##############
+    ############## MODIFICATO ##############
     def replace_unknown_values(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Replace 'Unknown', 'unknown', and '-4' values with NaN across all columns in a dataframe.
@@ -687,12 +687,12 @@ class DataCleaner:
         if common_type == str:
             df[col_name] = df[col_name].str.strip().str.lower()  # cleaning strings
             # Map gender to binary values: female -> 0, male -> 1
-            df[col_name] = df[col_name].map({'female': 0, 'male': 1}).astype('Int64')
+            df[col_name] = df[col_name].map({'female': 0, 'male': 1})
         
         # Case 2: The column contains numeric values (1 for male, 2 for female)
         elif common_type in [int, float]:
             # Handle gender with numeric representation: (male) 1 -> 1, (female) 2 -> 0
-            df[col_name] = df[col_name].apply(lambda x: 1 if x in [1, 1.0] else (0 if x in [2, 2.0] else np.nan)).astype('Int64')
+            df[col_name] = df[col_name].apply(lambda x: 1 if x in [1, 1.0] else (0 if x in [2, 2.0] else np.nan))
 
         # Handle unexpected types (either string or numeric, or other types)
         else:
@@ -717,13 +717,13 @@ class DataCleaner:
         if common_type == str:
             df[col_name] = df[col_name].str.strip().str.lower()  # pulizia
             # Map marital status to classes: 'married' -> 1, 'divorced' -> 2, 'widowed' -> 3, 'never married' -> 0
-            df[col_name] = df[col_name].map({'married' : 1, 'divorced' : 2, 'widowed' : 3, 'never married' : 0}).astype('Int64')
+            df[col_name] = df[col_name].map({'married' : 1, 'divorced' : 2, 'widowed' : 3, 'never married' : 0})
 
         # Case 2: The column contains int or float values (1 = 'married', 2 = 'divorced', 3 = 'widowed', 4= 'never married')
         elif common_type in [int, float]:
             # Map marital status to classes: 'married' -> 1, 'divorced' -> 2, 'widowed' -> 3, 'never married' -> 0
             mapping = {1: 1, 1.0: 1, 2: 2, 2.0: 2, 3: 3, 3.0: 3, 4: 0, 4.0: 0}
-            df[col_name] = df[col_name].map(mapping).astype('Int64')
+            df[col_name] = df[col_name].map(mapping)
         
         # Handle unexpected types (either string or numeric, or other types)
         else:
@@ -753,11 +753,11 @@ class DataCleaner:
         # Case 1: The column contains string values ('not hisp/latino', 'hisp/latino')
         if common_type == str:
             df[col_name] = df[col_name].str.strip().str.lower()  # pulizia
-            df[col_name] = df[col_name].map({'not hisp/latino' : 0 , 'hisp/latino' : 1}).astype('Int64')
+            df[col_name] = df[col_name].map({'not hisp/latino' : 0 , 'hisp/latino' : 1})
 
-        # Case 2: The column contains int or float values (1 = 'not hisp/latino', 2 = 'hisp/latino')
+        # Case 2: The column contains int or float values (1 = 'not hisp/latino' -->1 , 2 = 'hisp/latino'--> 0)
         elif common_type in [int, float]:
-            df[col_name] = df[col_name].apply(lambda x: 1 if x in [1, 1.0] else (0 if x in [2, 2.0] else np.nan)).astype('Int64')
+            df[col_name] = df[col_name].apply(lambda x: 1 if x in [1, 1.0] else (0 if x in [2, 2.0] else np.nan))
         
         # Handle unexpected types (either string or numeric, or other types)
         else:
@@ -787,12 +787,12 @@ class DataCleaner:
         # Case 1: The column contains string values ('White', 'More than one', 'Black', 'Asian', 'Am Indian/Alaskan', 'Hawaiian/Other PI')
         if common_type == str:
             df[col_name] = df[col_name].str.strip()  # pulizia
-            df[col_name] = df[col_name].map({'White': 5, 'More than one': 0, 'Black': 4, 'Asian': 2, 'Am Indian/Alaskan': 1, 'Hawaiian/Other PI': 3, '5': 5, '6': 0, '4': 4, '2': 2, '1': 1, '3': 3}).astype('Int64')
+            df[col_name] = df[col_name].map({'White': 5, 'More than one': 0, 'Black': 4, 'Asian': 2, 'Am Indian/Alaskan': 1, 'Hawaiian/Other PI': 3, '5': 5, '6': 0, '4': 4, '2': 2, '1': 1, '3': 3})
 
         # Case 2: The column contains int or float values (5 = 'White', 0 = 'More than one', 4 = 'Black', 2 = 'Asian', 1 = 'Am Indian/Alaskan', 3 = 'Hawaiian/Other PI')
         elif common_type in [int, float]:
             mapping = {1: 1, 1.0: 1, 2: 2, 2.0: 2, 3: 3, 3.0: 3, 4: 4, 4.0: 4, 5: 5, 5.0: 5, 6: 0, 6.0: 0}
-            df[col_name] = df[col_name].map(mapping).astype('Int64')
+            df[col_name] = df[col_name].map(mapping)
         
         # Handle unexpected types (either string or numeric, or other types)
         else:
@@ -914,12 +914,12 @@ class DataCleaner:
         # Case 1: The column contains string values ('CN', 'MCI', 'Dementia')
         if common_type == str:
             df[col_name] = df[col_name].str.strip()  # pulizia
-            df[col_name] = df[col_name].map({'CN' : 0 , 'MCI' : 1, 'Dementia': 2}).astype('Int64')
+            df[col_name] = df[col_name].map({'CN' : 0 , 'MCI' : 1, 'Dementia': 2})
 
         # Case 2: The column contains int or float values (1 = 'CN', 2 = 'MCI', 3 = 'Dementia')
         elif common_type in [int, float]:
             mapping = {1: 0, 1.0: 0, 2: 1, 2.0: 1, 3: 2, 3.0: 2}
-            df[col_name] = df[col_name].map(mapping).astype('Int64')
+            df[col_name] = df[col_name].map(mapping)
         
         # Handle unexpected types (either string or numeric, or other types)
         else:
@@ -1341,20 +1341,130 @@ class DataCleaner:
 
         return df
 
-    def get_abeta_tau_ratios(self, df: pd.DataFrame) -> pd.DataFrame:
+
+    def get_mean_row_per_visit(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Processa il dataframe per gestire le visite senza righe MEDIAN.
+        
+        Operazioni:
+        1. Identifica tutte le righe con BATCH == 'MEDIAN'
+        2. Trova le visite di ciascun soggetto dove non ci sono righe con BATCH == 'MEDIAN'
+        3. Per quelle visite senza MEDIAN, calcola la media di ABETA, PTAU e TAU sulle righe 
+           di quel paziente, creando una nuova riga con BATCH='MEDIAN_calculated'.
+        
+        Args:
+            df: DataFrame con colonne RID, VISCODE, DRAWDTE, BATCH, ABETA, PTAU, TAU
+            
+        Returns:
+            DataFrame con solo righe MEDIAN esistenti + righe MEDIAN_calculated per visite senza MEDIAN
+        """
+        df_result = df.copy()
+        
+        # 1. Identifica tutte le visite (coppie RID, VISCODE, DRAWDTE) presenti nel dataframe
+        visit_groups = df_result[['RID', 'VISCODE', 'DRAWDTE']].drop_duplicates()
+        
+        # 2. Trova le visite che HANNO una riga con BATCH == 'MEDIAN'
+        median_visits = df_result[df_result['BATCH'] == 'MEDIAN'][['RID', 'VISCODE', 'DRAWDTE']].drop_duplicates()
+        
+        # 3. Trova le visite SENZA righe MEDIAN usando merge con indicator
+        merged = visit_groups.merge(median_visits, on=['RID', 'VISCODE', 'DRAWDTE'], how='left', indicator=True)
+        visits_without_median = merged[merged['_merge'] == 'left_only'][['RID', 'VISCODE', 'DRAWDTE']]
+        
+        num_visits_without_median = len(visits_without_median)
+        print(f"Numero di visite che NON hanno una riga MEDIAN: {num_visits_without_median}")
+        
+        # 4. Per ogni visita senza MEDIAN, calcola la media
+        new_rows = []
+        
+        for _, visit in visits_without_median.iterrows():
+            rid = visit['RID']
+            viscode = visit['VISCODE']
+            drawdte = visit['DRAWDTE']
+            
+            # Trova tutte le righe per questo paziente e questa visita
+            visit_data = df_result[
+                (df_result['RID'] == rid) & 
+                (df_result['VISCODE'] == viscode) & 
+                (df_result['DRAWDTE'] == drawdte)
+            ]
+            
+            # Calcola la media per ABETA, PTAU e TAU
+            abeta_mean = visit_data['ABETA'].mean() if 'ABETA' in visit_data.columns else np.nan
+            ptau_mean = visit_data['PTAU'].mean() if 'PTAU' in visit_data.columns else np.nan
+            tau_mean = visit_data['TAU'].mean() if 'TAU' in visit_data.columns else np.nan
+            
+            # Prendi l'ultima riga come riferimento per RID, VISCODE, DRAWDTE
+            last_row = visit_data.iloc[-1]
+            
+            # Crea una nuova riga
+            new_row = last_row.copy()
+            new_row['BATCH'] = 'MEDIAN_calculated'
+            
+            # Imposta i valori medi per ABETA, PTAU, TAU
+            if 'ABETA' in new_row.index:
+                new_row['ABETA'] = abeta_mean
+            if 'PTAU' in new_row.index:
+                new_row['PTAU'] = ptau_mean
+            if 'TAU' in new_row.index:
+                new_row['TAU'] = tau_mean
+            
+            # Metti NaN per tutte le altre colonne (eccetto RID, VISCODE, DRAWDTE, BATCH, ABETA, PTAU, TAU)
+            columns_to_keep = ['RID', 'VISCODE', 'DRAWDTE', 'BATCH', 'ABETA', 'PTAU', 'TAU']
+            for col in new_row.index:
+                if col not in columns_to_keep:
+                    new_row[col] = np.nan
+            
+            new_rows.append(new_row)
+        
+        # 5. Filtra il df per tenere solo le righe con BATCH == 'MEDIAN'
+        df_filtered = df_result[df_result['BATCH'] == 'MEDIAN'].copy()
+        
+        # 6. Aggiungi le nuove righe calcolate
+        if new_rows:
+            df_new_rows = pd.DataFrame(new_rows)
+            df_result = pd.concat([df_filtered, df_new_rows], ignore_index=True)
+            print(f"Aggiunte {len(new_rows)} righe con BATCH='MEDIAN_calculated'")
+        else:
+            df_result = df_filtered
+            print("Nessuna visita senza MEDIAN trovata")
+        
+        # 7. Ordina il dataframe per soggetto e cronologicamente per visite
+        # Converti DRAWDTE in datetime se necessario per l'ordinamento
+        if 'DRAWDTE' in df_result.columns:
+            df_result['DRAWDTE_temp'] = pd.to_datetime(df_result['DRAWDTE'], errors='coerce')
+            # Ordina per RID e poi per DRAWDTE
+            df_result = df_result.sort_values(['RID', 'DRAWDTE_temp'], ignore_index=True)
+            df_result = df_result.drop('DRAWDTE_temp', axis=1)
+        
+        return df_result
+
+
+    def get_abeta_tau_ratios(self, df: pd.DataFrame, AB42='AB42', AB40='AB40', TTAU='TTAU', PTAU='PTAU') -> pd.DataFrame:
         ratios_var = []
-        if 'AB42' in df.columns:
-            if 'AB40' in df.columns:
-                df['AB4240'] = df.apply(lambda row: row['AB42']/row['AB40'], axis=1)
+        if AB42 in df.columns:
+            if AB40 in df.columns:
+                df['AB4240'] = df.apply(lambda row: row[AB42]/row[AB40], axis=1)
                 ratios_var.append('AB4240')
-            if 'TTAU' in df.columns:
-                df['TTAU_AB42'] = df.apply(lambda row: row['TTAU']/row['AB42'], axis=1)
+            if TTAU in df.columns:
+                df['TTAU_AB42'] = df.apply(lambda row: row[TTAU]/row[AB42], axis=1)
                 ratios_var.append('TTAU_AB42')
-            if 'PTAU' in df.columns:
-                df['PTAU_AB42'] = df.apply(lambda row: row['PTAU']/row['AB42'], axis=1)
+            if PTAU in df.columns:
+                df['PTAU_AB42'] = df.apply(lambda row: row[PTAU]/row[AB42], axis=1)
                 ratios_var.append('PTAU_AB42')
 
+        # Calculate ratios for the new biomarkers
+        if 'ENTORHINAL_SUVR' in df.columns and 'INFERIOR_TEMPORAL_SUVR' in df.columns:
+        # Example ratio based on the literature
+            df['ENTORHINAL_TEMPORAL_ratio'] = df.apply(lambda row: row['ENTORHINAL_SUVR']/row['INFERIOR_TEMPORAL_SUVR'] if row['INFERIOR_TEMPORAL_SUVR'] != 0 else np.nan, axis=1)
+            ratios_var.append('ENTORHINAL_TEMPORAL_ratio')
+        if 'TAU_METAROI' in df.columns and 'ENTORHINAL_SUVR' in df.columns:
+        # Example ratio for Tau neurodegeneration
+            df['TAU_ENTORHINAL_ratio'] = df.apply(lambda row: row['TAU_METAROI']/row['ENTORHINAL_SUVR'] if row['ENTORHINAL_SUVR'] != 0 else np.nan, axis=1)
+            ratios_var.append('TAU_ENTORHINAL_ratio')
+
         return df, ratios_var
+
+
     
     def calculate_Apositive(self, row):
         ab4240 = row.get('AB4240', np.nan)
@@ -1389,15 +1499,17 @@ class DataCleaner:
         if 'AB4240' in df.columns or 'AB42' in df.columns:
             df['Apositive'] = df.apply(self.calculate_Apositive, axis=1)
             # Converti automaticamente a interi mantenendo NaN
-            df['Apositive'] = df['Apositive'].astype('Int64')
+            df['Apositive'] = df['Apositive']
             ATN_var.append('Apositive')
         if 'PTAU_AB42' in df.columns:
             df['Tpositive'] = df['PTAU_AB42'].apply(lambda x: 1 if x >= 0.037 else 0 if not np.isnan(x) else np.nan)
-            df['Tpositive'] = df['Tpositive'].astype('Int64')
+            df['Tpositive'] = df['Tpositive']
             ATN_var.append('Tpositive')
         if 'TTAU_AB42' in df.columns:
             df['Npositive'] = df['TTAU_AB42'].apply(lambda x: 1 if x > 0.27 else 0 if not np.isnan(x) else np.nan)
-            df['Npositive'] = df['Npositive'].astype('Int64')
+            df['Npositive'] = df['Npositive']
             ATN_var.append('Npositive')
         return df, ATN_var 
+    
+
         
