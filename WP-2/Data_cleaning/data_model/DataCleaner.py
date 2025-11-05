@@ -156,8 +156,12 @@ class DataCleaner:
         Specific for imaging datasets - FreeSurfer.
         This function filters the dataframe based on the value of the filter_col.
         '''
-        print('Segmentation Status: \n', df[filter_col].value_counts(), '\n', type(df[filter_col].unique()[0]))
-        return df[df[filter_col].isin(['complete', 1]) ].reset_index(drop=True)
+        # normalizza a minuscolo gli eventuali valori stringa per garantire confronti consistenti
+        df[filter_col] = df[filter_col].apply(lambda v: v.strip().lower() if isinstance(v, str) else v)
+        col_norm = df[filter_col]
+        print('Segmentation Status:\n', col_norm.value_counts(), '\n', type(col_norm.dropna().unique()[0]) if col_norm.dropna().size > 0 else type(None))
+        mask = col_norm.isin(['complete', 1])
+        return df[mask].reset_index(drop=True)
     
     def convert_qcpass_values(self, df, col_name='QCPASS'):
         '''
@@ -559,12 +563,23 @@ class DataCleaner:
         
         return result_df
     ############## MODIFICATO ##############
-    def replace_unknown_values(self, df: pd.DataFrame) -> pd.DataFrame:
+    def replace_unknown_values(self, df: pd.DataFrame, new_nans: list = None) -> pd.DataFrame:
         """
         Replace 'Unknown', 'unknown', and '-4' values with NaN across all columns in a dataframe.
+        
+        Args:
+            df: DataFrame su cui applicare la sostituzione
+            new_nans: Lista opzionale di valori aggiuntivi da sostituire con NaN. Default: None (nessun valore aggiuntivo)
+        
+        Returns:
+            DataFrame con i valori sostituiti
         """
         # Create a copy of the dataframe to avoid modifying the original
         result_df = df.copy()
+        
+        # Inizializza new_nans come lista vuota se None
+        if new_nans is None:
+            new_nans = []
         
         # Dictionary of values to replace with NaN
         replace_dict = {
@@ -575,12 +590,37 @@ class DataCleaner:
             '9999': np.nan
         }
         
+        # Aggiungi i nuovi valori al dizionario di sostituzione
+        for value in new_nans:
+            if value is not None:
+                replace_dict[value] = np.nan
+        
         # Replace values across the entire dataframe
         result_df = result_df.replace(replace_dict)
         
+        # Lista di valori numerici da sostituire
+        numeric_replace_list = [-4, -4.0, 9999, 9999.0]
+        
+        # Aggiungi i nuovi valori numerici alla lista se sono numeri
+        for value in new_nans:
+            if value is not None:
+                try:
+                    # Prova a convertire in float per vedere se è numerico
+                    num_value = float(value)
+                    if num_value not in numeric_replace_list:
+                        numeric_replace_list.append(num_value)
+                    # Aggiungi anche la versione intera se applicabile
+                    if num_value == int(num_value):
+                        int_value = int(num_value)
+                        if int_value not in numeric_replace_list:
+                            numeric_replace_list.append(int_value)
+                except (ValueError, TypeError):
+                    # Se non è convertibile in numero, è già gestito nel replace_dict
+                    pass
+        
         # Gestisce le colonne numeriche dove -4, -4.0, 9999, 9999.0 potrebbero essere presenti come numeri
         for col in result_df.select_dtypes(include=['number']).columns:
-            result_df[col] = result_df[col].replace([-4, -4.0, 9999, 9999.0], np.nan)
+            result_df[col] = result_df[col].replace(numeric_replace_list, np.nan)
         return result_df
 
     def to_date_format(self, df, col_list=[]):
@@ -800,6 +840,79 @@ class DataCleaner:
         
         return df
 
+    def uniform_APOE_format(self, df, col_name, split='/'):
+        """
+        Normalizza i genotipi APOE in formato 'E{allele1}_E{allele2}'.
+        Regole:
+        - Converte i valori a stringa
+        - Se presente un separatore (parametro 'split', default '/') usa str.split(split, 1)
+        - Se non presente, divide la stringa a metà
+        - Per ciascuna parte mantiene solo le cifre (rimuove lettere/simboli)
+        - Se uno dei due alleli è mancante dopo la pulizia, imposta NaN
+        - Scrive il risultato nella stessa colonna come 'E{allele1}_E{allele2}'
+        """
+        import re
+        result_df = df.copy()
+        def normalize_apoe_value(v):
+            if pd.isna(v):
+                return np.nan
+            s = str(v).strip()
+            if s == "":
+                return np.nan
+            # prova split esplicito con il separatore richiesto
+            parts = s.split(split, 1)
+            if len(parts) == 2:
+                left, right = parts[0], parts[1]
+            else:
+                # fallback: divisione a metà
+                mid = len(s) // 2
+                left, right = s[:mid], s[mid:]
+            # mantieni solo cifre
+            left_digits = re.sub(r"\D", "", left)
+            right_digits = re.sub(r"\D", "", right)
+            if left_digits == "" or right_digits == "":
+                return np.nan
+            return f"e{left_digits}e{right_digits}"
+        result_df[col_name] = result_df[col_name].apply(normalize_apoe_value)
+        return result_df
+
+    def APOE_4_count(self, df, col_name):
+        """
+        Per ciascun valore della colonna indicata, conta quante occorrenze del
+        carattere '4' sono presenti nella stringa.
+
+        - Valori NaN rimangono NaN
+        - Il risultato viene salvato in una nuova colonna 'APOE_4'
+        """
+        result_df = df.copy()
+        def count_e4(v):
+            if pd.isna(v):
+                return np.nan
+            s = str(v)
+            return s.count('4')
+        # calcola la serie conteggi
+        counts = result_df[col_name].apply(count_e4).astype('Int64')
+        # rimuovi eventuale colonna esistente
+        if 'APOE_4' in result_df.columns:
+            result_df = result_df.drop(columns=['APOE_4'])
+        # inserisci subito dopo col_name
+        insert_pos = result_df.columns.get_loc(col_name) + 1
+        result_df.insert(insert_pos, 'APOE_4', counts)
+        return result_df
+
+    def APOE_to_dummies(self, df, col_name='APOE', prefix_step='/'):
+        """
+        Converte una colonna con genotipi APOE in colonne dummy separate.
+        Crea una colonna per ciascun allele presente nella stringa.
+        Popola le colonne con 1 per valori positivi (+) e 0 per valori negativi (-).
+        """
+        df = pd.get_dummies(df, columns=[col_name], prefix=[col_name], prefix_sep=prefix_step)
+        # Trova le nuove colonne dummies create
+        new_columns = [col for col in df.columns if col != col_name]
+
+        return df, new_columns
+
+
     def convert_to_dummies_ATNC_profile(self, df, col_name):
         """
         Converte una colonna con profili ATNC (es. 'A+T-N-C+') in colonne dummy separate.
@@ -856,6 +969,10 @@ class DataCleaner:
 
     def convert_to_two_bit(self, df, col_name):
         """
+        DEPRECABILE/ELEMINABILE
+        --> sostituita da più efficente funzione convert_to_ATN_profile
+
+
         Converts a column with values like 'A+T-', 'A-T-', 'A+T+', 'A-T+' into a 2-bit representation.
         First bit: 0 if A-, 1 if A+
         Second bit: 0 if T-, 1 if T+
@@ -1494,22 +1611,144 @@ class DataCleaner:
         return np.nan
             
     
-    def get_ATN_profile(self, df: pd.DataFrame) -> pd.DataFrame:
+    def get_ATN_profile(self, df: pd.DataFrame, support_file=None, file_code=None):
         ATN_var = []
-        if 'AB4240' in df.columns or 'AB42' in df.columns:
-            df['Apositive'] = df.apply(self.calculate_Apositive, axis=1)
-            # Converti automaticamente a interi mantenendo NaN
-            df['Apositive'] = df['Apositive']
+        n = len(df)
+        idx = df.index
+        
+ 
+        # ---------- Helper to build an Int64 mask with OR across multiple sources ----------
+        def or_from_sources(bool_series_list, avail_series_list):
+            if not bool_series_list:
+                # no sources provided for this letter at all
+                return pd.Series(pd.NA, index=idx, dtype="Int64")
+            # OR across booleans (treat missing as False for the boolean OR),
+            # but compute availability separately so we can emit NA where nothing is available.
+            or_bool = bool_series_list[0].fillna(False)
+            for s in bool_series_list[1:]:
+                or_bool = or_bool | s.fillna(False)
+            avail = avail_series_list[0]
+            for a in avail_series_list[1:]:
+                avail = avail | a
+            out = pd.Series(pd.NA, index=idx, dtype="Int64")
+            out.loc[avail] = or_bool.loc[avail].astype("Int64")
+            return out
+ 
+        # ---------- Amprion parsing (Result) ----------
+        amprion_bool_list = []
+        amprion_avail_list = []
+        if 'Result' in df.columns:
+            # normalize strings
+            r = df['Result'].astype(str).str.strip().str.lower().str.replace(r"\s+", "", regex=True)
+            # positive tokens; avoid matching "not_detected"
+            amprion_pos = r.isin({"detected-1", "detected", "positive", "pos", "1", "true", "yes"})
+            amprion_neg = r.isin({"notdetected", "nd", "negative", "neg", "0", "false", "no"})
+            amprion_avail = amprion_pos | amprion_neg
+            # boolean with NaN where unknown
+            amprion_bool = amprion_pos.where(amprion_avail, np.nan)
+            amprion_bool_list.append(amprion_bool)
+            amprion_avail_list.append(amprion_avail)
+            df['Amprion_positive'] = amprion_bool.astype("Int64")
+            ATN_var.append('Amprion_positive')
+        else:
+            # still create a column of NAs, for convenience/debugging
+            df['Amprion_positive'] = pd.Series(pd.NA, index=idx, dtype="Int64")
+ 
+        # ---------- A (Amyloid) ----------
+        def calculate_Apositive_multimethod(row, support_file_filtered):
+            """Determine A-positivity using assay-specific thresholds. 
+            Based on the method reported in the support file for the given file_code."""
+            if 'Method' not in row or pd.isna(row['Method']):
+                return pd.NA
+ 
+            method = support_file_filtered[support_file_filtered['variable_code'] == 'AB42']['Method'].iloc[0]
+ 
+            # Define thresholds per method (adjust based on validation)
+            thresholds = {
+                "elecsys": {"AB4240": 0.059, "AB42": 650},    
+                "lumipulse": {"AB4240": 0.070, "AB42": 550},
+                "elisa": {"AB4240": 0.100, "AB42": 450},
+            }
+ 
+            if method not in thresholds:
+                return pd.NA
+ 
+            thr = thresholds[method]
+ 
+            # Priority: AB4240 (ratio) > AB42 concentration
+            if 'AB4240' in row and pd.notna(row['AB4240']):
+                return int(row['AB4240'] < thr['AB4240'])
+            elif 'AB42' in row and pd.notna(row['AB42']):
+                return int(row['AB42'] < thr['AB42'])
+            else:
+                return pd.NA
+ 
+        if any(col in df.columns for col in ['AB4240', 'AB42']):
+            # verifico di avere il file_code
+            if file_code is None:
+                if not self.file_code:
+                    raise ValueError("L'attributo 'file_code' non è stato impostato. inserire come input il file_code. Oppure eseguire prima una funzione come 'get_file_code_metadata'.")
+                else:
+                    file_code = self.file_code
+
+            # filtro il support file per il file_code
+            if support_file is not None:
+                support_file_filtered = support_file[support_file['file_code'] == self.file_code]
+            elif self.support_file is not None:
+                support_file_filtered = self.support_file[self.support_file['file_code'] == file_code]
+            else:
+                raise ValueError("Nessun support file fornito. inserire come input il support_file. Oppure eseguire prima una funzione come 'update_self_support_file'.")
+
+            df['Apositive'] = df.apply(calculate_Apositive_multimethod, support_file_filtered=support_file_filtered, axis=1).astype("Int64")
             ATN_var.append('Apositive')
+        else:
+            df['Apositive'] = pd.Series(pd.NA, index=idx, dtype="Int64")
+ 
+        # ---------- T (Tau) ----------
+        t_bool_list = []
+        t_avail_list = []
+ 
         if 'PTAU_AB42' in df.columns:
-            df['Tpositive'] = df['PTAU_AB42'].apply(lambda x: 1 if x >= 0.037 else 0 if not np.isnan(x) else np.nan)
-            df['Tpositive'] = df['Tpositive']
+            t_bool_list.append((df['PTAU_AB42'] >= 0.037))
+            t_avail_list.append(df['PTAU_AB42'].notna())
+ 
+        if 'INFERIOR_TEMPORAL_SUVR' in df.columns:
+            t_bool_list.append((df['INFERIOR_TEMPORAL_SUVR'] >= 1.35))
+            t_avail_list.append(df['INFERIOR_TEMPORAL_SUVR'].notna())
+ 
+        # Amprion contributes to Tau
+        if amprion_bool_list:
+            t_bool_list.append(amprion_bool_list[0])
+            t_avail_list.append(amprion_avail_list[0])
+ 
+        df['Tpositive'] = or_from_sources(t_bool_list, t_avail_list)
+        if df['Tpositive'].notna().any():
             ATN_var.append('Tpositive')
+ 
+        # ---------- N (Neurodegeneration) ----------
+        n_bool_list = []
+        n_avail_list = []
+ 
         if 'TTAU_AB42' in df.columns:
-            df['Npositive'] = df['TTAU_AB42'].apply(lambda x: 1 if x > 0.27 else 0 if not np.isnan(x) else np.nan)
-            df['Npositive'] = df['Npositive']
+            n_bool_list.append((df['TTAU_AB42'] > 0.27))
+            n_avail_list.append(df['TTAU_AB42'].notna())
+ 
+        if 'TAU_METAROI' in df.columns:
+            n_bool_list.append((df['TAU_METAROI'] >= 1.2))
+            n_avail_list.append(df['TAU_METAROI'].notna())
+ 
+        # Amprion supportive for N as well (conservative OR)
+        if amprion_bool_list:
+            n_bool_list.append(amprion_bool_list[0])
+            n_avail_list.append(amprion_avail_list[0])
+ 
+        df['Npositive'] = or_from_sources(n_bool_list, n_avail_list)
+        if df['Npositive'].notna().any():
             ATN_var.append('Npositive')
-        return df, ATN_var 
-    
+ 
+        # optional: print for quick sanity check
+        # print("Columns in the DataFrame after processing:", df.columns.tolist())
+ 
+        return df, ATN_var
 
         
