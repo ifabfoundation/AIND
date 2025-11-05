@@ -219,6 +219,14 @@ class InfoSupportFile:
                             pd.DataFrame([new_row]),
                             self.support_file.iloc[index:]
                         ]).reset_index(drop=True)
+                else:
+                    # For the row of the population, impose 'Cohort' in the column 'parameter'
+                    idx = self.support_file[
+                        (self.support_file['file_code'] == self.file_code) &
+                        (self.support_file['variable_code'] == population)
+                    ].index
+                    if not idx.empty:
+                        support_file_new.loc[idx, 'parameter'] = 'Cohort'
             except Exception as e:
                 print(f"Errore nell'aggiornamento del file di supporto: {e}")
                 support_file_new = self.support_file
@@ -267,6 +275,7 @@ class InfoSupportFile:
         n = self.df[self.key].first_valid_index()
         #print(self.key, n)
         if n is None:
+            tipo = None
             raw_tipo = None
             intervallo = [None]
             classes = [None]
