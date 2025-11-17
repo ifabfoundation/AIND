@@ -1104,8 +1104,6 @@ class DataCleaner:
         - Rinomina le colonne del df secondo la colonna new_variable_code (se presente), altrimenti lascia il nome originale
         - Restituisce sia il df rinominato che il support file aggiornato
         """
-        import pandas as pd
-        import numpy as np
 
         # Carica il support file da Excel
         new_support_file = pd.read_excel(new_support_file_path)
@@ -1465,12 +1463,14 @@ class DataCleaner:
         for key, value in filtered_settings.items():
             if isinstance(value, dict):
                 method_list = df['METHOD'].unique().tolist()
-                filtered_settings[key] = {k: value[k] for k in method_list}
-                if 'unknown' in method_list:
-                    perc_1 = df[key].quantile(0.01)
-                    perc_99 = df[key].quantile(0.99)
+                filtered_settings[key] = {k: value[k] for k in method_list if k in value}
+                if 'unknown' in method_list and df[df['METHOD']=='unknown'][key].notna().any():
+                    perc_1 = df[df['METHOD']=='unknown'][key].quantile(0.01)
+                    perc_99 = df[df['METHOD']=='unknown'][key].quantile(0.99)
                     filtered_settings[key]['unknown'][0] = perc_1
                     filtered_settings[key]['unknown'][1] = perc_99
+                elif 'unknown' in method_list and not df[df['METHOD']=='unknown'][key].notna().any():
+                    filtered_settings[key].pop('unknown', None)
             else:
                 filtered_settings[key] = value
         
