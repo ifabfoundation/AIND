@@ -1,0 +1,233 @@
+{
+  "AB42_PL": {
+      "simoa": 192,
+      "lumipulse": 180,
+      "elisa": 200,
+      "massospectrometry": 185,
+      "quanterix": 190,
+      "unknown": 195
+  },
+
+  "AB40_PL": {
+      "simoa": 1000,
+      "lumipulse": 950,
+      "elisa": 1100,
+      "massospectrometry": 1050,
+      "quanterix": 1000,
+      "unknown": 1000
+  },
+
+  "AB4240_PL": {
+      "simoa": 0.18,
+      "lumipulse": 0.19,
+      "elisa": 0.2,
+      "massospectrometry": 0.19,
+      "quanterix": 0.2,
+      "unknown": 0.19
+  },
+
+  "NFL_CSF": {
+      "elisa": 100,
+      "unknown": 100
+  },
+
+  "NFL_PL": {
+      "simoa": 700,
+      "quanterix": 750,
+      "unknown": 725
+  },
+
+  "TTAU_PL": {
+      "simoa": 300,
+      "unknown": 300
+  },
+
+  "ALPHASYN": {
+      "luminex": 10,
+      "unknown": 10
+  },
+
+  "PT217_PL": {
+      "elecsys": 600,
+      "lumipulse": 580,
+      "elisa": 650,
+      "massospectrometry": 630,
+      "quanterix": 610,
+      "unknown": 610
+  },
+
+  "nPT217_PL": {
+      "elecsys": 5,
+      "lumipulse": 4.8,
+      "elisa": 5.2,
+      "massospectrometry": 5.5,
+      "unknown": 5
+  },
+
+  "PT217_nPT217_PL": {
+      "elecsys": 2,
+      "lumipulse": 1.9,
+      "elisa": 2.1,
+      "massospectrometry": 2.2,
+      "unknown": 2
+  },
+
+  "PT181_PL": {
+      "elecsys": 250,
+      "lumipulse": 230,
+      "simoa": 270,
+      "unknown": 260
+  },
+
+  "GFAP": {
+      "simoa": 100,
+      "quanterix": 110,
+      "unknown": 105
+  },
+
+  "PT217_AB42_PL": {
+      "quanterix": 700,
+      "unknown": 710
+  },
+
+  "AMY_CENTILOIDS": {
+      "NAV": 28.8,
+      "FBB": 26.0,
+      "FBP": 24.0,
+      "unknown": 26.0
+  },
+
+  "SUMMARY_SUVR": {
+      "NAV": 1.11,
+      "FBB": 1.08,
+      "FBP": 1.10,
+      "unknown": 1.10
+  },
+
+  "PRECUNEUS_SUVR": {
+      "FTP": 1.10,
+      "FBB": 1.07,
+      "FBP": 1.09,
+      "MK6240": 1.11,
+      "PI2620": 1.12,
+      "unknown": 1.09
+  },
+
+  "AMYLOID_STATUS_COMPOSITE_REF": {
+      "NAV": 1,
+      "FBB": 1,
+      "FBP": 1,
+      "unknown": 1
+  },
+
+  "TAU_METAROI": {
+      "FTP": 1.23,
+      "FBB": 1.21,
+      "FBP": 1.27,
+      "MK6240": 1.25,
+      "PI2620": 1.25,
+      "unknown": 1.25
+  },
+
+  "INFERIORPARIETAL_SUVR": {
+      "FTP": 1.11,
+      "FBB": 1.09,
+      "FBP": 1.10,
+      "MK6240": 1.10,
+      "PI2620": 1.10,
+      "unknown": 1.10
+  },
+
+  "LATERALOCCIPITAL_SUVR": {
+      "FTP": 1.10,
+      "FBB": 1.08,
+      "MK6240": 1.09,
+      "PI2620": 1.09,
+      "FBP": 1.10,
+      "unknown": 1.09
+  },
+
+  "MIDDLETEMPORAL_SUVR": {
+      "FTP": 1.09,
+      "FBB": 1.08,
+      "MK6240": 1.09,
+      "PI2620": 1.09,
+      "FBP": 1.10,
+      "unknown": 1.09
+  },
+
+  "CSF_SUVR": {
+      "FTP": 1.00,
+      "FBB": 1.00,
+      "FBP": 1.00,
+      "MK6240": 1.00,
+      "PI2620": 1.00,
+      "unknown": 1.00
+  },
+
+  "AB42_CSF": {
+    "elecsys": 1000,
+    "lumipulse": 600,
+    "elisa": 640,
+    "alzbio3": 300, 
+    "massospectrometry": 600,
+    "mesoscalediscovery": 700,
+    "saladax": null,
+    "unknown": null
+  },
+  
+  "AB4240_CSF": {
+    "elecsys": 0.08,
+    "lumipulse": 0.073,
+    "elisa": 0.065,
+    "alzbio3": 0.058,
+    "massospectrometry": 0.08,
+    "mesoscalediscovery": 0.07,
+    "saladax":  null,
+    "unknown": null
+  },
+
+  "PT181_CSF": {
+    "elecsys": 22,
+    "lumipulse": 40,
+    "elisa": 55,
+    "alzbio3": 47.9,
+    "massospectrometry": 50,
+    "mesoscalediscovery": 45,
+    "saladax":  null,
+    "unknown": null
+  },
+
+  "PT181_AB42_CSF": {
+    "elecsys": 0.023,
+    "lumipulse": 0.07,
+    "elisa": 0.12,
+    "alzbio3": 0.13,
+    "massospectrometry": null,
+    "mesoscalediscovery": null,
+    "saladax":  null,
+    "unknown": null
+  },
+
+  "TTAU_CSF": {
+    "elecsys": 300,
+    "lumipulse": 350,
+    "elisa": 350,
+    "alzbio3": 325,
+    "massospectrometry": null,
+    "mesoscalediscovery": 380,
+    "saladax":  null,
+    "unknown": null
+  },
+
+  "TTAU_AB42_CSF": {
+    "elecsys": 0.26,
+    "lumipulse": 0.517,
+    "elisa": null,
+    "alzbio3": null,
+    "massospectrometry": null,
+    "mesoscalediscovery": null,
+    "saladax": null,
+    "unknown": null
+  }
+}
