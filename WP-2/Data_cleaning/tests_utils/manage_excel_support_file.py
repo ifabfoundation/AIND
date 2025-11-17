@@ -368,3 +368,43 @@ class InfoSupportFile:
         # Sottrai le popolazioni completamente mancanti da quelle possibili
         present_population = [pop for pop in possible_population if pop not in completely_missing_population]
         return present_population
+
+    def get_subjects_and_multiplevisits(self, key):
+        """
+        Conta il numero di soggetti che hanno la variabile key e il numero di soggetti 
+        che hanno più di una visita con quella variabile valida.
+        
+        Args:
+            key (str): Nome della colonna/variabile da analizzare.
+        
+        Returns:
+            tuple: (subject_tot, subject_multivisit, df_filtered)
+                - subject_tot (int): Numero di soggetti unici (RID) che hanno almeno un valore valido per la variabile key.
+                - subject_multivisit (int): Numero di soggetti (RID) che hanno almeno 2 visite con valori validi per la variabile key.
+                - df_filtered (pd.DataFrame): DataFrame filtrato contenente solo le righe dove key non è NaN.
+        """
+        # Verifica che la colonna key esista nel DataFrame
+        if key not in self.df.columns:
+            raise ValueError(f"La colonna '{key}' non esiste nel DataFrame")
+        
+        # Verifica che esista la colonna RID
+        if 'RID' not in self.df.columns:
+            raise ValueError("La colonna 'RID' non esiste nel DataFrame")
+        
+        # Crea un sotto-dataframe contenente solo le righe dove key non è NaN
+        df_filtered = self.df[self.df[key].notna()].copy()
+        
+        # Conta il numero di RID unici (soggetti totali)
+        subject_tot = df_filtered['RID'].nunique()
+        
+        # Conta quanti RID compaiono almeno 2 volte (soggetti con più visite)
+        rid_counts = df_filtered['RID'].value_counts()
+        subject_multivisit = (rid_counts >= 2).sum()
+
+        # Aggiorna il file di supporto
+        index = self.support_file[(self.support_file['file_code'] == self.file_code) & (self.support_file['variable_code'] == key)].index[0]
+        self.support_file['subj_tot'][index] = subject_tot
+        self.support_file['subj_multiple_visits'][index] = subject_multivisit
+        
+        return self.support_file
+        
