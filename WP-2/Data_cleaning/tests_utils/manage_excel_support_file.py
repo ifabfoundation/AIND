@@ -373,38 +373,48 @@ class InfoSupportFile:
         """
         Conta il numero di soggetti che hanno la variabile key e il numero di soggetti 
         che hanno più di una visita con quella variabile valida.
-        
-        Args:
-            key (str): Nome della colonna/variabile da analizzare.
-        
-        Returns:
-            tuple: (subject_tot, subject_multivisit, df_filtered)
-                - subject_tot (int): Numero di soggetti unici (RID) che hanno almeno un valore valido per la variabile key.
-                - subject_multivisit (int): Numero di soggetti (RID) che hanno almeno 2 visite con valori validi per la variabile key.
-                - df_filtered (pd.DataFrame): DataFrame filtrato contenente solo le righe dove key non è NaN.
         """
-        # Verifica che la colonna key esista nel DataFrame
+        # --- Validation --- #
         if key not in self.df.columns:
             raise ValueError(f"La colonna '{key}' non esiste nel DataFrame")
-        
-        # Verifica che esista la colonna RID
+
         if 'RID' not in self.df.columns:
             raise ValueError("La colonna 'RID' non esiste nel DataFrame")
-        
-        # Crea un sotto-dataframe contenente solo le righe dove key non è NaN
+
+        # --- Filter valid rows --- #
         df_filtered = self.df[self.df[key].notna()].copy()
-        
-        # Conta il numero di RID unici (soggetti totali)
+
+        # Totale soggetti unici
         subject_tot = df_filtered['RID'].nunique()
-        
-        # Conta quanti RID compaiono almeno 2 volte (soggetti con più visite)
+
+        # Soggetti con più di una visita
         rid_counts = df_filtered['RID'].value_counts()
         subject_multivisit = (rid_counts >= 2).sum()
 
-        # Aggiorna il file di supporto
-        index = self.support_file[(self.support_file['file_code'] == self.file_code) & (self.support_file['variable_code'] == key)].index[0]
-        self.support_file['subj_tot'][index] = subject_tot
-        self.support_file['subj_multiple_visits'][index] = subject_multivisit
-        
+        # --- Ensure columns exist in support_file --- #
+        for col in ['subj_tot', 'subj_multiple_visits']:
+            if col not in self.support_file.columns:
+                self.support_file[col] = None
+
+        # --- Locate the correct row in support_file --- #
+        mask = (
+            (self.support_file['file_code'] == self.file_code) &
+            (self.support_file['variable_code'] == key)
+        )
+
+        if not mask.any():
+            raise ValueError(
+                f"Nessuna riga trovata in support_file per file_code='{self.file_code}', "
+                f"variable_code='{key}'"
+            )
+
+        index = self.support_file.loc[mask].index[0]
+
+        # --- Safe, non-chained assignment --- #
+        self.support_file.loc[index, 'subj_tot'] = subject_tot
+        self.support_file.loc[index, 'subj_multiple_visits'] = subject_multivisit
+
         return self.support_file
+
+
         

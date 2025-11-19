@@ -1462,17 +1462,19 @@ class DataCleaner:
             except Exception as e:
                 print(f"Warning: Could not save updated settings to {json_path}. Error: {e}")
 
-        for key, value in filtered_settings.items():
-            if isinstance(value, dict):
-                method_list = df['METHOD'].unique().tolist()
-                filtered_settings[key] = {k: value[k] for k in method_list}
-                if 'unknown' in method_list:
-                    perc_1 = df[key].quantile(0.01)
-                    perc_99 = df[key].quantile(0.99)
-                    filtered_settings[key]['unknown'][0] = perc_1
-                    filtered_settings[key]['unknown'][1] = perc_99
-            else:
-                filtered_settings[key] = value
+            for key, value in filtered_settings.items():
+                if isinstance(value, dict):
+                    method_list = df['METHOD'].unique().tolist()
+                    filtered_settings[key] = {k: value[k] for k in method_list if k in value}
+                    if 'unknown' in method_list and df[df['METHOD']=='unknown'][key].notna().any():
+                        perc_1 = df[df['METHOD']=='unknown'][key].quantile(0.01)
+                        perc_99 = df[df['METHOD']=='unknown'][key].quantile(0.99)
+                        filtered_settings[key]['unknown'][0] = perc_1
+                        filtered_settings[key]['unknown'][1] = perc_99
+                    elif 'unknown' in method_list and not df[df['METHOD']=='unknown'][key].notna().any():
+                        filtered_settings[key].pop('unknown', None)
+                else:
+                    filtered_settings[key] = value
         
         return filtered_settings
 
