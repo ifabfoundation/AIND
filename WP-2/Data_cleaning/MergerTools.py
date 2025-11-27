@@ -1,4 +1,5 @@
 
+import stat
 import pandas as pd
 import numpy as np
 import re
@@ -14,28 +15,27 @@ class MergerTools:
         Crea una matrice di match per (RID, EXAMDATE) tra i dataframe in dfs.
         """
         # Assicurati che le colonne RID e EXAMDATE siano presenti e che EXAMDATE sia in formato datetime
-        for i, df in enumerate(dfs):
+        for _, df in dfs.items():
             for col in columns_list:
                 if col not in df.columns:
-                    print(f"AVVISO: '{df_names[i]}' non contiene colonna RID")
+                    print(f"AVVISO: '{df_names[df_code[i]]}' non contiene colonna {col}")
 
         # Matrice di match per (RID, EXAMDATE)
-        n = len(dfs)
+        keys_list = list(dfs.keys())
         match_matrix = pd.DataFrame(0, index=df_code, columns=df_code)
         columns_set = set(columns_list)
-        for i in range(n):
-            for j in range(n):
+        for i, kI in enumerate(keys_list):
+            for j, kJ in enumerate(keys_list):
                 # Ci assicuriamo di confrontare solo se entrambe le colonne esistono nei dati
-                if columns_set.issubset(dfs[i].columns) and columns_set.issubset(dfs[j].columns):
+                if columns_set.issubset(dfs[kI].columns) and columns_set.issubset(dfs[kJ].columns):
                     if ['RID', 'EXAMDATE'] == columns_list:
-                        match_matrix.iloc[i, j] = len(self.date_matches_with_buffer(dfs[i], dfs[j], time_buffer))
+                        match_matrix.iloc[i, j] = len(self.date_matches_with_buffer(dfs[kI], dfs[kJ], time_buffer))
                     else:
-                        s1 = set(dfs[i][columns_list].drop_duplicates().itertuples(index=False, name=None))
-                        s2 = set(dfs[j][columns_list].drop_duplicates().itertuples(index=False, name=None))
+                        s1 = set(dfs[kI][columns_list].drop_duplicates().itertuples(index=False, name=None))
+                        s2 = set(dfs[kJ][columns_list].drop_duplicates().itertuples(index=False, name=None))
                         match_matrix.iloc[i, j] = len(s1 & s2)
                 else:
-                    match_matrix.iloc[i, j] = None  # Indica colonne mancanti
-
+                    match_matrix.iloc[kI, kJ] = None  # Indica colonne mancanti
 
         display_match_matrix = match_matrix.copy()
         mask = np.triu(np.ones(display_match_matrix.shape), k=1).astype(bool)
@@ -50,17 +50,19 @@ class MergerTools:
         columns_set = set(columns_list)
         s1 = set(df_0[columns_list].drop_duplicates().itertuples(index=False, name=None)) if columns_set.issubset(df_0.columns) else set()
 
-        for k in range(len(dfs)):
+        for k in dfs.keys():
             if not columns_set.issubset(dfs[k].columns):
-                print(f"AVVISO: '{df_names[k+1]}' non contiene tutte le colonne {columns_list}")
+                print(f"AVVISO: '{k}' non contiene tutte le colonne {columns_list}")
                 continue
+            
+            df_k = dfs[k].copy(deep=True)
 
             s2 = set(dfs[k][columns_list].drop_duplicates().itertuples(index=False, name=None))
 
             use_time_buffer = columns_list == ['RID', 'EXAMDATE'] and time_buffer != pd.Timedelta(days=0)
 
             if use_time_buffer:
-                matches = self.date_matches_with_buffer(df_0, dfs[k], time_buffer)
+                matches = self.date_matches_with_buffer(df_0, df_k, time_buffer)
                 matched_df0 = set(matches[['RID', 'EXAMDATE_1']].drop_duplicates().itertuples(index=False, name=None))
                 matched_dfk = set(matches[['RID', 'EXAMDATE_2']].drop_duplicates().itertuples(index=False, name=None))
                 both_count = len(matched_df0)
@@ -187,7 +189,7 @@ class MergerTools:
         """
         # Ottieni i match con buffer e senza buffer
         matches_with_buffer = self.date_matches_with_buffer(df1, df2, time_buffer, print_info=print_info)
-        matches_exact = self.date_matches_with_buffer(df1, df2, print_info=print_info)
+        matches_exact = self.date_matches_with_buffer(df1, df2)
         
         only_buffer = pd.concat([matches_with_buffer, matches_exact]).drop_duplicates(keep=False)
         
@@ -197,13 +199,7 @@ class MergerTools:
             if len(index_df1)!=len(index_df2):
                 print('Qualcosa è andato storto --> len(buffer_index1)!=len(buffer_index2)\nBisogna trovare ugual numero di indici uguali')
             elif len(index_df1) > 0:
-                print('''
-                Ci sono match con TIME BUFFER --> necessario studiare riga per riga
-                Obbiettivo capire se la differenza di data è: 
-                    1) perchè nei due dataset la data si riferisce ad esami diversi 
-                    2) o se il motivo è un altro.
-                Nel primo caso --> bisogna modificare il nome dell'examdate che si riferisce a MRI, PET, CSV, o altri biomarcatori, quindi nel merge questa data non viene persa.
-                ''')
+                print('Ci sono match con TIME BUFFER --> necessario studiare riga per riga\nObbiettivo capire se la differenza di data è: \n1) perchè nei due dataset la data si riferisce ad esami diversi \n2) o se il motivo è un altro.\nNel primo caso --> bisogna modificare il nome dell\'examdate che si riferisce a MRI, PET, CSV, o altri biomarcatori, quindi nel merge questa data non viene persa.')
             else:
                 print('ZERO matches con TIME BUFFER')
         
@@ -245,7 +241,8 @@ class MergerTools:
 
             return pd.Index(index_diff1), pd.Index(index_diff2), columns_different
 
-    def create_temp_merge(self, df1, df2, all_index1, all_index2, rid, col_list=['VISCODE', 'EXAMDATE']):
+
+    def create_temp_merge(self, df1, df2, all_index1, all_index2, rid=None, col_list=['VISCODE', 'EXAMDATE']):
         """
         Crea un merge temporaneo dei dataset filtrati per il soggetto RID.
         Include solo colonne RID, VISCODE ed EXAMDATE (se presenti).
@@ -257,24 +254,28 @@ class MergerTools:
             df2: secondo dataframe
             all_index1: indici appaiati del primo dataframe (indici originali)
             all_index2: indici appaiati del secondo dataframe (indici originali)
-            rid: RID del soggetto da filtrare
-            
+            rid: RID del soggetto da filtrare, se None, non filtra per RID
+            col_list: liste di colonne da selezionare
         Returns:
             DataFrame con merge temporaneo
         """
         # Filtra per RID
-        df1_filtered = df1[df1['RID'] == rid].copy(deep=True)
-        df2_filtered = df2[df2['RID'] == rid].copy(deep=True)
-        
+        if rid is not None:
+            df1_filtered = df1[df1['RID'] == rid].copy(deep=True)
+            df2_filtered = df2[df2['RID'] == rid].copy(deep=True)
+        else:
+            df1_filtered = df1.copy(deep=True)
+            df2_filtered = df2.copy(deep=True)
+
         # Seleziona solo colonne RID, VISCODE, EXAMDATE (se presenti)
-        cols_to_select = ['RID']
+        cols_to_select = []
         for col in col_list:
             if col in df1_filtered.columns:
                 cols_to_select.append(col)
         
         df1_focus = df1_filtered[cols_to_select].copy(deep=True)
         
-        cols_to_select2 = ['RID']
+        cols_to_select2 = []
         for col in col_list:
             if col in df2_filtered.columns:
                 cols_to_select2.append(col)
@@ -300,13 +301,13 @@ class MergerTools:
             # Verifica che gli indici appartengano ai dataframe filtrati per questo RID
             if orig_idx1 in original_indices_1 and orig_idx2 in original_indices_2:
                 # Verifica anche che il RID corrisponda (doppio controllo)
-                if df1.loc[orig_idx1, 'RID'] == rid and df2.loc[orig_idx2, 'RID'] == rid:
+                if rid is None or (df1.loc[orig_idx1, 'RID'] == rid and df2.loc[orig_idx2, 'RID'] == rid):
                     # Trova la posizione nell'array filtrato
                     filtered_idx1 = original_indices_1.index(orig_idx1)
                     filtered_idx2 = original_indices_2.index(orig_idx2)
                     paired_indices_1.append(filtered_idx1)
                     paired_indices_2.append(filtered_idx2)
-        
+       
         # Crea il merge per le righe appaiate
         paired_rows = []
         for idx1, idx2 in zip(paired_indices_1, paired_indices_2):
@@ -314,10 +315,14 @@ class MergerTools:
             row2 = df2_focus.iloc[idx2].copy()
             
             # Crea una riga merged
-            merged_row = {'RID': row1['RID']}
-            
+            #merged_row = {'RID': row1['RID']}
+            merged_row = {}
+
             for col in col_list:
-                if col in row1.index:
+                if col == 'RID':
+                    merged_row[col] = row1[col]
+                    continue
+                elif col in row1.index:
                     merged_row[f'{col}_1'] = row1[col]
                 else:
                     merged_row[f'{col}_1'] = None
@@ -329,38 +334,46 @@ class MergerTools:
             paired_rows.append(merged_row)
         
         # Trova righe uniche (non appaiate)
-        all_filtered_indices_1 = set(range(len(df1_focus)))
-        all_filtered_indices_2 = set(range(len(df2_focus)))
-        unique_indices_1 = all_filtered_indices_1 - set(paired_indices_1)
-        unique_indices_2 = all_filtered_indices_2 - set(paired_indices_2)
+        if rid is not None:
+            all_filtered_indices_1 = set(range(len(df1_focus)))
+            all_filtered_indices_2 = set(range(len(df2_focus)))
+            unique_indices_1 = all_filtered_indices_1 - set(paired_indices_1)
+            unique_indices_2 = all_filtered_indices_2 - set(paired_indices_2)
         
-        # Aggiungi righe uniche di df1
-        for idx1 in unique_indices_1:
-            row1 = df1_focus.iloc[idx1].copy()
-            merged_row = {'RID': row1['RID']}
-            
-            for col in col_list:
-                if col in row1.index:
-                    merged_row[f'{col}_1'] = row1[col]
-                else:
-                    merged_row[f'{col}_1'] = None
-                merged_row[f'{col}_2'] = None
-            
-            paired_rows.append(merged_row)
         
-        # Aggiungi righe uniche di df2
-        for idx2 in unique_indices_2:
-            row2 = df2_focus.iloc[idx2].copy()
-            merged_row = {'RID': row2['RID']}
-            
-            for col in col_list:
-                if col in row2.index:
-                    merged_row[f'{col}_2'] = row2[col]
-                else:
+            # Aggiungi righe uniche di df1
+            for idx1 in unique_indices_1:
+                row1 = df1_focus.iloc[idx1].copy()
+                merged_row = {}
+                
+                for col in col_list:
+                    if col == 'RID':
+                        merged_row[col] = row1[col]
+                        continue
+                    elif col in row1.index:
+                        merged_row[f'{col}_1'] = row1[col]
+                    else:
+                        merged_row[f'{col}_1'] = None
                     merged_row[f'{col}_2'] = None
-                merged_row[f'{col}_1'] = None
+                
+                paired_rows.append(merged_row)
+            
+            # Aggiungi righe uniche di df2
+            for idx2 in unique_indices_2:
+                row2 = df2_focus.iloc[idx2].copy()
+                merged_row = {}
+                
+                for col in col_list:
+                    if col == 'RID':
+                        merged_row[col] = row2[col]
+                        continue
+                    elif col in row2.index:
+                        merged_row[f'{col}_2'] = row2[col]
+                    else:
+                        merged_row[f'{col}_2'] = None
+                    merged_row[f'{col}_1'] = None
 
-            paired_rows.append(merged_row)
+                paired_rows.append(merged_row)
         
         # Crea il dataframe finale
         temp_merge = pd.DataFrame(paired_rows)
@@ -447,7 +460,7 @@ class MergerTools:
         raise FileNotFoundError(f'File JSON non trovato. Percorsi verificati: {candidates}')
 
 
-    def get_merged_col_reference(self, col1, col2, diff_idx, col_name):
+    def get_merged_col_reference(self, col1, col2, diff_idx, col_name, subject_id):
         '''
         Funzione per ottenere la colonna matchata per le colonne di riferimento.
         Focus su un solo soggetto che ha righe incomune tra due dataframe.
@@ -456,15 +469,16 @@ class MergerTools:
             col2: colonna del secondo dataframe
             diff_idx: indici delle righe che differiscono
             col_name: nome della colonna
+            subject_id: id del soggetto
         Returns:
             colonna matchata
         '''
 
         if col_name == 'EXAMDATE':
-            print('### There are differences between EXAMDATE_1 and EXAMDATE_2 ---> should be handled before')
+            print(f'{subject_id} \n### There are differences between EXAMDATE_1 and EXAMDATE_2 ---> should be handled before')
             return col1.copy().fillna(col2)
 
-        elif col_name in ['VISITCODE', 'VISIT_MONTH']:
+        elif col_name in ['VISCODE', 'VISIT_MONTH']:
             # visit code andrà poi eliminato mentre visit_month verrà normalizzato/ricalcolato alla fine del merge
             return col1.copy().fillna(col2)
 
@@ -668,7 +682,7 @@ class MergerTools:
         diff_check = (diff_col > 0.1*mean_col).fillna(False)
         if not all(~diff_check):
             # Conta il numero di True in diff_check
-            num_true = diff_check.sum()
+            print(f'### ATTENZIONE: {col_name} diff >>> 10% media')
             
             #print('ATTENZIONE: ci sono differenze tra i due valori che superano il 10% della media\n', diff_check)
             
@@ -682,12 +696,15 @@ class MergerTools:
                 else:
                     diff_dict = {}
                 
+                # Converte diff_check in lista di booleani
+                diff_check_list = diff_check.tolist()
+                
                 # Se col_name è già nelle chiavi, appende alla lista esistente
                 if col_name in diff_dict:
-                    diff_dict[col_name].append([rid, int(num_true)])
+                    diff_dict[col_name].append([rid, diff_check_list])
                 else:
-                    # Altrimenti aggiunge la nuova chiave con una lista contenente [rid, num_true]
-                    diff_dict[col_name] = [[rid, int(num_true)]]
+                    # Altrimenti aggiunge la nuova chiave con una lista contenente [rid, lista_booleani]
+                    diff_dict[col_name] = [[rid, diff_check_list]]
                 
                 # Salva il dizionario aggiornato nel file JSON
                 with open(json_file_path, 'w', encoding='utf-8') as f:
@@ -719,14 +736,18 @@ class MergerTools:
 
             # CRITERIO a PRIORI (se presente)
             if param_type == 'volume':
+                stat1 = status1.loc[idx] if status1 is not None else None
+                stat2 = status2.loc[idx] if status2 is not None else None
                 # se i due status sono diversi allora prende quello che ha lo status 'complete'
-                if status1 is not None and status2 is not None and status1.loc[idx] != status2.loc[idx]:
-                    if status1.loc[idx] == 'complete':
+                if stat1 is not None or stat2 is not None and stat1 != stat2:
+                    if (stat1 == 'complete' and stat2 != 'complete') or (stat1 == 'partial' and stat2 is None):
                         merged_col.loc[idx] = col1.loc[idx]
-                        #print(idx, '--> scelta per STATUS')
-                    elif status2.loc[idx] == 'complete':
+                        #print(idx, f'--> scelta per STATUS1 (1){stat1} vs (2){stat2}')
+                    elif (stat2 == 'complete' and stat1 != 'complete') or (stat2 == 'partial' and stat1 is None):
                         merged_col.loc[idx] = col2.loc[idx]
-                        #print(idx, '--> scelta per STATUS')
+                        #print(idx, f'--> scelta per STATUS2 (1){stat1} vs (2){stat2}')
+                    else:
+                        merged_col.loc[idx] = np.nan
                     continue
             elif param_type == 'biomark':
                 pass
@@ -754,8 +775,10 @@ class MergerTools:
         cofattori_ref = self.get_json_file('cofattori_values_settings.json')
 
         ### CREAZIONE TEMPORANEO MERGE 
-        # specifico per soggetto, e focalizzato su colonne in comune
-        col_list = [x for x in df1.columns if x in df2.columns and x != 'RID']
+        # specifico per soggetto
+        #col_list = [x for x in df1.columns if x in df2.columns and x != 'RID']
+        common_cols = list(df1.columns.intersection(df2.columns))
+        col_list = list(df1.columns) + [c for c in df2.columns if c not in df1.columns]
         df_compare = self.create_temp_merge(df1, df2, index1, index2, rid=subject_id, col_list=col_list)
         ### CREAZIONE MERGE per il soggetto con righe accoppiate
         base_cols = [c for c in ['RID', 'DX_1', 'DX_2'] if c in df_compare.columns]
@@ -766,9 +789,22 @@ class MergerTools:
         col_diff = []
         row_diff = {}
         
-        for col in col_list:
+        col_to_merge = [c for c in col_list if c not in base_cols]
+        #print(f'col_to_merge {col_to_merge}')
+        for col in col_to_merge:
             col1 = col + '_1'
             col2 = col + '_2'
+            # se la colonna non è in comune tra i due df, prendo la colonna tra le due che non è tutta nan
+            if col not in common_cols:
+                temp_df = df_compare[[col1, col2]].dropna(axis=1, how="all")
+                if temp_df.shape[1] > 0:
+                    valid_col = temp_df.iloc[:, 0]
+                    df_merge[col] = valid_col
+                else:
+                    # Se entrambe le colonne sono completamente NaN, crea una colonna di NaN
+                    df_merge[col] = pd.Series([None] * len(df_merge), index=df_merge.index)
+                continue
+
             if df_compare[col1].equals(df_compare[col2]):
                 col_exact_match.append(col)
                 df_merge[col] = df_compare[col1]
@@ -790,12 +826,12 @@ class MergerTools:
             
             ### COLONNE DI RIFERIMENTO
             if col in ref_col:
-                df_merge[col] = self.get_merged_col_reference(df_compare[col1], df_compare[col2], diff_idx, col_name=col)
+                df_merge[col] = self.get_merged_col_reference(df_compare[col1], df_compare[col2], diff_idx, col_name=col, subject_id=subject_id)
             ### VOLUMI
             elif col in volume_ref.keys():
                 if 'STATUS' in col_list:
-                    status1 = df_compare['STATUS_1']
-                    status2 = df_compare['STATUS_2']
+                    status1 = df_compare['STATUS_1'] if 'STATUS' in df1.columns else None
+                    status2 = df_compare['STATUS_2'] if 'STATUS' in df2.columns else None
                     df_merge[col] = self.get_merged_columns_float( df_compare[col1], df_compare[col2], diff_idx, col_name=col, param_type='volume', param_ref=volume_ref, status1=status1, status2=status2, rid=subject_id)
                 else:
                     df_merge[col] = self.get_merged_columns_float( df_compare[col1], df_compare[col2], diff_idx, col_name=col, param_type='volume', param_ref=volume_ref, rid=subject_id)
