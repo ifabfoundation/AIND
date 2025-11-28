@@ -465,3 +465,34 @@ def normalize_dataset(dataset):
             dataset_copy[column] = normalize_column_min_max(dataset_copy[column])
 
     return dataset_copy
+
+def clean_generated_dataframe(df_generated):
+    """
+    Clean the generated dataframe by removing prefixes and metadata columns.
+
+    This function:
+    - Removes 'generated_' prefix from column names (where present)
+    - Removes 'generation_id' column if present
+    - Returns the cleaned dataframe
+
+    Parameters:
+    -----------
+    df_generated : pandas.DataFrame
+        The generated synthetic dataframe to clean
+
+    Returns:
+    --------
+    pandas.DataFrame
+        Cleaned dataframe ready for saving
+    """
+    df_cleaned = df_generated.copy()  # Work on a copy to preserve original data
+
+    # Remove 'generated_' prefix from column names
+    df_cleaned.columns = [col.replace('generated_', '') if col.startswith('generated_') else col
+                          for col in df_cleaned.columns]
+
+    # Remove generation_id column if present
+    if 'generation_id' in df_cleaned.columns:
+        df_cleaned = df_cleaned.drop(columns=['generation_id'])
+
+    return df_cleaned
