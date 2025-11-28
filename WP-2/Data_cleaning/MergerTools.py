@@ -29,7 +29,7 @@ class MergerTools:
                 # Ci assicuriamo di confrontare solo se entrambe le colonne esistono nei dati
                 if columns_set.issubset(dfs[kI].columns) and columns_set.issubset(dfs[kJ].columns):
                     if ['RID', 'EXAMDATE'] == columns_list:
-                        match_matrix.iloc[i, j] = len(self.date_matches_with_buffer(dfs[kI], dfs[kJ], time_buffer))
+                        match_matrix.iloc[i, j] = len(self.date_matches_with_buffer(dfs[kI], dfs[kJ], time_buffer)[0])
                     else:
                         s1 = set(dfs[kI][columns_list].drop_duplicates().itertuples(index=False, name=None))
                         s2 = set(dfs[kJ][columns_list].drop_duplicates().itertuples(index=False, name=None))
@@ -62,7 +62,7 @@ class MergerTools:
             use_time_buffer = columns_list == ['RID', 'EXAMDATE'] and time_buffer != pd.Timedelta(days=0)
 
             if use_time_buffer:
-                matches = self.date_matches_with_buffer(df_0, df_k, time_buffer)
+                matches = self.date_matches_with_buffer(df_0, df_k, time_buffer)[0]
                 matched_df0 = set(matches[['RID', 'EXAMDATE_1']].drop_duplicates().itertuples(index=False, name=None))
                 matched_dfk = set(matches[['RID', 'EXAMDATE_2']].drop_duplicates().itertuples(index=False, name=None))
                 both_count = len(matched_df0)
@@ -79,70 +79,70 @@ class MergerTools:
             print(f"N righe {columns_list} di {df_names[k+1]} NON in {df_names[0]}:", len(opposite), '\n')
     
     def date_matches_with_buffer(self, df1, df2, time_buffer=pd.Timedelta(days=0), print_info=False):
-        #### potremmo fare .py tipo MergerDf dove mettere queste funzioni
+
         """
-        Conta il numero di match tra due dataframe considerando RID e EXAMDATE entro un buffer temporale.
-        Due righe matchano se hanno lo stesso RID e |EXAMDATE1 - EXAMDATE2| <= time_buffer
+        Trova match esatti + eventuali match entro buffer.
+        Le date che hanno match esatto vengono *eliminate* dal confronto buffer
+        per evitare accoppiamenti falsi.
         """
-        # Prendi solo RID e EXAMDATE, rimuovi duplicati
+
+        # --- Step 1: Preprocessing ---
         d1 = df1[['RID', 'EXAMDATE']].drop_duplicates().copy(deep=True)
         d2 = df2[['RID', 'EXAMDATE']].drop_duplicates().copy(deep=True)
-        
-        # Converti EXAMDATE in datetime se non lo è già
-        if not pd.api.types.is_datetime64_any_dtype(d1['EXAMDATE']):
-            d1['EXAMDATE'] = pd.to_datetime(d1['EXAMDATE'])
-        if not pd.api.types.is_datetime64_any_dtype(d2['EXAMDATE']):
-            d2['EXAMDATE'] = pd.to_datetime(d2['EXAMDATE'])
-        
-        # Merge su RID per trovare tutti i possibili match
-        merged = d1.merge(d2, on='RID', suffixes=('_1', '_2'))
-        
-        # Assicurati che le colonne EXAMDATE siano datetime anche dopo il merge
-        if not pd.api.types.is_datetime64_any_dtype(merged['EXAMDATE_1']):
-            merged['EXAMDATE_1'] = pd.to_datetime(merged['EXAMDATE_1'], errors='coerce')
-        if not pd.api.types.is_datetime64_any_dtype(merged['EXAMDATE_2']):
-            merged['EXAMDATE_2'] = pd.to_datetime(merged['EXAMDATE_2'], errors='coerce')
-        
-        if time_buffer != pd.Timedelta(days=0):
-            merged = merged.dropna(subset=['EXAMDATE_1', 'EXAMDATE_2'])
-            merged['date_diff'] = (merged['EXAMDATE_1'] - merged['EXAMDATE_2']).abs()
-            exact_matches = merged[merged['date_diff'] == pd.Timedelta(days=0)]
-            exact_keys = set()
-            if not exact_matches.empty:
-                exact_keys = set(
-                    exact_matches[['RID', 'EXAMDATE_1']].drop_duplicates().itertuples(index=False, name=None)
-                )
-            buffered_matches = merged[
-                (merged['date_diff'] <= time_buffer) & (merged['date_diff'] > pd.Timedelta(days=0))
-            ]
-            if exact_keys and not buffered_matches.empty:
-                buffered_matches = buffered_matches[
-                    ~buffered_matches.apply(lambda row: (row['RID'], row['EXAMDATE_1']) in exact_keys, axis=1)
-                ]
-            matches = pd.concat([exact_matches, buffered_matches], ignore_index=True)
-            if print_info:
-                exact_count = len(exact_matches)
-                buffer_count = len(buffered_matches)
-                if exact_count > 0 and buffer_count == 0:
-                    print(f"[date_matches_with_buffer] Trovati solo match esatti --> {exact_count}.")
-                elif exact_count == 0 and buffer_count > 0:
-                    print(f"[date_matches_with_buffer] Nessun match esatto, trovati solo match entro il buffer ({time_buffer}) --> {buffer_count}.")
-                elif exact_count > 0 and buffer_count > 0:
-                    print(f"[date_matches_with_buffer] Trovati match esatti e match entro il buffer ({time_buffer}) --> Exact: {exact_count} + Buffer: {buffer_count}.")
-                else:
-                    print(f"[date_matches_with_buffer] Nessun match trovato (time_buffer={time_buffer}).")
 
-        else:
-            # Rimuovi righe con valori NaT (Not a Time) prima del confronto
-            merged = merged.dropna(subset=['EXAMDATE_1', 'EXAMDATE_2'])
-            matches = merged[merged['EXAMDATE_1'] == merged['EXAMDATE_2']]
+        d1['EXAMDATE'] = pd.to_datetime(d1['EXAMDATE'])
+        d2['EXAMDATE'] = pd.to_datetime(d2['EXAMDATE'])
+
+        merged = d1.merge(d2, on='RID', suffixes=('_1', '_2'))
+        merged['date_diff'] = (merged['EXAMDATE_1'] - merged['EXAMDATE_2']).abs()
+
+        # --- Step 2: Match esatti ---
+        exact_matches = merged[merged['date_diff'] == pd.Timedelta(0)]
+
+        # Lista (RID, EXAMDATE) da escludere dal buffer match
+        exact_keys = set(
+            exact_matches[['RID', 'EXAMDATE_1']]
+            .drop_duplicates()
+            .itertuples(index=False, name=None)
+        )
+
+        # Se nessun buffer richiesto → ritorno match esatti e basta
+        if time_buffer == pd.Timedelta(0):
             if print_info:
-                print(f"[date_matches_with_buffer] Trovati solo match esatti --> {len(matches)}.")
-        # Conta i match unici (RID, EXAMDATE_1) - ogni riga di df1 può matchare con più righe di df2
-        # ma vogliamo contare quante righe di df1 hanno almeno un match
-        unique_matches = matches[['RID', 'EXAMDATE_1', 'EXAMDATE_2']].drop_duplicates()
-        
-        return unique_matches
+                print(f"[date_matches_with_buffer] Match esatti: {len(exact_matches)}")
+            return exact_matches[['RID', 'EXAMDATE_1', 'EXAMDATE_2']].drop_duplicates()
+
+        # --- Step 3: Rimuovere *tutte le righe* che coinvolgono una data già matchata esattamente ---
+        if exact_keys:
+            merged_no_exact = merged[
+                ~(
+                    merged.apply(lambda row:
+                        (row['RID'], row['EXAMDATE_1']) in exact_keys or
+                        (row['RID'], row['EXAMDATE_2']) in exact_keys,
+                    axis=1)
+                )
+            ]
+        else:
+            merged_no_exact = merged.copy()
+
+        # --- Step 4: Match entro buffer (escludendo match esatti) ---
+        buffered_matches = merged_no_exact[
+            (merged_no_exact['date_diff'] <= time_buffer) &
+            (merged_no_exact['date_diff'] > pd.Timedelta(0))
+        ]
+
+        # --- Step 5: Unione finale ---
+        matches = pd.concat([exact_matches, buffered_matches], ignore_index=True)
+        matches = matches[['RID', 'EXAMDATE_1', 'EXAMDATE_2']].drop_duplicates()
+
+        # --- Step 6: Info ---
+        if print_info:
+            print(f"[date_matches_with_buffer] Exact: {len(exact_matches)}, "
+                f"Buffer ({time_buffer}): {len(buffered_matches)}, "
+                f"Totale: {len(matches)}")
+
+        return matches, exact_matches, buffered_matches
+
 
 
     def get_indexes_from_matches(self,df1, df2, matches, columns_list=['RID', 'EXAMDATE']):
@@ -188,18 +188,15 @@ class MergerTools:
             index_df2: indici delle righe in df2 che matchano con buffer ma non hanno data esatta
         """
         # Ottieni i match con buffer e senza buffer
-        matches_with_buffer = self.date_matches_with_buffer(df1, df2, time_buffer, print_info=print_info)
-        matches_exact = self.date_matches_with_buffer(df1, df2)
+        buffered_matches = self.date_matches_with_buffer(df1, df2, time_buffer, print_info=print_info)[2] 
         
-        only_buffer = pd.concat([matches_with_buffer, matches_exact]).drop_duplicates(keep=False)
-        
-        index_df1, index_df2 = self.get_indexes_from_matches(df1, df2, only_buffer, columns_list=['RID', 'EXAMDATE'])
+        index_df1, index_df2 = self.get_indexes_from_matches(df1, df2, buffered_matches, columns_list=['RID', 'EXAMDATE'])
 
         if print_info:
             if len(index_df1)!=len(index_df2):
                 print('Qualcosa è andato storto --> len(buffer_index1)!=len(buffer_index2)\nBisogna trovare ugual numero di indici uguali')
             elif len(index_df1) > 0:
-                print('Ci sono match con TIME BUFFER --> necessario studiare riga per riga\nObbiettivo capire se la differenza di data è: \n1) perchè nei due dataset la data si riferisce ad esami diversi \n2) o se il motivo è un altro.\nNel primo caso --> bisogna modificare il nome dell\'examdate che si riferisce a MRI, PET, CSV, o altri biomarcatori, quindi nel merge questa data non viene persa.')
+                print('\n\nCi sono match con TIME BUFFER --> necessario studiare riga per riga\n====> Perchè?\n1) si riferisce ad esami diversi ==> raname uno dei due EXAMDATE \n2) altenativamente ===> scegli quale EXAMDATE usare e sovrascriverlo sull\'altro per quei valori.\n')            
             else:
                 print('ZERO matches con TIME BUFFER')
         
@@ -210,8 +207,8 @@ class MergerTools:
         """
         Ottiene gli indici delle righe che matchano tra due dataframe considerando RID e EXAMDATE con buffer temporale.
         """
-        unique_matches = self.date_matches_with_buffer(df1, df2, time_buffer, print_info)
-        index_df1, index_df2 = self.get_indexes_from_matches(df1, df2, unique_matches, columns_list=['RID', 'EXAMDATE'])
+        all_matches = self.date_matches_with_buffer(df1, df2, time_buffer, print_info)[0]
+        index_df1, index_df2 = self.get_indexes_from_matches(df1, df2, all_matches, columns_list=['RID', 'EXAMDATE'])
         return index_df1, index_df2
 
     def get_row_different_for_col(self, df1, df2,index1,index2,columns_list):
@@ -268,12 +265,12 @@ class MergerTools:
             df2_filtered = df2.copy(deep=True)
 
         # Seleziona solo colonne RID, VISCODE, EXAMDATE (se presenti)
-        cols_to_select = []
+        cols_to_select1 = []
         for col in col_list:
             if col in df1_filtered.columns:
-                cols_to_select.append(col)
+                cols_to_select1.append(col)
         
-        df1_focus = df1_filtered[cols_to_select].copy(deep=True)
+        df1_focus = df1_filtered[cols_to_select1].copy(deep=True)
         
         cols_to_select2 = []
         for col in col_list:
@@ -339,7 +336,7 @@ class MergerTools:
             all_filtered_indices_2 = set(range(len(df2_focus)))
             unique_indices_1 = all_filtered_indices_1 - set(paired_indices_1)
             unique_indices_2 = all_filtered_indices_2 - set(paired_indices_2)
-        
+            
         
             # Aggiungi righe uniche di df1
             for idx1 in unique_indices_1:
@@ -475,7 +472,7 @@ class MergerTools:
         '''
 
         if col_name == 'EXAMDATE':
-            print(f'{subject_id} \n### There are differences between EXAMDATE_1 and EXAMDATE_2 ---> should be handled before')
+            print(f'{subject_id} \n### EXAMDATE_1 != EXAMDATE_2 ---> should be handled before')
             return col1.copy().fillna(col2)
 
         elif col_name in ['VISCODE', 'VISIT_MONTH']:
@@ -679,12 +676,11 @@ class MergerTools:
         mean_col = col1.combine(col2, lambda x, y: (x + y) / 2 if not pd.isna(x) and not pd.isna(y) else x if pd.isna(x) else y, fill_value=np.nan)
         # verifico se la differenza tra i due valori è maggiore del 10% della media
         diff_col = col1.combine(col2, lambda x, y: abs(x - y) if not pd.isna(x) and not pd.isna(y) else np.nan, fill_value=np.nan)
-        diff_check = (diff_col > 0.1*mean_col).fillna(False)
-        if not all(~diff_check):
-            # Conta il numero di True in diff_check
-            print(f'### ATTENZIONE: {col_name} diff >>> 10% media')
-            
-            #print('ATTENZIONE: ci sono differenze tra i due valori che superano il 10% della media\n', diff_check)
+        #diff_in_col = np.max([(col1.shift(0) - col1.shift(-1)).iloc[:-1].max(), (col2.shift(0) - col2.shift(-1)).iloc[:-1].max()])
+        diff_check_mean = (diff_col > 0.2*mean_col).fillna(False)
+        #diff_check_in_col = (diff_col > diff_in_col).fillna(False)
+        if not all(~diff_check_mean):           
+            print(f'------> ATTENZIONE: {col_name} diff >>> 20% media tra visite')
             
             # Aggiorna il file JSON se rid è disponibile
             if rid is not None:
@@ -695,20 +691,21 @@ class MergerTools:
                         diff_dict = json.load(f)
                 else:
                     diff_dict = {}
-                
                 # Converte diff_check in lista di booleani
-                diff_check_list = diff_check.tolist()
+                diff_check_list_mean = diff_check_mean.tolist()
+                #diff_check_list_in_col = diff_check_in_col.tolist()
                 
                 # Se col_name è già nelle chiavi, appende alla lista esistente
                 if col_name in diff_dict:
-                    diff_dict[col_name].append([rid, diff_check_list])
+                    diff_dict[col_name].append([rid, diff_check_list_mean])#, diff_check_list_in_col])
                 else:
                     # Altrimenti aggiunge la nuova chiave con una lista contenente [rid, lista_booleani]
-                    diff_dict[col_name] = [[rid, diff_check_list]]
+                    diff_dict[col_name] = [[rid, diff_check_list_mean]]#, diff_check_list_in_col]]
                 
                 # Salva il dizionario aggiornato nel file JSON
                 with open(json_file_path, 'w', encoding='utf-8') as f:
                     json.dump(diff_dict, f, indent=4, ensure_ascii=False)
+
         # verifico se tutte le colonne sono dentro il range e seguono il trend
         in_trend, in_range = self.check_trend_and_range(col1, col2, mean_col, trend, min_val, max_val)
 
