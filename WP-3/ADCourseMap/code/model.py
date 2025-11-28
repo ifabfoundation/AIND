@@ -195,6 +195,9 @@ class LeaspyModel():
         generated_datasets = []
         all_combined_data = []
 
+        # Track cumulative subject count to ensure unique IDs across generations
+        cumulative_subjects = 0
+
         # Use personalization to sample random effect variables from the data distribution
         ip = self.personalize(data, generation=True)
 
@@ -277,6 +280,25 @@ class LeaspyModel():
             # Convert to dataframe format
             df_simu = simulated_data.data.to_dataframe()
 
+            # Make IDs unique across all generations by adding offset
+            # Reset index to access ID column easily
+            df_simu_reset = df_simu.reset_index()
+
+            # Get unique IDs and create mapping to new unique IDs
+            unique_ids = df_simu_reset['ID'].unique()
+            id_mapping = {old_id: f"S{cumulative_subjects + idx:05d}" for idx, old_id in enumerate(unique_ids)}
+
+            # Apply ID mapping
+            df_simu_reset['ID'] = df_simu_reset['ID'].map(id_mapping)
+
+            # Set index back to [ID, TIME]
+            df_simu = df_simu_reset.set_index(['ID', 'TIME'])
+
+            # Update cumulative count for next iteration
+            cumulative_subjects += len(unique_ids)
+
+            print(f"  Generated {len(unique_ids)} unique subjects (IDs: {id_mapping[unique_ids[0]]} to {id_mapping[unique_ids[-1]]})")
+
             # Add cofactor combination information to the dataframe (using original combination including NaN values)
             for cofactor_name, cofactor_value in original_combination.items():
                 df_simu[f'generated_{cofactor_name}'] = cofactor_value
@@ -290,9 +312,19 @@ class LeaspyModel():
                 generated_datasets.append(df_simu)
 
         if merge_generations:
+            # Reset index to make ID and TIME regular columns before concatenation
+            all_combined_data_reset = [df.reset_index() for df in all_combined_data]
+
             # Combine all generations into a single DataFrame
-            final_dataset = pd.concat(all_combined_data, ignore_index=True)
-            print(f"Combined dataset: {len(final_dataset)} total observations")
+            final_dataset = pd.concat(all_combined_data_reset, ignore_index=True)
+
+            # Verify unique IDs
+            unique_ids_final = final_dataset['ID'].nunique()
+            total_rows = len(final_dataset)
+
+            print(f"Combined dataset: {total_rows} total observations from {unique_ids_final} unique subjects")
+            print(f"Average visits per subject: {total_rows / unique_ids_final:.2f}")
+
             return final_dataset
         else:
             print(f"Generated {len(generated_datasets)} separate datasets")
