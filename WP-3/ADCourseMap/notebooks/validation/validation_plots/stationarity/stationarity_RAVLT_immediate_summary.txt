@@ -1,0 +1,123 @@
+================================================================================
+STATIONARITY TESTS SUMMARY
+================================================================================
+
+Objective:
+--------------------------------------------------------------------------------
+Validate that synthetic data captures disease progression dynamics.
+CRITICAL: If real data is non-stationary (disease progression) but
+synthetic data is stationary (static patients), the model has FAILED.
+
+================================================================================
+AUGMENTED DICKEY-FULLER (ADF) TEST
+================================================================================
+Null Hypothesis: Time series is non-stationary
+Interpretation: p < 0.05 -> Stationary (reject H0)
+
+Status: PASSED
+
+Real Data:
+  Total patients tested: 1107
+  Stationary: 301 (27.2%)
+  Non-stationary: 806 (72.8%)
+
+Synthetic Data:
+  Total patients tested: 1196
+  Stationary: 404 (33.8%)
+  Non-stationary: 792 (66.2%)
+
+Difference: 6.6%
+
+Interpretation:
+GOOD: Synthetic data matches real data stationarity patterns. The model successfully captures disease progression dynamics.
+
+================================================================================
+KWIATKOWSKI-PHILLIPS-SCHMIDT-SHIN (KPSS) TEST
+================================================================================
+Null Hypothesis: Time series is stationary
+Interpretation: p >= 0.05 -> Stationary (cannot reject H0)
+
+Status: PASSED
+
+Real Data:
+  Total patients tested: 1378
+  Stationary: 995 (72.2%)
+  Non-stationary: 383 (27.8%)
+
+Synthetic Data:
+  Total patients tested: 1333
+  Stationary: 980 (73.5%)
+  Non-stationary: 353 (26.5%)
+
+Difference: 1.3%
+
+Interpretation:
+GOOD: Synthetic data matches real data stationarity patterns. The model successfully captures disease progression dynamics.
+
+================================================================================
+INTERPRETATION GUIDE: Understanding the Results
+================================================================================
+
+Why do ADF and KPSS give seemingly opposite results?
+--------------------------------------------------------------------------------
+This is NOT a contradiction! The two tests have OPPOSITE null hypotheses:
+
+  ADF Test:
+    H0 (null hypothesis) = 'The series is NON-stationary'
+    If p-value > 0.05 -> Cannot reject H0 -> Series is NON-stationary
+    If p-value < 0.05 -> Reject H0 -> Series is STATIONARY
+
+  KPSS Test:
+    H0 (null hypothesis) = 'The series is STATIONARY'
+    If p-value > 0.05 -> Cannot reject H0 -> Series is STATIONARY
+    If p-value < 0.05 -> Reject H0 -> Series is NON-stationary
+
+What this means in practice:
+--------------------------------------------------------------------------------
+Many patients fall in a 'GREY ZONE' where:
+  - ADF cannot find strong enough evidence of stationarity
+    -> Classified as 'non-stationary' (shows some progression)
+  - KPSS cannot find strong enough evidence of non-stationarity
+    -> Classified as 'stationary' (not dramatic changes)
+
+This grey zone typically contains patients with:
+  - Mild/moderate disease progression (not dramatic decline)
+  - Some variability but with underlying trends
+  - Realistic disease dynamics (not static, not extreme)
+
+================================================================================
+WHAT MATTERS FOR YOUR VALIDATION
+================================================================================
+
+Focus on ADF test for disease progression:
+--------------------------------------------------------------------------------
+  Real patients showing progression:        72.8%
+  Synthetic patients showing progression:   66.2%
+  Difference:                                6.6%
+
+INTERPRETATION:
+  The synthetic data successfully captures the disease progression
+  dynamics of the real data. The model is NOT generating 'frozen'
+  patients - synthetic patients progress similarly to real ones.
+
+================================================================================
+OVERALL CONCLUSION
+================================================================================
+STATUS: PASSED
+
+The model successfully captures disease progression dynamics.
+Synthetic data matches real data stationarity patterns.
+
+What this means in simple terms:
+--------------------------------------------------------------------------------
+  - 72.8% of REAL patients show disease progression over time
+  - 66.2% of SYNTHETIC patients show disease progression
+  - Difference of 6.6% is ACCEPTABLE (threshold: < 20%)
+
+  SUCCESS: The synthetic data is NOT generating 'frozen' patients.
+           Synthetic patients progress realistically over time,
+           capturing the disease dynamics of real patients.
+
+RECOMMENDATION: Synthetic data is validated for temporal dynamics.
+                Safe to use for longitudinal analyses.
+================================================================================

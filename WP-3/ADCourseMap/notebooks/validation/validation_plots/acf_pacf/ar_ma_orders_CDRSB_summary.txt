@@ -1,0 +1,67 @@
+================================================================================
+AR/MA ORDER DETECTION SUMMARY: CDRSB
+================================================================================
+
+Objective:
+--------------------------------------------------------------------------------
+Validate that synthetic data has the same temporal structure (AR/MA orders)
+as real data.
+
+What is AR/MA order?
+--------------------------------------------------------------------------------
+AR(p): Autoregressive model of order p (depends on p previous values)
+MA(q): Moving average model of order q (depends on q previous errors)
+
+CRITICAL: If AR/MA orders differ, the synthetic model may be:
+  - Overfitting (too high order)
+  - Underfitting (too low order)
+  - Using wrong temporal dependencies
+
+================================================================================
+AR ORDER (AUTOREGRESSIVE)
+================================================================================
+
+Most common in Real data:      AR(1)
+Most common in Synthetic data: AR(2)
+Match: NO
+
+Real AR order distribution:
+  AR(1): 46.2%
+  AR(2): 34.3%
+  AR(3): 19.5%
+
+Synthetic AR order distribution:
+  AR(1): 17.5%
+  AR(2): 71.1%
+  AR(3): 11.4%
+
+================================================================================
+MA ORDER (MOVING AVERAGE)
+================================================================================
+
+Most common in Real data:      MA(1)
+Most common in Synthetic data: MA(1)
+Match: YES
+
+Real MA order distribution:
+  MA(1): 61.5%
+  MA(2): 32.0%
+  MA(3): 6.5%
+
+Synthetic MA order distribution:
+  MA(1): 60.5%
+  MA(2): 37.7%
+  MA(3): 1.8%
+
+================================================================================
+CONCLUSION
+================================================================================
+
+Status: WARNING
+
+Interpretation:
+WARNING: Partial match. Real: AR(1), MA(1). Synthetic: AR(2), MA(1).
+
+RECOMMENDATION: Review model. Partial match in AR/MA structure.
+                May affect some longitudinal analyses.
+================================================================================

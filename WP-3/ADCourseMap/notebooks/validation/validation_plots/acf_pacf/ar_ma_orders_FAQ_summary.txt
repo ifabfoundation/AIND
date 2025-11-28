@@ -1,0 +1,67 @@
+================================================================================
+AR/MA ORDER DETECTION SUMMARY: FAQ
+================================================================================
+
+Objective:
+--------------------------------------------------------------------------------
+Validate that synthetic data has the same temporal structure (AR/MA orders)
+as real data.
+
+What is AR/MA order?
+--------------------------------------------------------------------------------
+AR(p): Autoregressive model of order p (depends on p previous values)
+MA(q): Moving average model of order q (depends on q previous errors)
+
+CRITICAL: If AR/MA orders differ, the synthetic model may be:
+  - Overfitting (too high order)
+  - Underfitting (too low order)
+  - Using wrong temporal dependencies
+
+================================================================================
+AR ORDER (AUTOREGRESSIVE)
+================================================================================
+
+Most common in Real data:      AR(2)
+Most common in Synthetic data: AR(2)
+Match: YES
+
+Real AR order distribution:
+  AR(1): 32.2%
+  AR(2): 40.9%
+  AR(3): 26.9%
+
+Synthetic AR order distribution:
+  AR(1): 0.9%
+  AR(2): 81.2%
+  AR(3): 17.9%
+
+================================================================================
+MA ORDER (MOVING AVERAGE)
+================================================================================
+
+Most common in Real data:      MA(1)
+Most common in Synthetic data: MA(1)
+Match: YES
+
+Real MA order distribution:
+  MA(1): 67.3%
+  MA(2): 26.3%
+  MA(3): 6.4%
+
+Synthetic MA order distribution:
+  MA(1): 67.9%
+  MA(2): 29.5%
+  MA(3): 2.7%
+
+================================================================================
+CONCLUSION
+================================================================================
+
+Status: PASSED
+
+Interpretation:
+GOOD: Synthetic data has same AR/MA structure as real data. Most common: AR(2), MA(1).
+
+RECOMMENDATION: Synthetic data has correct temporal structure.
+                The model captures AR/MA dynamics properly.
+================================================================================
