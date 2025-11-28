@@ -593,7 +593,7 @@ class SyntheticDataValidator:
                  time_var: Optional[str] = None,
                  auto_detect_categorical: bool = True,
                  generate_plots: bool = True,
-                 output_dir: str = 'validation_plots',
+                 output_dir: str = 'validation_results',
                  utility_synthetic_data: Optional[pd.DataFrame] = None):
         """
         Initialize validator.
@@ -617,7 +617,7 @@ class SyntheticDataValidator:
             If True and categorical_features is None, automatically detects categorical columns
         generate_plots : bool, default=True
             If True, generates visualization plots for KS tests and other validations
-        output_dir : str, default='validation_plots'
+        output_dir : str, default='validation_results'
             Directory where plots will be saved (only used if generate_plots=True)
         utility_synthetic_data : pd.DataFrame, optional
             Separate synthetic dataset to use ONLY for utility validation (TSTR test).
@@ -2086,12 +2086,12 @@ def main():
     # Save results
     print("\n=� Saving results...")
     validator.save_report('validation_report.json')
-    validator.generate_visualizations(output_dir='validation_plots')
+    validator.generate_visualizations(output_dir='validation_results')
 
     print("\n Validation complete!")
     print("\nNext steps:")
     print("  1. Review validation_report.json for detailed results")
-    print("  2. Check validation_plots/ for visualizations")
+    print("  2. Check validation_results/ for visualizations")
     print("  3. If validation passed, synthetic data is ready to use")
     print("  4. If validation failed, consider:")
     print("     - Adjusting your generative model parameters")

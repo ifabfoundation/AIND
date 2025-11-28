@@ -174,7 +174,7 @@ CATEGORICAL_FEATURES = []
 # Output settings
 PRECHECK_REPORT = 'pre_validation_report_aligned.txt'
 VALIDATION_REPORT = 'validation_report.json'
-PLOTS_DIR = 'validation_plots'
+PLOTS_DIR = 'validation_results'
 
 
 # ============================================================================

@@ -1,17 +1,10 @@
 {
   "univariate": {
-    "ADAS13": {
+    "CDRSB": {
       "type": "numeric",
       "test": "ks",
-      "ks_statistic": 0.04492433215381184,
-      "p_value": 4.331169567797646e-08,
-      "passed": false
-    },
-    "TIME": {
-      "type": "numeric",
-      "test": "ks",
-      "ks_statistic": 0.07381775333687252,
-      "p_value": 1.8391846123821213e-21,
+      "ks_statistic": 0.1506736286933424,
+      "p_value": 3.8076393771910735e-87,
       "passed": false
     },
     "RAVLT_immediate": {
@@ -21,13 +14,6 @@
       "p_value": 2.1287766155121432e-08,
       "passed": false
     },
-    "CDRSB": {
-      "type": "numeric",
-      "test": "ks",
-      "ks_statistic": 0.1506736286933424,
-      "p_value": 3.8076393771910735e-87,
-      "passed": false
-    },
     "ADAS11": {
       "type": "numeric",
       "test": "ks",
@@ -35,11 +21,11 @@
       "p_value": 1.6603469008424435e-08,
       "passed": false
     },
-    "MMSE": {
+    "ADAS13": {
       "type": "numeric",
       "test": "ks",
-      "ks_statistic": 0.08105833452043022,
-      "p_value": 1.221402335291922e-25,
+      "ks_statistic": 0.04492433215381184,
+      "p_value": 4.331169567797646e-08,
       "passed": false
     },
     "FAQ": {
@@ -47,6 +33,20 @@
       "test": "ks",
       "ks_statistic": 0.17628599321038838,
       "p_value": 3.618564516095218e-119,
+      "passed": false
+    },
+    "TIME": {
+      "type": "numeric",
+      "test": "ks",
+      "ks_statistic": 0.07381775333687252,
+      "p_value": 1.8391846123821213e-21,
+      "passed": false
+    },
+    "MMSE": {
+      "type": "numeric",
+      "test": "ks",
+      "ks_statistic": 0.08105833452043022,
+      "p_value": 1.221402335291922e-25,
       "passed": false
     }
   },
@@ -87,18 +87,18 @@
     "overall_passed": false
   },
   "stationarity": {
-    "ADAS13": {
+    "CDRSB": {
       "adf": {
-        "real_stationary_pct": 25.727272727272727,
-        "synth_stationary_pct": 29.411764705882355,
-        "difference_pct": 3.6844919786096284,
+        "real_stationary_pct": 17.654476670870114,
+        "synth_stationary_pct": 26.89295039164491,
+        "difference_pct": 9.238473720774795,
         "status": "PASSED",
         "model_failed": false
       },
       "kpss": {
-        "real_stationary_pct": 75.29239766081871,
-        "synth_stationary_pct": 72.56838905775076,
-        "difference_pct": 2.7240086030679436,
+        "real_stationary_pct": 80.69620253164557,
+        "synth_stationary_pct": 78.84615384615384,
+        "difference_pct": 1.8500486854917284,
         "status": "PASSED",
         "model_failed": false
       }
@@ -119,22 +119,6 @@
         "model_failed": false
       }
     },
-    "CDRSB": {
-      "adf": {
-        "real_stationary_pct": 17.654476670870114,
-        "synth_stationary_pct": 26.89295039164491,
-        "difference_pct": 9.238473720774795,
-        "status": "PASSED",
-        "model_failed": false
-      },
-      "kpss": {
-        "real_stationary_pct": 80.69620253164557,
-        "synth_stationary_pct": 78.84615384615384,
-        "difference_pct": 1.8500486854917284,
-        "status": "PASSED",
-        "model_failed": false
-      }
-    },
     "ADAS11": {
       "adf": {
         "real_stationary_pct": 26.141450313339305,
@@ -151,18 +135,18 @@
         "model_failed": false
       }
     },
-    "MMSE": {
+    "ADAS13": {
       "adf": {
-        "real_stationary_pct": 27.90909090909091,
-        "synth_stationary_pct": 32.66162888329135,
-        "difference_pct": 4.75253797420044,
+        "real_stationary_pct": 25.727272727272727,
+        "synth_stationary_pct": 29.411764705882355,
+        "difference_pct": 3.6844919786096284,
         "status": "PASSED",
         "model_failed": false
       },
       "kpss": {
-        "real_stationary_pct": 76.76003028009085,
-        "synth_stationary_pct": 75.990675990676,
-        "difference_pct": 0.7693542894148493,
+        "real_stationary_pct": 75.29239766081871,
+        "synth_stationary_pct": 72.56838905775076,
+        "difference_pct": 2.7240086030679436,
         "status": "PASSED",
         "model_failed": false
       }
@@ -182,73 +166,25 @@
         "status": "PASSED",
         "model_failed": false
       }
+    },
+    "MMSE": {
+      "adf": {
+        "real_stationary_pct": 27.90909090909091,
+        "synth_stationary_pct": 32.66162888329135,
+        "difference_pct": 4.75253797420044,
+        "status": "PASSED",
+        "model_failed": false
+      },
+      "kpss": {
+        "real_stationary_pct": 76.76003028009085,
+        "synth_stationary_pct": 75.990675990676,
+        "difference_pct": 0.7693542894148493,
+        "status": "PASSED",
+        "model_failed": false
+      }
     }
   },
   "acf_pacf": {
-    "ADAS13": {
-      "ar_ma_orders": {
-        "real_ar_mode": 2,
-        "synth_ar_mode": 2,
-        "ar_match": true,
-        "real_ar_distribution": {
-          "2": 53.987730061349694,
-          "3": 46.012269938650306
-        },
-        "synth_ar_distribution": {
-          "2": 84.34782608695653,
-          "3": 15.65217391304348
-        },
-        "real_ma_mode": 1,
-        "synth_ma_mode": 1,
-        "ma_match": true,
-        "real_ma_distribution": {
-          "1": 61.963190184049076,
-          "2": 33.12883435582822,
-          "3": 4.9079754601226995
-        },
-        "synth_ma_distribution": {
-          "1": 64.34782608695652,
-          "2": 33.91304347826087,
-          "3": 1.7391304347826086
-        },
-        "status": "PASSED",
-        "interpretation": "GOOD: Synthetic data has same AR/MA structure as real data. Most common: AR(2), MA(1)."
-      },
-      "n_real_patients": 163,
-      "n_synth_patients": 115
-    },
-    "RAVLT_immediate": {
-      "ar_ma_orders": {
-        "real_ar_mode": 2,
-        "synth_ar_mode": 2,
-        "ar_match": true,
-        "real_ar_distribution": {
-          "2": 53.65853658536586,
-          "3": 46.34146341463415
-        },
-        "synth_ar_distribution": {
-          "2": 84.070796460177,
-          "3": 15.929203539823009
-        },
-        "real_ma_mode": 1,
-        "synth_ma_mode": 1,
-        "ma_match": true,
-        "real_ma_distribution": {
-          "1": 68.29268292682927,
-          "2": 30.48780487804878,
-          "3": 1.2195121951219512
-        },
-        "synth_ma_distribution": {
-          "1": 67.2566371681416,
-          "2": 30.973451327433626,
-          "3": 1.7699115044247788
-        },
-        "status": "PASSED",
-        "interpretation": "GOOD: Synthetic data has same AR/MA structure as real data. Most common: AR(2), MA(1)."
-      },
-      "n_real_patients": 164,
-      "n_synth_patients": 113
-    },
     "CDRSB": {
       "ar_ma_orders": {
         "real_ar_mode": 1,
@@ -283,6 +219,38 @@
       "n_real_patients": 169,
       "n_synth_patients": 114
     },
+    "RAVLT_immediate": {
+      "ar_ma_orders": {
+        "real_ar_mode": 2,
+        "synth_ar_mode": 2,
+        "ar_match": true,
+        "real_ar_distribution": {
+          "2": 53.65853658536586,
+          "3": 46.34146341463415
+        },
+        "synth_ar_distribution": {
+          "2": 84.070796460177,
+          "3": 15.929203539823009
+        },
+        "real_ma_mode": 1,
+        "synth_ma_mode": 1,
+        "ma_match": true,
+        "real_ma_distribution": {
+          "1": 68.29268292682927,
+          "2": 30.48780487804878,
+          "3": 1.2195121951219512
+        },
+        "synth_ma_distribution": {
+          "1": 67.2566371681416,
+          "2": 30.973451327433626,
+          "3": 1.7699115044247788
+        },
+        "status": "PASSED",
+        "interpretation": "GOOD: Synthetic data has same AR/MA structure as real data. Most common: AR(2), MA(1)."
+      },
+      "n_real_patients": 164,
+      "n_synth_patients": 113
+    },
     "ADAS11": {
       "ar_ma_orders": {
         "real_ar_mode": 2,
@@ -315,39 +283,37 @@
       "n_real_patients": 168,
       "n_synth_patients": 115
     },
-    "MMSE": {
+    "ADAS13": {
       "ar_ma_orders": {
         "real_ar_mode": 2,
         "synth_ar_mode": 2,
         "ar_match": true,
         "real_ar_distribution": {
-          "1": 9.523809523809524,
-          "2": 50.0,
-          "3": 40.476190476190474
+          "2": 53.987730061349694,
+          "3": 46.012269938650306
         },
         "synth_ar_distribution": {
-          "1": 1.7241379310344827,
-          "2": 81.03448275862068,
-          "3": 17.24137931034483
+          "2": 84.34782608695653,
+          "3": 15.65217391304348
         },
         "real_ma_mode": 1,
         "synth_ma_mode": 1,
         "ma_match": true,
         "real_ma_distribution": {
-          "1": 72.61904761904762,
-          "2": 23.809523809523807,
-          "3": 3.571428571428571
+          "1": 61.963190184049076,
+          "2": 33.12883435582822,
+          "3": 4.9079754601226995
         },
         "synth_ma_distribution": {
-          "1": 70.6896551724138,
-          "2": 26.72413793103448,
-          "3": 2.586206896551724
+          "1": 64.34782608695652,
+          "2": 33.91304347826087,
+          "3": 1.7391304347826086
         },
         "status": "PASSED",
         "interpretation": "GOOD: Synthetic data has same AR/MA structure as real data. Most common: AR(2), MA(1)."
       },
-      "n_real_patients": 168,
-      "n_synth_patients": 116
+      "n_real_patients": 163,
+      "n_synth_patients": 115
     },
     "FAQ": {
       "ar_ma_orders": {
@@ -382,6 +348,40 @@
       },
       "n_real_patients": 171,
       "n_synth_patients": 112
+    },
+    "MMSE": {
+      "ar_ma_orders": {
+        "real_ar_mode": 2,
+        "synth_ar_mode": 2,
+        "ar_match": true,
+        "real_ar_distribution": {
+          "1": 9.523809523809524,
+          "2": 50.0,
+          "3": 40.476190476190474
+        },
+        "synth_ar_distribution": {
+          "1": 1.7241379310344827,
+          "2": 81.03448275862068,
+          "3": 17.24137931034483
+        },
+        "real_ma_mode": 1,
+        "synth_ma_mode": 1,
+        "ma_match": true,
+        "real_ma_distribution": {
+          "1": 72.61904761904762,
+          "2": 23.809523809523807,
+          "3": 3.571428571428571
+        },
+        "synth_ma_distribution": {
+          "1": 70.6896551724138,
+          "2": 26.72413793103448,
+          "3": 2.586206896551724
+        },
+        "status": "PASSED",
+        "interpretation": "GOOD: Synthetic data has same AR/MA structure as real data. Most common: AR(2), MA(1)."
+      },
+      "n_real_patients": 168,
+      "n_synth_patients": 116
     }
   }
 }

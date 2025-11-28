@@ -71,7 +71,7 @@ La pipeline esegue automaticamente:
 Per ogni variabile testata (es. MMSE, ADAS11), viene generato:
 
 ```
-validation_plots/
+validation_results/
 ├── stationarity_MMSE_summary.txt      # Riepilogo dettagliato per MMSE
 ├── stationarity_ADAS11_summary.txt    # Riepilogo dettagliato per ADAS11
 └── ...
@@ -121,7 +121,7 @@ The model successfully captures disease progression dynamics.
 Per ogni variabile:
 
 ```
-validation_plots/
+validation_results/
 ├── stationarity_MMSE.png              # Grafico comparativo per MMSE
 ├── stationarity_ADAS11.png            # Grafico comparativo per ADAS11
 └── ...
