@@ -1,0 +1,4 @@
+
+1. python post-generation\reverse_from_datalake.py --file-code ADNIMERGE_synthetic --prefix synthetic/reversed" 
+2. python post-generation\reverse_from_datalake.py --file-code ADNIMERGE_for_validation --prefix validation/reversed" 
+3. python post-generation\inject_missing_values.py --file-code-real ADNIMERGE_for_validation_reversed --file-code-gen ADNIMERGE_synthetic_reversed --prefix synthetic/missing_injected

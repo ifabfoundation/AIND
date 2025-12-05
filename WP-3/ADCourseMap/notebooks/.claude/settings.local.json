@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(del apply_patch.py)",
+      "Bash(del apply_regression_fix.py validate_data_updated.py)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

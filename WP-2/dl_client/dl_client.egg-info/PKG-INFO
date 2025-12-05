@@ -9,3 +9,4 @@ Requires-Python: >=3.6
 Requires-Dist: requests>=2.25.0
 Requires-Dist: click>=8.0.0
 Requires-Dist: tqdm>=4.60.0
+Requires-Dist: pandas>=1.0.0

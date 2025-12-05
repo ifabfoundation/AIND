@@ -3,12 +3,32 @@ import numpy as np
 import datetime
 import string
 import json
+import re
 import os
 from dateutil.relativedelta import relativedelta
 from dl_client import DatalakeClient
 
+def load_cutoffs(path: str) -> dict:
+    with open(path, "r") as f:
+        raw = json.load(f)
+    # normalize method keys to lowercase
+    norm = {}
+    for param, methods in raw.items():
+        norm[param] = {str(m).lower(): float(v) if v is not None else np.nan for m, v in methods.items()}
+    return norm
 
+def deep_update(base: dict, override: dict) -> dict:
+    for k, v in override.items():
+        if isinstance(v, dict) and isinstance(base.get(k), dict):
+            deep_update(base[k], v)
+        else:
+            base[k] = v
+    return base
 
+def get_cutoff_from_dict(cutoffs: dict, parameter: str, method: str, default=np.nan):
+    methods = cutoffs.get(parameter, {})
+    m = (method or "unknown").lower()
+    return methods.get(m, methods.get("unknown", default))
 
 def update_variables_support_file(df, support_file, file_code, variable_col='variable_code'):
     """
@@ -87,8 +107,20 @@ def update_variables_support_file(df, support_file, file_code, variable_col='var
     
     # identificare le variabili extra nel support file
     # Escludiamo i valori np.nan che rappresentano variabili appena aggiunte
-    extra_vars = [col for col in support_file_filtered[variable_col].values 
-                 if pd.notna(col) and col not in df.columns]
+    # 🧹 Clean up possible nested lists or arrays
+    support_file_filtered[variable_col] = support_file_filtered[variable_col].apply(
+        lambda x: x[0] if isinstance(x, (list, tuple, np.ndarray)) and len(x) > 0 else x
+    )
+
+    # 🧠 Make sure everything is a string (for safe comparison)
+    support_file_filtered[variable_col] = support_file_filtered[variable_col].astype(str).str.strip()
+
+    # 💡 Now safely compute extra_vars
+    extra_vars = [
+        col for col in support_file_filtered[variable_col].values
+        if pd.notna(col) and col not in df.columns
+    ]
+
     #print('extra_vars: ', extra_vars)
     # Rimuovi dal support file le righe corrispondenti alle variabili extra
     if extra_vars:
@@ -156,8 +188,12 @@ class DataCleaner:
         Specific for imaging datasets - FreeSurfer.
         This function filters the dataframe based on the value of the filter_col.
         '''
-        print('Segmentation Status: \n', df[filter_col].value_counts(), '\n', type(df[filter_col].unique()[0]))
-        return df[df[filter_col].isin(['complete', 1]) ].reset_index(drop=True)
+        # normalizza a minuscolo gli eventuali valori stringa per garantire confronti consistenti
+        df[filter_col] = df[filter_col].apply(lambda v: v.strip().lower() if isinstance(v, str) else v)
+        col_norm = df[filter_col]
+        print('Segmentation Status:\n', col_norm.value_counts(), '\n', type(col_norm.dropna().unique()[0]) if col_norm.dropna().size > 0 else type(None))
+        mask = col_norm.isin(['complete', 1])
+        return df[mask].reset_index(drop=True)
     
     def convert_qcpass_values(self, df, col_name='QCPASS'):
         '''
@@ -169,7 +205,7 @@ class DataCleaner:
         df_copy[col_name] = df_copy[col_name].map({1: 'complete', 0: 'partial'})
         return df_copy
     
-    def find_exam_code(self, df, date_column = 'EXAMDATE', viscode_refernce = 'VISCODE', patient_id_column = 'RID', essential_variables: list = []):
+    def find_exam_code(self, df, date_column = 'EXAMDATE', viscode_reference = 'VISCODE', patient_id_column = 'RID', essential_variables: list = []):
         '''
         This function finds the exam code for each patient based on the date of the visit.
         Pipeline per ciascun paziente:
@@ -185,7 +221,11 @@ class DataCleaner:
         start_df = df.copy()
         
         # Verifica che le colonne richieste esistano
-        required_cols = [date_column, viscode_refernce, patient_id_column] + essential_variables
+        required_cols = [date_column, viscode_reference, patient_id_column] + essential_variables
+        if viscode_reference == None:
+            required_cols.remove(viscode_reference)
+            print('VISCODE reference is not present in the dataframe, it will not be used for the visit selection')
+
         for col in required_cols:
             if col not in start_df.columns:
                 raise ValueError(f"Column '{col}' not found in dataframe")
@@ -209,13 +249,13 @@ class DataCleaner:
                 # 3) Gestisci le date duplicate
                 N_patient += 1
                 df_patient_cleaned, adopted_strategy = self._handle_duplicate_dates(
-                    df_patient, date_column, viscode_refernce, essential_variables, adopted_strategy
+                    df_patient, date_column, viscode_reference, essential_variables, adopted_strategy
                 )
             else:
                 df_patient_cleaned = df_patient
             # 4) Calcola VISIT_MONTH
             df_patient_cleaned = self._calculate_visit_month(
-                df_patient_cleaned, date_column, patient_id_column, viscode_refernce
+                df_patient_cleaned, date_column, viscode_reference
             )
 
             final_rows.append(df_patient_cleaned)
@@ -228,11 +268,11 @@ class DataCleaner:
             result_df = pd.concat(final_rows, ignore_index=True)
         else:
             result_df = start_df
-            pritn('The function find_exam_code has failed, no changes have been applied')
+            print('The function find_exam_code has failed, no changes have been applied')
         
         return result_df
     
-    def _handle_duplicate_dates(self, df_patient, date_column, viscode_refernce, essential_variables, adopted_strategy):
+    def _handle_duplicate_dates(self, df_patient, date_column, viscode_reference, essential_variables, adopted_strategy):
         """
         Gestisce le date duplicate per un singolo paziente seguendo la logica specificata.
         """
@@ -261,13 +301,20 @@ class DataCleaner:
                             # Una sola riga con il minor numero di nulli
                             row_to_keep = candidates.index[0]
                             adopted_strategy.append('Min null values')
+                        elif viscode_reference == None:
+                            row_to_keep = candidates.index[0]
+                            adopted_strategy.append('First row')
                         else:
                             # 3c) Stesso numero di nulli, seleziona quella con 'bl' o che inizia per 'm'
-                            row_to_keep, adopted_strategy = self._select_by_viscode_priority(candidates, viscode_refernce, adopted_strategy)
+                            row_to_keep, adopted_strategy = self._select_by_viscode_priority(candidates, viscode_reference, adopted_strategy)
                             
                 else:
                     # Se non ci sono essential_variables, usa solo la logica del viscode
-                    row_to_keep = self._select_by_viscode_priority(group, viscode_refernce)
+                    if viscode_reference == None:
+                        row_to_keep = group.index[0]
+                        adopted_strategy.append('First row')
+                    else:
+                        row_to_keep = self._select_by_viscode_priority(group, viscode_reference)
                 
                 # Rimuovi le righe duplicate mantenendo solo quella selezionata
                 rows_to_remove = group.index[group.index != row_to_keep]
@@ -275,12 +322,12 @@ class DataCleaner:
         
         return df_cleaned.reset_index(drop=True), adopted_strategy
     
-    def _select_by_viscode_priority(self, candidates, viscode_refernce, adopted_strategy):
+    def _select_by_viscode_priority(self, candidates, viscode_reference, adopted_strategy):
         """
         Seleziona la riga basandosi sulla priorità del viscode: 'bl' o che inizia per 'm'.
         """
         for idx, row in candidates.iterrows():
-            viscode = row[viscode_refernce]
+            viscode = row[viscode_reference]
             if pd.notna(viscode):
                 if viscode == 'bl' or (isinstance(viscode, str) and viscode.startswith('m')):
                     adopted_strategy.append('VISITCODE priority')
@@ -290,7 +337,7 @@ class DataCleaner:
         # Se nessuna riga soddisfa i criteri, restituisci la prima
         return candidates.index[0], adopted_strategy
     
-    def _calculate_visit_month(self, df_patient, date_column, patient_id_column, viscode_refernce):
+    def _calculate_visit_month(self, df_patient, date_column, viscode_reference):
         """
         Calcola VISIT_MONTH: prima data = 0, successive = mesi di distanza dalla visita 0.
         Inserisce la colonna VISIT_MONTH subito dopo la colonna VISCODE.
@@ -317,15 +364,22 @@ class DataCleaner:
             else:
                 visit_months.append(np.nan)
         
-        # Trova la posizione della colonna VISCODE
-        viscode_position = df_patient.columns.get_loc(viscode_refernce)
-        
-        # Inserisci la colonna VISIT_MONTH subito dopo VISCODE
-        df_patient.insert(viscode_position + 1, 'VISIT_MONTH', visit_months)
-        
+        if viscode_reference != None:
+            # Trova la posizione della colonna VISCODE
+            viscode_position = df_patient.columns.get_loc(viscode_reference)
+            
+            # Inserisci la colonna VISIT_MONTH subito dopo VISCODE
+            df_patient.insert(viscode_position + 1, 'VISIT_MONTH', visit_months)
+        else: 
+            # Trova la posizione della colonna data
+            date_position = df_patient.columns.get_loc(date_column)
+            
+            # Inserisci la colonna VISIT_MONTH subito prima della colonna data
+            df_patient.insert(date_position - 1, 'VISIT_MONTH', visit_months)
+
         return df_patient
     
-    def _select_from_complete_rows(self, complete_rows, essential_variables, viscode_refernce, adopted_strategy):
+    def _select_from_complete_rows(self, complete_rows, essential_variables, viscode_reference, adopted_strategy):
         """
         Seleziona una riga dalle righe con STATUS == 'complete' applicando la logica di selezione.
         """
@@ -344,13 +398,13 @@ class DataCleaner:
             else:
                 # Valori diversi, verifica quale ha meno valori nulli
                 return self._select_by_null_count_and_viscode(
-                    complete_rows, essential_variables, viscode_refernce, adopted_strategy
+                    complete_rows, essential_variables, viscode_reference, adopted_strategy
                 )
         else:
             # Se non ci sono essential_variables, usa solo la logica del viscode
-            return self._select_by_viscode_priority(complete_rows, viscode_refernce, adopted_strategy)[0]
+            return self._select_by_viscode_priority(complete_rows, viscode_reference, adopted_strategy)[0]
     
-    def _select_by_null_count_and_viscode(self, group, essential_variables, viscode_refernce, adopted_strategy):
+    def _select_by_null_count_and_viscode(self, group, essential_variables, viscode_reference, adopted_strategy):
         """
         Seleziona una riga basandosi sul numero di valori nulli e poi sulla priorità del viscode.
         """
@@ -367,10 +421,10 @@ class DataCleaner:
                 return candidates.index[0]
             else:
                 # Stesso numero di nulli, seleziona quella con 'bl' o che inizia per 'm'
-                return self._select_by_viscode_priority(candidates, viscode_refernce, adopted_strategy)[0]
+                return self._select_by_viscode_priority(candidates, viscode_reference, adopted_strategy)[0]
         else:
             # Se non ci sono essential_variables, usa solo la logica del viscode
-            return self._select_by_viscode_priority(group, viscode_refernce, adopted_strategy)[0]
+            return self._select_by_viscode_priority(group, viscode_reference, adopted_strategy)[0]
 
             
     
@@ -558,13 +612,24 @@ class DataCleaner:
         result_df = result_df.drop(rows_to_drop)
         
         return result_df
-############## MODIFICATO ##############
-    def replace_unknown_values(self, df: pd.DataFrame) -> pd.DataFrame:
+    ############## MODIFICATO ##############
+    def replace_unknown_values(self, df: pd.DataFrame, new_nans: list = None) -> pd.DataFrame:
         """
         Replace 'Unknown', 'unknown', and '-4' values with NaN across all columns in a dataframe.
+        
+        Args:
+            df: DataFrame su cui applicare la sostituzione
+            new_nans: Lista opzionale di valori aggiuntivi da sostituire con NaN. Default: None (nessun valore aggiuntivo)
+        
+        Returns:
+            DataFrame con i valori sostituiti
         """
         # Create a copy of the dataframe to avoid modifying the original
         result_df = df.copy()
+        
+        # Inizializza new_nans come lista vuota se None
+        if new_nans is None:
+            new_nans = []
         
         # Dictionary of values to replace with NaN
         replace_dict = {
@@ -575,12 +640,37 @@ class DataCleaner:
             '9999': np.nan
         }
         
+        # Aggiungi i nuovi valori al dizionario di sostituzione
+        for value in new_nans:
+            if value is not None:
+                replace_dict[value] = np.nan
+        
         # Replace values across the entire dataframe
         result_df = result_df.replace(replace_dict)
         
+        # Lista di valori numerici da sostituire
+        numeric_replace_list = [-4, -4.0, 9999, 9999.0]
+        
+        # Aggiungi i nuovi valori numerici alla lista se sono numeri
+        for value in new_nans:
+            if value is not None:
+                try:
+                    # Prova a convertire in float per vedere se è numerico
+                    num_value = float(value)
+                    if num_value not in numeric_replace_list:
+                        numeric_replace_list.append(num_value)
+                    # Aggiungi anche la versione intera se applicabile
+                    if num_value == int(num_value):
+                        int_value = int(num_value)
+                        if int_value not in numeric_replace_list:
+                            numeric_replace_list.append(int_value)
+                except (ValueError, TypeError):
+                    # Se non è convertibile in numero, è già gestito nel replace_dict
+                    pass
+        
         # Gestisce le colonne numeriche dove -4, -4.0, 9999, 9999.0 potrebbero essere presenti come numeri
         for col in result_df.select_dtypes(include=['number']).columns:
-            result_df[col] = result_df[col].replace([-4, -4.0, 9999, 9999.0], np.nan)
+            result_df[col] = result_df[col].replace(numeric_replace_list, np.nan)
         return result_df
 
     def to_date_format(self, df, col_list=[]):
@@ -687,12 +777,12 @@ class DataCleaner:
         if common_type == str:
             df[col_name] = df[col_name].str.strip().str.lower()  # cleaning strings
             # Map gender to binary values: female -> 0, male -> 1
-            df[col_name] = df[col_name].map({'female': 0, 'male': 1}).astype('Int64')
+            df[col_name] = df[col_name].map({'female': 0, 'male': 1})
         
         # Case 2: The column contains numeric values (1 for male, 2 for female)
         elif common_type in [int, float]:
             # Handle gender with numeric representation: (male) 1 -> 1, (female) 2 -> 0
-            df[col_name] = df[col_name].apply(lambda x: 1 if x in [1, 1.0] else (0 if x in [2, 2.0] else np.nan)).astype('Int64')
+            df[col_name] = df[col_name].apply(lambda x: 1 if x in [1, 1.0] else (0 if x in [2, 2.0] else np.nan))
 
         # Handle unexpected types (either string or numeric, or other types)
         else:
@@ -717,13 +807,13 @@ class DataCleaner:
         if common_type == str:
             df[col_name] = df[col_name].str.strip().str.lower()  # pulizia
             # Map marital status to classes: 'married' -> 1, 'divorced' -> 2, 'widowed' -> 3, 'never married' -> 0
-            df[col_name] = df[col_name].map({'married' : 1, 'divorced' : 2, 'widowed' : 3, 'never married' : 0}).astype('Int64')
+            df[col_name] = df[col_name].map({'married' : 1, 'divorced' : 2, 'widowed' : 3, 'never married' : 0})
 
         # Case 2: The column contains int or float values (1 = 'married', 2 = 'divorced', 3 = 'widowed', 4= 'never married')
         elif common_type in [int, float]:
             # Map marital status to classes: 'married' -> 1, 'divorced' -> 2, 'widowed' -> 3, 'never married' -> 0
             mapping = {1: 1, 1.0: 1, 2: 2, 2.0: 2, 3: 3, 3.0: 3, 4: 0, 4.0: 0}
-            df[col_name] = df[col_name].map(mapping).astype('Int64')
+            df[col_name] = df[col_name].map(mapping)
         
         # Handle unexpected types (either string or numeric, or other types)
         else:
@@ -753,11 +843,11 @@ class DataCleaner:
         # Case 1: The column contains string values ('not hisp/latino', 'hisp/latino')
         if common_type == str:
             df[col_name] = df[col_name].str.strip().str.lower()  # pulizia
-            df[col_name] = df[col_name].map({'not hisp/latino' : 0 , 'hisp/latino' : 1}).astype('Int64')
+            df[col_name] = df[col_name].map({'not hisp/latino' : 0 , 'hisp/latino' : 1})
 
-        # Case 2: The column contains int or float values (1 = 'not hisp/latino', 2 = 'hisp/latino')
+        # Case 2: The column contains int or float values (1 = 'not hisp/latino' -->1 , 2 = 'hisp/latino'--> 0)
         elif common_type in [int, float]:
-            df[col_name] = df[col_name].apply(lambda x: 1 if x in [1, 1.0] else (0 if x in [2, 2.0] else np.nan)).astype('Int64')
+            df[col_name] = df[col_name].apply(lambda x: 1 if x in [1, 1.0] else (0 if x in [2, 2.0] else np.nan))
         
         # Handle unexpected types (either string or numeric, or other types)
         else:
@@ -787,12 +877,12 @@ class DataCleaner:
         # Case 1: The column contains string values ('White', 'More than one', 'Black', 'Asian', 'Am Indian/Alaskan', 'Hawaiian/Other PI')
         if common_type == str:
             df[col_name] = df[col_name].str.strip()  # pulizia
-            df[col_name] = df[col_name].map({'White': 5, 'More than one': 0, 'Black': 4, 'Asian': 2, 'Am Indian/Alaskan': 1, 'Hawaiian/Other PI': 3, '5': 5, '6': 0, '4': 4, '2': 2, '1': 1, '3': 3}).astype('Int64')
+            df[col_name] = df[col_name].map({'White': 5, 'More than one': 0, 'Black': 4, 'Asian': 2, 'Am Indian/Alaskan': 1, 'Hawaiian/Other PI': 3, '5': 5, '6': 0, '4': 4, '2': 2, '1': 1, '3': 3})
 
         # Case 2: The column contains int or float values (5 = 'White', 0 = 'More than one', 4 = 'Black', 2 = 'Asian', 1 = 'Am Indian/Alaskan', 3 = 'Hawaiian/Other PI')
         elif common_type in [int, float]:
             mapping = {1: 1, 1.0: 1, 2: 2, 2.0: 2, 3: 3, 3.0: 3, 4: 4, 4.0: 4, 5: 5, 5.0: 5, 6: 0, 6.0: 0}
-            df[col_name] = df[col_name].map(mapping).astype('Int64')
+            df[col_name] = df[col_name].map(mapping)
         
         # Handle unexpected types (either string or numeric, or other types)
         else:
@@ -800,10 +890,139 @@ class DataCleaner:
         
         return df
 
+    def uniform_APOE_format(self, df, col_name, split='/'):
+        """
+        Normalizza i genotipi APOE in formato 'E{allele1}_E{allele2}'.
+        Regole:
+        - Converte i valori a stringa
+        - Se presente un separatore (parametro 'split', default '/') usa str.split(split, 1)
+        - Se non presente, divide la stringa a metà
+        - Per ciascuna parte mantiene solo le cifre (rimuove lettere/simboli)
+        - Se uno dei due alleli è mancante dopo la pulizia, imposta NaN
+        - Scrive il risultato nella stessa colonna come 'E{allele1}_E{allele2}'
+        """
+        import re
+        result_df = df.copy()
+        def normalize_apoe_value(v):
+            if pd.isna(v):
+                return np.nan
+            s = str(v).strip()
+            if s == "":
+                return np.nan
+            # prova split esplicito con il separatore richiesto
+            parts = s.split(split, 1)
+            if len(parts) == 2:
+                left, right = parts[0], parts[1]
+            else:
+                # fallback: divisione a metà
+                mid = len(s) // 2
+                left, right = s[:mid], s[mid:]
+            # mantieni solo cifre
+            left_digits = re.sub(r"\D", "", left)
+            right_digits = re.sub(r"\D", "", right)
+            if left_digits == "" or right_digits == "":
+                return np.nan
+            return f"e{left_digits}e{right_digits}"
+        result_df[col_name] = result_df[col_name].apply(normalize_apoe_value)
+        return result_df
 
+    def APOE_4_count(self, df, col_name):
+        """
+        Per ciascun valore della colonna indicata, conta quante occorrenze del
+        carattere '4' sono presenti nella stringa.
+
+        - Valori NaN rimangono NaN
+        - Il risultato viene salvato in una nuova colonna 'APOE_4'
+        """
+        result_df = df.copy()
+        def count_e4(v):
+            if pd.isna(v):
+                return np.nan
+            s = str(v)
+            return s.count('4')
+        # calcola la serie conteggi
+        counts = result_df[col_name].apply(count_e4).astype('Int64')
+        # rimuovi eventuale colonna esistente
+        if 'APOE_4' in result_df.columns:
+            result_df = result_df.drop(columns=['APOE_4'])
+        # inserisci subito dopo col_name
+        insert_pos = result_df.columns.get_loc(col_name) + 1
+        result_df.insert(insert_pos, 'APOE_4', counts)
+        return result_df
+
+    def APOE_to_dummies(self, df, col_name='APOE', prefix_step='/'):
+        """
+        Converte una colonna con genotipi APOE in colonne dummy separate.
+        Crea una colonna per ciascun allele presente nella stringa.
+        Popola le colonne con 1 per valori positivi (+) e 0 per valori negativi (-).
+        """
+        df = pd.get_dummies(df, columns=[col_name], prefix=[col_name], prefix_sep=prefix_step)
+        # Trova le nuove colonne dummies create
+        new_columns = [col for col in df.columns if col != col_name]
+
+        return df, new_columns
+
+
+    def convert_to_dummies_ATNC_profile(self, df, col_name):
+        """
+        Converte una colonna con profili ATNC (es. 'A+T-N-C+') in colonne dummy separate.
+        Crea una colonna per ciascun parametro presente nella stringa (Aprofile, Tprofile, Nprofile, Cprofile).
+        Popola le colonne con 1 per valori positivi (+) e 0 per valori negativi (-).
+        
+        Parameters
+        ----------
+        df : pandas.DataFrame
+            DataFrame contenente la colonna da convertire
+        col_name : str
+            Nome della colonna da convertire
+            
+        Returns
+        -------
+        pandas.DataFrame
+            DataFrame con le nuove colonne dummy aggiunte
+        """
+        # Crea una copia del dataframe per evitare di modificare l'originale
+        result_df = df.copy()
+        
+        # Parametri possibili
+        parameters = ['A', 'T', 'N', 'C']
+        
+        # Analizza tutti i valori non nulli per identificare quali parametri sono presenti
+        non_null_values = result_df[col_name].dropna().astype(str)
+        present_parameters = set()
+        
+        for value in non_null_values:
+            for param in parameters:
+                if f"{param}+" in value or f"{param}-" in value:
+                    present_parameters.add(param)
+        
+        profiles_var = []
+        # Crea colonne dummy per ciascun parametro presente
+        for param in present_parameters:
+            profile_col_name = f"{param}profile"
+            profiles_var.append(profile_col_name)
+            def extract_profile(value):
+                if pd.isna(value):
+                    return np.nan
+                
+                value_str = str(value)
+                if f"{param}+" in value_str:
+                    return 1
+                elif f"{param}-" in value_str:
+                    return 0
+                else:
+                    return np.nan  # Parametro non presente in questo valore
+            
+            result_df[profile_col_name] = result_df[col_name].apply(extract_profile)
+        
+        return result_df, profiles_var
 
     def convert_to_two_bit(self, df, col_name):
         """
+        DEPRECABILE/ELEMINABILE
+        --> sostituita da più efficente funzione convert_to_ATN_profile
+
+
         Converts a column with values like 'A+T-', 'A-T-', 'A+T+', 'A-T+' into a 2-bit representation.
         First bit: 0 if A-, 1 if A+
         Second bit: 0 if T-, 1 if T+
@@ -862,12 +1081,12 @@ class DataCleaner:
         # Case 1: The column contains string values ('CN', 'MCI', 'Dementia')
         if common_type == str:
             df[col_name] = df[col_name].str.strip()  # pulizia
-            df[col_name] = df[col_name].map({'CN' : 0 , 'MCI' : 1, 'Dementia': 2}).astype('Int64')
+            df[col_name] = df[col_name].map({'CN' : 0 , 'MCI' : 1, 'Dementia': 2})
 
         # Case 2: The column contains int or float values (1 = 'CN', 2 = 'MCI', 3 = 'Dementia')
         elif common_type in [int, float]:
             mapping = {1: 0, 1.0: 0, 2: 1, 2.0: 1, 3: 2, 3.0: 2}
-            df[col_name] = df[col_name].map(mapping).astype('Int64')
+            df[col_name] = df[col_name].map(mapping)
         
         # Handle unexpected types (either string or numeric, or other types)
         else:
@@ -885,8 +1104,6 @@ class DataCleaner:
         - Rinomina le colonne del df secondo la colonna new_variable_code (se presente), altrimenti lascia il nome originale
         - Restituisce sia il df rinominato che il support file aggiornato
         """
-        import pandas as pd
-        import numpy as np
 
         # Carica il support file da Excel
         new_support_file = pd.read_excel(new_support_file_path)
@@ -960,7 +1177,7 @@ class DataCleaner:
         variables_to_remove = support_file_for_file[support_file_for_file[flag_col] == 'drop']['variable_code'].tolist()
 
         # Step 4: rimuovere dal df dato in input le colonne che corrispondono alle stringhe della lista appena creata
-        df_cleaned = df.drop(columns=[col for col in variables_to_remove if col in df.columns], errors='ignore')
+        df_cleaned = df.drop(columns=[col for col in variables_to_remove if col in df.columns and col not in ['RID', 'VISCODE', 'VISIT_MONTH', 'EXAMDATE']], errors='ignore')
         
         # Rimuovi le righe dal support_file per il file_code corrente e le variabili da rimuovere
         mask = ~(
@@ -1076,6 +1293,10 @@ class DataCleaner:
             self.metadata_costum['norm_intervallo'] = norm_intervallo
             self.metadata_costum['norm_volume'] = norm_volume
             #print('scala', norm_scala, '\nintervallo', norm_intervallo)
+            if cofattori and 'APOE_4' in cofattori:
+                cofattori_metadata = self.get_normalization_settings(df, file_name='cofattori_values_settings.json')
+                self.metadata_costum['cofattori_metadata'] = cofattori_metadata
+            
             if norm_scala or norm_intervallo:
                 #print('entro in scala o intervallo')
                 # Estrazione altri metadata per la normalizzazione da un file Jaison
@@ -1238,6 +1459,20 @@ class DataCleaner:
                 print(f"Updated normalization settings saved to {json_path}")
             except Exception as e:
                 print(f"Warning: Could not save updated settings to {json_path}. Error: {e}")
+
+        for key, value in filtered_settings.items():
+            if isinstance(value, dict):
+                method_list = df['METHOD'].unique().tolist()
+                filtered_settings[key] = {k: value[k] for k in method_list if k in value}
+                if 'unknown' in method_list and df[df['METHOD']=='unknown'][key].notna().any():
+                    perc_1 = df[df['METHOD']=='unknown'][key].quantile(0.01)
+                    perc_99 = df[df['METHOD']=='unknown'][key].quantile(0.99)
+                    filtered_settings[key]['unknown'][0] = perc_1
+                    filtered_settings[key]['unknown'][1] = perc_99
+                elif 'unknown' in method_list and not df[df['METHOD']=='unknown'][key].notna().any():
+                    filtered_settings[key].pop('unknown', None)
+            else:
+                filtered_settings[key] = value
         
         return filtered_settings
 
@@ -1289,63 +1524,468 @@ class DataCleaner:
 
         return df
 
-    def get_abeta_tau_ratios(self, df: pd.DataFrame) -> pd.DataFrame:
+
+    def get_mean_row_per_visit(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Processa il dataframe per gestire le visite senza righe MEDIAN.
+        
+        Operazioni:
+        1. Identifica tutte le righe con BATCH == 'MEDIAN'
+        2. Trova le visite di ciascun soggetto dove non ci sono righe con BATCH == 'MEDIAN'
+        3. Per quelle visite senza MEDIAN, calcola la media di ABETA, PTAU e TAU sulle righe 
+           di quel paziente, creando una nuova riga con BATCH='MEDIAN_calculated'.
+        
+        Args:
+            df: DataFrame con colonne RID, VISCODE, DRAWDTE, BATCH, ABETA, PTAU, TAU
+            
+        Returns:
+            DataFrame con solo righe MEDIAN esistenti + righe MEDIAN_calculated per visite senza MEDIAN
+        """
+        df_result = df.copy()
+        
+        # 1. Identifica tutte le visite (coppie RID, VISCODE, DRAWDTE) presenti nel dataframe
+        visit_groups = df_result[['RID', 'VISCODE', 'DRAWDTE']].drop_duplicates()
+        
+        # 2. Trova le visite che HANNO una riga con BATCH == 'MEDIAN'
+        median_visits = df_result[df_result['BATCH'] == 'MEDIAN'][['RID', 'VISCODE', 'DRAWDTE']].drop_duplicates()
+        
+        # 3. Trova le visite SENZA righe MEDIAN usando merge con indicator
+        merged = visit_groups.merge(median_visits, on=['RID', 'VISCODE', 'DRAWDTE'], how='left', indicator=True)
+        visits_without_median = merged[merged['_merge'] == 'left_only'][['RID', 'VISCODE', 'DRAWDTE']]
+        
+        num_visits_without_median = len(visits_without_median)
+        print(f"Numero di visite che NON hanno una riga MEDIAN: {num_visits_without_median}")
+        
+        # 4. Per ogni visita senza MEDIAN, calcola la media
+        new_rows = []
+        
+        for _, visit in visits_without_median.iterrows():
+            rid = visit['RID']
+            viscode = visit['VISCODE']
+            drawdte = visit['DRAWDTE']
+            
+            # Trova tutte le righe per questo paziente e questa visita
+            visit_data = df_result[
+                (df_result['RID'] == rid) & 
+                (df_result['VISCODE'] == viscode) & 
+                (df_result['DRAWDTE'] == drawdte)
+            ]
+            
+            # Calcola la media per ABETA, PTAU e TAU
+            abeta_mean = visit_data['ABETA'].mean() if 'ABETA' in visit_data.columns else np.nan
+            ptau_mean = visit_data['PTAU'].mean() if 'PTAU' in visit_data.columns else np.nan
+            tau_mean = visit_data['TAU'].mean() if 'TAU' in visit_data.columns else np.nan
+            
+            # Prendi l'ultima riga come riferimento per RID, VISCODE, DRAWDTE
+            last_row = visit_data.iloc[-1]
+            
+            # Crea una nuova riga
+            new_row = last_row.copy()
+            new_row['BATCH'] = 'MEDIAN_calculated'
+            
+            # Imposta i valori medi per ABETA, PTAU, TAU
+            if 'ABETA' in new_row.index:
+                new_row['ABETA'] = abeta_mean
+            if 'PTAU' in new_row.index:
+                new_row['PTAU'] = ptau_mean
+            if 'TAU' in new_row.index:
+                new_row['TAU'] = tau_mean
+            
+            # Metti NaN per tutte le altre colonne (eccetto RID, VISCODE, DRAWDTE, BATCH, ABETA, PTAU, TAU)
+            columns_to_keep = ['RID', 'VISCODE', 'DRAWDTE', 'BATCH', 'ABETA', 'PTAU', 'TAU']
+            for col in new_row.index:
+                if col not in columns_to_keep:
+                    new_row[col] = np.nan
+            
+            new_rows.append(new_row)
+        
+        # 5. Filtra il df per tenere solo le righe con BATCH == 'MEDIAN'
+        df_filtered = df_result[df_result['BATCH'] == 'MEDIAN'].copy()
+        
+        # 6. Aggiungi le nuove righe calcolate
+        if new_rows:
+            df_new_rows = pd.DataFrame(new_rows)
+            df_result = pd.concat([df_filtered, df_new_rows], ignore_index=True)
+            print(f"Aggiunte {len(new_rows)} righe con BATCH='MEDIAN_calculated'")
+        else:
+            df_result = df_filtered
+            print("Nessuna visita senza MEDIAN trovata")
+        
+        # 7. Ordina il dataframe per soggetto e cronologicamente per visite
+        # Converti DRAWDTE in datetime se necessario per l'ordinamento
+        if 'DRAWDTE' in df_result.columns:
+            df_result['DRAWDTE_temp'] = pd.to_datetime(df_result['DRAWDTE'], errors='coerce')
+            # Ordina per RID e poi per DRAWDTE
+            df_result = df_result.sort_values(['RID', 'DRAWDTE_temp'], ignore_index=True)
+            df_result = df_result.drop('DRAWDTE_temp', axis=1)
+        
+        return df_result
+
+
+    def get_abeta_tau_ratios(self, df: pd.DataFrame, AB42='AB42_CSF', AB40='AB40_CSF', TTAU='TTAU_CSF', PT181='PT181_CSF', PT217='PT217_PL') -> pd.DataFrame:
         ratios_var = []
-        if 'AB42' in df.columns:
-            if 'AB40' in df.columns:
-                df['AB4240'] = df.apply(lambda row: row['AB42']/row['AB40'], axis=1)
-                ratios_var.append('AB4240')
-            if 'TTAU' in df.columns:
-                df['TTAU_AB42'] = df.apply(lambda row: row['TTAU']/row['AB42'], axis=1)
-                ratios_var.append('TTAU_AB42')
-            if 'PTAU' in df.columns:
-                df['PTAU_AB42'] = df.apply(lambda row: row['PTAU']/row['AB42'], axis=1)
-                ratios_var.append('PTAU_AB42')
+        suffix = '_'+ AB42.split('_')[1]
+        if AB42 in df.columns:
+            if AB40 in df.columns:
+                df['AB4240'+ suffix] = df.apply(lambda row: row[AB42]/row[AB40], axis=1)
+                ratios_var.append('AB4240'+suffix)
+            if TTAU in df.columns:
+                df['TTAU_AB42'+ suffix] = df.apply(lambda row: row[TTAU]/row[AB42], axis=1)
+                ratios_var.append('TTAU_AB42'+suffix)
+            if PT181 in df.columns:
+                df['PT181_AB42'+ suffix] = df.apply(lambda row: row[PT181]/row[AB42], axis=1)
+                ratios_var.append('PT181_AB42'+suffix)
+            if PT217 in df.columns:
+                df['PT217_AB42_PL'] = df.apply(lambda row: row[PT217]/row[AB42], axis=1)
+                ratios_var.append('PT217_AB42_PL')
+                if 'nPT217_PL' in df.columns:
+                    df['nPT217_PT217_PL'] = df.apply(lambda row: row['nPT217_P']/row[PT217], axis=1)
+                    ratios_var.append('nPT217_PT217_PL')
+
 
         return df, ratios_var
-    
-    def calculate_Apositive(self, row):
-        ab4240 = row.get('AB4240', np.nan)
-        ab42 = row.get('AB42', np.nan)
+
+
+    def handel_same_variable_different_methods(slef, df: pd.DataFrame, var1: list, var2: list, method1: str, method2: str, mapping: dict) -> pd.DataFrame:
+        """
+        Gestisce variabili con lo stesso significato ma misurate con metodi diversi.
         
-        # Se entrambi i valori sono NaN, restituisci NaN
-        if np.isnan(ab4240) and np.isnan(ab42):
-            return np.nan
+        Args:
+            df: DataFrame da processare
+            var1: Lista di colonne per il metodo 1
+            var2: Lista di colonne per il metodo 2
+            method1: Nome del metodo 1 da inserire nella colonna METHOD
+            method2: Nome del metodo 2 da inserire nella colonna METHOD
+            mapping: Dizionario che mappa le colonne var2 alle colonne var1 (es: {'var2_col': 'var1_col'})
         
-        # Se AB4240 è disponibile, usa la logica basata su AB4240
-        if not np.isnan(ab4240):
-            if ab4240 < 0.059:
-                return 1
-            elif 0.059 <= ab4240 < 0.073:
-                # Se AB42 è disponibile, usa AB42 per decidere
-                if not np.isnan(ab42):
-                    return 1 if ab42 < 1100 else 0
-                else:
-                    return 0  # AB4240 nel range ma AB42 non disponibile
-            else:  # ab4240 >= 0.073
-                return 0
+        Returns:
+            DataFrame processato con le colonne var2 rimosse
+        """
+        # Crea una copia del DataFrame per non modificare l'originale
+        df = df.copy()
         
-        # Se solo AB42 è disponibile, usa la logica originale
-        elif not np.isnan(ab42):
-            return 1 if ab42 <= 1100 else 0
+        # Assicurati che la colonna METHOD esista
+        if 'METHOD' not in df.columns:
+            df['METHOD'] = 'unknown'
         
-        return np.nan
+        # Combina tutte le variabili
+        all_vars = var1 + var2
+        
+        # Trova le righe dove c'è almeno un valore non nullo tra var1 e var2
+        mask_has_values = df[all_vars].notna().any(axis=1)
+        rows_to_process = df[mask_has_values].copy()
+        
+        if rows_to_process.empty:
+            # Se non ci sono righe da processare, rimuovi solo le colonne var2 e restituisci
+            df = df.drop(columns=var2, errors='ignore')
+            print(f'No rows to process in function handel_same_variable_different_methods, columns {var2} removed from dataframe')
+            return df
+        
+        # Lista per memorizzare le nuove righe da aggiungere
+        new_rows = []
+        indices_to_update = []
+        
+        # Processa ogni riga
+        for idx in rows_to_process.index:
+            row = rows_to_process.loc[idx].copy()
             
-    
-    def get_ATN_profile(self, df: pd.DataFrame) -> pd.DataFrame:
-        ATN_var = []
-        if 'AB4240' in df.columns or 'AB42' in df.columns:
-            df['Apositive'] = df.apply(self.calculate_Apositive, axis=1)
-            # Converti automaticamente a interi mantenendo NaN
-            df['Apositive'] = df['Apositive'].astype('Int64')
-            ATN_var.append('Apositive')
-        if 'PTAU_AB42' in df.columns:
-            df['Tpositive'] = df['PTAU_AB42'].apply(lambda x: 1 if x >= 0.037 else 0 if not np.isnan(x) else np.nan)
-            df['Tpositive'] = df['Tpositive'].astype('Int64')
-            ATN_var.append('Tpositive')
-        if 'TTAU_AB42' in df.columns:
-            df['Npositive'] = df['TTAU_AB42'].apply(lambda x: 1 if x > 0.27 else 0 if not np.isnan(x) else np.nan)
-            df['Npositive'] = df['Npositive'].astype('Int64')
-            ATN_var.append('Npositive')
-        return df, ATN_var 
+            # Verifica se ci sono valori non nulli per var1 e var2
+            has_var1 = row[var1].notna().any()
+            has_var2 = row[var2].notna().any()
+            
+            if has_var1 and not has_var2:
+                # Caso 1: var2 sono NaN ma ci sono valori non nulli per var1
+                # Mettere METHOD = method1 nella riga originale
+                indices_to_update.append((idx, method1))
+                
+            elif has_var2 and not has_var1:
+                # Caso 2: ci sono valori per var2 ma var1 sono tutte NaN
+                # Copiare i valori delle var2 nelle colonne var1 con mappatura
+                for var2_col, var1_col in mapping.items():
+                    if var2_col in row.index and var1_col in df.columns:
+                        df.loc[idx, var1_col] = row[var2_col]
+                # Indicare METHOD = method2
+                indices_to_update.append((idx, method2))
+                
+            elif has_var1 and has_var2:
+                # Caso 3: sono presenti valori non nulli sia per var1 che per var2
+                # Creare una nuova riga
+                new_row = row.copy()
+                # Nella nuova riga: resettare var1 a NaN e copiare var2 nelle var1 seguendo mappatura
+                for var1_col in var1:
+                    new_row[var1_col] = np.nan
+                for var2_col, var1_col in mapping.items():
+                    if var2_col in row.index and var1_col in df.columns:
+                        new_row[var1_col] = row[var2_col]
+                # Nella nuova riga: METHOD = method2
+                new_row['METHOD'] = method2
+                new_rows.append(new_row)
+                
+                # Nella riga originale: METHOD = method1
+                indices_to_update.append((idx, method1))
         
+        # Aggiorna i valori di METHOD per le righe esistenti
+        for idx, method in indices_to_update:
+            df.loc[idx, 'METHOD'] = method
+        
+        # Aggiungi le nuove righe se ce ne sono
+        if new_rows:
+            new_rows_df = pd.DataFrame(new_rows)
+            df = pd.concat([df, new_rows_df], ignore_index=True)
+        
+        # Rimuovi le colonne var2
+        df = df.drop(columns=var2, errors='ignore')
+        
+        # Ordina il DataFrame per RID e EXAMDATE (cronologicamente per ciascun soggetto)
+        df = df.sort_values(by=['RID', 'EXAMDATE'], na_position='last').reset_index(drop=True)
+
+        return df
+    
+    
+    def ensure_method_column(self, df: pd.DataFrame, default_method: str = 'simoa') -> pd.DataFrame:
+        """
+        Rename IMMUNOASSAY -> METHOD and normalize values in-place.
+        No extra columns are created.
+        """
+        if 'IMMUNOASSAY' in df.columns:
+            df.rename(columns={'IMMUNOASSAY': 'METHOD'}, inplace=True)
+        elif 'MODALITY' in df.columns:
+            df.rename(columns={'MODALITY': 'METHOD'}, inplace=True)
+        elif 'TRACER' in df.columns:
+            df.rename(columns={'TRACER': 'METHOD'}, inplace=True)
+        else:
+            raise KeyError("Neither 'IMMUNOASSAY' nor 'MODALITY' found — cannot create 'METHOD'.")
+
+        df = df.copy()
+
+        # normalize text first (lowercase, strip, collapse spaces)
+        def _norm(s: pd.Series) -> pd.Series:
+            s = s.astype(str).str.lower().str.strip()
+            return s.apply(lambda x: re.sub(r'\s+', ' ', x))
+
+        df['METHOD'] = _norm(df['METHOD'])
+
+        # exact map for known phrases
+        exact_map = {
+            'ptau181 simoa': 'simoa',
+            'ptau231 simoa': 'simoa',
+            'simoa ptau 181v2 advantage': 'simoav2',
+            'lumipulse g ptau 181 plasma': 'lumipulse',
+            'roche elecsys plasma phospho-tau(181p)': 'elecsys',
+            'flortaucipir': 'ftp'
+        }
+
+        mapped = df['METHOD'].map(exact_map)
+
+        # pattern-based fallback to catch small variations
+        def _pattern_map(x: str) -> str:
+            if pd.isna(x) or x in ('nan', ''):
+                return default_method.lower()
+            if 'lumipulse' in x:
+                return 'lumipulse'
+            if 'elecsys' in x or 'roche' in x:
+                return 'elecsys'
+            if 'ftp' in x:
+                return 'FTP'
+            if 'fbb' in x:
+                return 'FBB'
+            if 'nav' in x:
+                return 'NAV'
+            if 'fbp' in x:
+                return 'FBP'
+            if 'simoa' in x:
+                # distinguish v2 if present
+                if 'v2' in x or 'advantage' in x:
+                    return 'simoav2'
+                return 'simoa'
+            return default_method.lower()
+
+        df['METHOD'] = mapped.fillna(df['METHOD'].apply(_pattern_map))
+
+        return df
+    
+    def ensure_tau_metaroi(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+    Crea la colonna 'TAU_METAROI' solo se:
+    - non è già presente, e
+    - può essere calcolata (almeno una delle regioni temporali mediali è disponibile).
+
+    Calcola come media di:
+        ENTORHINAL_SUVR, INFERIOR_TEMPORAL_SUVR, FUSIFORM_SUVR, PARAHIPPOCAMPAL_SUVR
+    """
+        df = df.copy()
+
+        # Se TAU_METAROI esiste già, non fare nulla
+        if 'TAU_METAROI' in df.columns:
+            print("TAU_METAROI già presente nel dataset. Nessuna modifica eseguita.")
+            return df
+
+        tau_regions = [
+            'ENTORHINAL_SUVR',
+            'INFERIOR_TEMPORAL_SUVR',
+            'FUSIFORM_SUVR',
+            'PARAHIPPOCAMPAL_SUVR'
+        ]
+        available_regions = [r for r in tau_regions if r in df.columns]
+
+        if available_regions:
+            df['TAU_METAROI'] = df[available_regions].mean(axis=1, skipna=True)
+            print(f"TAU_METAROI calcolata usando: {', '.join(available_regions)}")
+        else:
+            print("Nessuna regione Tau disponibile — TAU_METAROI non creata.")
+
+        return df
+
+
+    def get_ATN_profile(self, df: pd.DataFrame, cutoffs: dict):
+        """
+        Calcola i profili A, T, N in base alle variabili disponibili e ai metodi.
+        I cutoffs sono dinamicamente applicati in base al metodo per ciascuna variabile.
+        Restituisce un DataFrame con le colonne Apositive, Tpositive, Npositive.
+        """
+ 
+        # Accept dict or JSON path
+        if isinstance(cutoffs, str):
+            cutoffs = load_cutoffs(cutoffs)
+            # Normalizza valori non numerici in lowercase, ma lasciali intatti (es. 'categorical')
+            for param, methods in cutoffs.items():
+                for method, val in methods.items():
+                    if isinstance(val, str) and not val.replace('.', '', 1).isdigit():
+                        cutoffs[param][method] = val.lower()
+                    elif val is None:
+                        cutoffs[param][method] = np.nan
+                    else:
+                        try:
+                            cutoffs[param][method] = float(val)
+                        except (ValueError, TypeError):
+                            cutoffs[param][method] = np.nan
+                           
+        elif not isinstance(cutoffs, dict):
+            raise TypeError("cutoffs must be a dict or a JSON file path (str).")
+ 
+        if not isinstance(df, pd.DataFrame):
+            raise TypeError(f"Expected a pandas DataFrame, but got {type(df)}")
+ 
+        df = df.copy()
+        idx = df.index
+        ATN_vars = []
+ 
+        # helper that uses the module-level safe getter
+        def _cut(parameter: str, method_val):
+            method = 'unknown' if pd.isna(method_val) else str(method_val)
+            return get_cutoff_from_dict(cutoffs, parameter, method, default=np.nan)
+ 
+        # Helper function per gestire gerarchie
+        def _assign_from_hierarchy(out_series, markers, op):
+            """
+            Assegna valori alla serie di output seguendo una gerarchia di marcatori.
+           
+            Args:
+                out_series: Serie pandas da popolare (A, T, o N)
+                markers: Lista di marcatori in ordine di priorità (dal più importante al meno)
+                op: Funzione operatore per il confronto (es. lambda val, cutoff: val < cutoff)
+            """
+            for marker in markers: # Itera sui marcatori IN ORDINE DI PRIORITÀ
+                if marker in df.columns: # Controlla se il marcatore esiste nel dataset
+                    for i in idx: # Per ogni paziente
+                        if pd.isna(out_series.at[i]):  # Assegna SOLO se ancora vuoto (se è già stato assegnato, niente)
+                            val = df.at[i, marker]
+                            if pd.notna(val): # Se il paziente ha questo valore
+                                method = df.at[i, 'METHOD'] if 'METHOD' in df.columns else 'unknown'
+                                cutoff = _cut(marker, method)
+                                if pd.notna(cutoff): # Se esiste un cutoff per questo metodo
+                                    out_series.at[i] = 1 if op(val, cutoff) else 0  # Applica l'operatore di confronto
+            return out_series
+ 
+        # Helper speciale per valori categorici (es. Amprion_Result)
+        def _assign_categorical(out_series, column, positive_values, negative_values):
+            """Assegna valori basati su categorie predefinite."""
+            if column in df.columns:
+                for i in idx:
+                    if pd.isna(out_series.at[i]):
+                        val = df.at[i, column]
+                        if val in positive_values:
+                            out_series.at[i] = 1
+                        elif val in negative_values:
+                            out_series.at[i] = 0
+            return out_series
+ 
+        # -----------------------------
+        # A: Amyloid (ordine di priorità decrescente)
+        # -----------------------------
+        A = pd.Series(pd.NA, index=idx, dtype="Int64")
+       
+        # Gerarchia A: Prima COMPOSITE_REF (gold standard), poi imaging, poi CSF    
+        amyloid_imaging = ['AMY_CENTILOIDS', 'PRECUNEUS_SUVR']
+        amyloid_plasma_CSF = ['AB4240_CSF', 'AB42_CSF', 'AB4240_PL', 'AB42_PL']
+       
+        # Prima gestiamo il COMPOSITE_REF come categorico
+        A = _assign_categorical(A, 'AMYLOID_STATUS_COMPOSITE_REF',
+                            positive_values=[1],
+                            negative_values=[0])
+       
+        # Poi applichiamo la gerarchia per i valori continui
+        A = _assign_from_hierarchy(A, amyloid_imaging,
+                                lambda val, cutoff: val >= cutoff) # qui il cutoff indica valori ALTI per positività amyloid= PATOLOGICO
+        A = _assign_from_hierarchy(A, amyloid_plasma_CSF,
+                                lambda val, cutoff: val < cutoff) # QUI VICEVERSA
+       
+        if not A.isna().all():
+            df['Apositive'] = A
+            ATN_vars.append('Apositive')
+ 
+        # -----------------------------
+        # T: Tau (ordine di priorità decrescente)
+        # -----------------------------
+        T = pd.Series(pd.NA, index=idx, dtype="Int64")
+       
+        # Gerarchia T: Prima imaging, poi CSF p-tau, poi ratio, poi total tau
+        tau_hierarchy = [
+            'TAU_METAROI',        # Imaging (più specifico per tau patologico)
+            'PT181_CSF',
+            'PT181_AB42_CSF',
+            'PT217_PL',           # p-tau217 (molto specifico per AD)
+            'PT181_PL',           # p-tau181
+            'PT217_AB42_PL',      # Ratio p-tau/AB42 --> ptau/nptau plasma
+            'TTAU_PL'             # Total tau (meno specifico)
+        ]
+       
+        T = _assign_from_hierarchy(T, tau_hierarchy,
+                                lambda val, cutoff: val >= cutoff)
+       
+        if not T.isna().all():
+            df['Tpositive'] = T
+            ATN_vars.append('Tpositive')
+ 
+        # -----------------------------
+        # N: Neurodegeneration (ordine di priorità decrescente)
+        # -----------------------------
+        N = pd.Series(pd.NA, index=idx, dtype="Int64")
+       
+        # Prima gestiamo Amprion_Result (categorico, alta specificità)
+        N = _assign_categorical(N, 'Amprion_Result',
+                            positive_values=['Detected-1', 'Detected-2'],
+                            negative_values=['Not_Detected'])
+       
+        # Gerarchia N: Imaging strutturale, poi biomarcatori neurali, poi altri
+        # Definisco le gerarchie separate per tipo di operatore
+ 
+        fluid_biomarkers = [
+            'TTAU_CSF',
+            'NFL_CSF',
+            'TTAU_AB42_CSF',
+            'GFAP',
+            'NFL_PL',
+            'ALPHA_SYN'
+        ]
+ 
+        # Altri biomarcatori: valori ALTI indicano neurodegenerazione
+        N = _assign_from_hierarchy(N, fluid_biomarkers,
+                                lambda val, cutoff: val >= cutoff)
+ 
+       
+        if not N.isna().all():
+            df['Npositive'] = N
+            ATN_vars.append('Npositive')
+ 
+        return df, ATN_vars

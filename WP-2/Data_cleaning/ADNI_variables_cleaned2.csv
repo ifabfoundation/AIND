@@ -36,31 +36,36 @@ Key ADNI tables merged into one table,ADNIMERGE,Ethnicity,['PTRACCAT'],RACE/Whit
 Key ADNI tables merged into one table,ADNIMERGE,Diagnosi,['DX'],DX/CN,,<class 'numpy.bool'>,"True, False",,11135.0,0.0,ADNI4,keep,,
 Key ADNI tables merged into one table,ADNIMERGE,Diagnosi,['DX'],DX/Dementia,,<class 'numpy.bool'>,"False, True",,11135.0,0.0,ADNI4,keep,,
 Key ADNI tables merged into one table,ADNIMERGE,Diagnosi,['DX'],DX/MCI,,<class 'numpy.bool'>,"False, True",,11135.0,0.0,ADNI4,keep,,
-ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,ID,PTID,PTID,,<class 'str'>,"011_S_0003, 022_S_0004, 011_S_0005, 011_S_0008, 011_S_0010",,1245.0,0.0,"ADNI3, ADNI4",keep,,
-ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,ID,RID,RID,,<class 'numpy.int64'>,,"5296.0, 3.0",1245.0,0.0,"ADNI3, ADNI4",keep,,
-ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Cohort,PHASE,COHORT,,<class 'str'>,"ADNI1, ADNIGO, ADNI2",,1245.0,0.0,"ADNI3, ADNI4",keep,,
-ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Visit,DRAWDATE,EXAMDATE,,<class 'str'>,"2006-09-13, 2006-11-28, 2006-09-06, 2006-09-20, 2006-11-10",,1245.0,0.0,"ADNI3, ADNI4",keep,,
-ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Education,PHC_Education,EDUCAT,,<class 'numpy.int64'>,,"20.0, 4.0",1245.0,0.0,"ADNI3, ADNI4",keep,cofattore,
-ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Tau,PHC_Tau,PHC_Tau,,<class 'numpy.float64'>,,"2.66834693328626, -2.75390285653023",1212.0,33.0,"ADNI3, ADNI4",keep,predittore,intervallo
-ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Visit,PHC_Visit,PHC_Visit,,<class 'numpy.float64'>,,"10.0, 1.0",1243.0,2.0,"ADNI3, ADNI4",keep,,
-ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Tau,PHC_pTau,PHC_pTau,,<class 'numpy.float64'>,,"2.95236525879149, -2.97667099545672",1238.0,7.0,"ADNI3, ADNI4",keep,predittore,intervallo
-ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Abeta,PHC_AB42,PHC_AB42,,<class 'numpy.float64'>,,"2.62575583932457, -2.50491980032413",1242.0,3.0,"ADNI3, ADNI4",keep,predittore,intervallo
-ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Abeta,PHC_SCeNS_AB42_Score,PHC_SCeNS_AB42_Score,,<class 'numpy.float64'>,,"93.9784578531717, -62.6428271053293",1236.0,9.0,"ADNI3, ADNI4",keep,predittore,intervallo
-ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Tau,PHC_SCeNS_pTau_Score,PHC_SCeNS_pTau_Score,,<class 'numpy.float64'>,,"93.6386452771735, -100.0",1236.0,9.0,"ADNI3, ADNI4",keep,predittore,intervallo
-ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,AT,AT_class,AT_class,,<class 'numpy.float64'>,"2.0, 0.0, 3.0, 1.0, nan","3.0, 0.0",1236.0,9.0,"ADNI3, ADNI4",keep,predittore,scala
-ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Age,PHC_Age_Biomarker,AGE,,<class 'numpy.float64'>,,"95.76, 54.76",1245.0,0.0,"ADNI3, ADNI4",keep,,
-ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,,Visit,VISIT_MONTH,,<class 'numpy.int64'>,0,"0.0, 0.0",1245.0,0.0,"ADNI3, ADNI4",keep,,
-ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Sex,['PHC_Sex'],GENDER/female,,<class 'numpy.bool'>,"False, True",,1245.0,0.0,"ADNI3, ADNI4",keep,cofattore,
-ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Sex,['PHC_Sex'],GENDER/male,,<class 'numpy.bool'>,"True, False",,1245.0,0.0,"ADNI3, ADNI4",keep,cofattore,
-ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Ethnicity,['PHC_Ethnicity'],ETHNICITY/latino,,<class 'numpy.bool'>,"False, True",,1245.0,0.0,"ADNI3, ADNI4",keep,cofattore,
-ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Ethnicity,['PHC_Ethnicity'],ETHNICITY/not_latino,,<class 'numpy.bool'>,"True, False",,1245.0,0.0,"ADNI3, ADNI4",keep,cofattore,
-ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Ethnicity,['PHC_Race'],RACE/Asian,,<class 'numpy.bool'>,"False, True",,1245.0,0.0,"ADNI3, ADNI4",keep,cofattore,
-ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Ethnicity,['PHC_Race'],RACE/Black,,<class 'numpy.bool'>,"False, True",,1245.0,0.0,"ADNI3, ADNI4",keep,cofattore,
-ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Ethnicity,['PHC_Race'],RACE/Native_american,,<class 'numpy.bool'>,"False, True",,1245.0,0.0,"ADNI3, ADNI4",keep,cofattore,
-ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Ethnicity,['PHC_Race'],RACE/White,,<class 'numpy.bool'>,"True, False",,1245.0,0.0,"ADNI3, ADNI4",keep,cofattore,
-ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Diagnosi,['PHC_Diagnosis'],DX/CN,,<class 'numpy.bool'>,"False, True",,1245.0,0.0,"ADNI3, ADNI4",keep,,
-ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Diagnosi,['PHC_Diagnosis'],DX/Dementia,,<class 'numpy.bool'>,"True, False",,1245.0,0.0,"ADNI3, ADNI4",keep,,
-ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Diagnosi,['PHC_Diagnosis'],DX/MCI,,<class 'numpy.bool'>,"False, True",,1245.0,0.0,"ADNI3, ADNI4",keep,,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,ID,RID,RID,,<class 'numpy.int64'>,None,"5296.0, 3.0",1245.0,0.0,"ADNI3, ADNI4",keep,,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Cohort,PHASE,COHORT,,<class 'str'>,"ADNI1, ADNIGO, ADNI2",None,1245.0,0.0,"ADNI3, ADNI4",keep,,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Visit,DRAWDATE,EXAMDATE,,<class 'str'>,"2006-09-13, 2006-11-28, 2006-09-06, 2006-09-20, 2006-11-10",None,1245.0,0.0,"ADNI3, ADNI4",keep,,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Education,PHC_Education,EDUCAT,,<class 'numpy.int64'>,None,"20.0, 4.0",1245.0,0.0,"ADNI3, ADNI4",keep,cofattore,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Abeta,PHC_SCeNS_AB42_Score,SCeNS_AB42_Score,,<class 'numpy.float64'>,None,"93.9784578531717, -62.6428271053293",1236.0,9.0,"ADNI3, ADNI4",keep,,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Tau,PHC_SCeNS_pTau_Score,SCeNS_pTau_Score,,<class 'numpy.float64'>,None,"93.6386452771735, -100.0",1236.0,9.0,"ADNI3, ADNI4",keep,,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Age,PHC_Age_Biomarker,AGE,,<class 'numpy.float64'>,None,"95.76, 54.76",1245.0,0.0,"ADNI3, ADNI4",keep,,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Age,AB42_RAW,AB42,,<class 'numpy.float64'>,None,"374.0, 75.3",1242.0,3.0,"ADNI3, ADNI4",keep,predittore,intervallo
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Abeta,PHC_AB42,AB42_z,,<class 'numpy.float64'>,None,"2.62575583932457, -2.50491980032413",1242.0,3.0,"ADNI3, ADNI4",keep,predittore,intervallo
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Abeta,Tau_RAW,TTAU,,<class 'numpy.float64'>,None,"330.0, 18.4",1212.0,33.0,"ADNI3, ADNI4",keep,predittore,intervallo
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Tau,PHC_Tau,TTAU_z,,<class 'numpy.float64'>,None,"2.66834693328626, -2.75390285653023",1212.0,33.0,"ADNI3, ADNI4",keep,predittore,intervallo
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Tau,pTau_RAW,PTAU,,<class 'numpy.float64'>,None,"170.0, 6.9",1238.0,7.0,"ADNI3, ADNI4",keep,predittore,intervallo
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Tau,PHC_pTau,PTAU_z,,<class 'numpy.float64'>,None,"2.95236525879149, -2.97667099545672",1238.0,7.0,"ADNI3, ADNI4",keep,predittore,intervallo
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Tau,AT_class,AT_profile,,<class 'str'>,"A+T-, A-T-, A+T+, A-T+, nan",None,1236.0,9.0,"ADNI3, ADNI4",keep,,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Visit,,VISIT_MONTH,,<class 'numpy.int64'>,0,"0.0, 0.0",1245.0,0.0,"ADNI3, ADNI4",keep,,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,ATN_profile,,Tprofile,,<class 'numpy.float64'>,"0.0, 1.0, nan","1.0, 0.0",1236.0,9.0,"ADNI3, ADNI4",keep,predittore,scala
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,ATN_profile,,Aprofile,,<class 'numpy.float64'>,"1.0, 0.0, nan","1.0, 0.0",1236.0,9.0,"ADNI3, ADNI4",keep,predittore,scala
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,,,TTAU_AB42,,<class 'numpy.float64'>,None,"3.5844748858447493, 0.0911392405063291",1209.0,36.0,"ADNI3, ADNI4",keep,,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,,,PTAU_AB42,,<class 'numpy.float64'>,None,"1.8781094527363185, 0.0330143540669856",1236.0,9.0,"ADNI3, ADNI4",keep,,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Sex,['PHC_Sex'],GENDER/female,,<class 'numpy.bool'>,"False, True",None,1245.0,0.0,"ADNI3, ADNI4",keep,cofattore,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Sex,['PHC_Sex'],GENDER/male,,<class 'numpy.bool'>,"True, False",None,1245.0,0.0,"ADNI3, ADNI4",keep,cofattore,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Ethnicity,['PHC_Ethnicity'],ETHNICITY/latino,,<class 'numpy.bool'>,"False, True",None,1245.0,0.0,"ADNI3, ADNI4",keep,cofattore,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Ethnicity,['PHC_Ethnicity'],ETHNICITY/not_latino,,<class 'numpy.bool'>,"True, False",None,1245.0,0.0,"ADNI3, ADNI4",keep,cofattore,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Ethnicity,['PHC_Race'],RACE/Asian,,<class 'numpy.bool'>,"False, True",None,1245.0,0.0,"ADNI3, ADNI4",keep,cofattore,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Ethnicity,['PHC_Race'],RACE/Black,,<class 'numpy.bool'>,"False, True",None,1245.0,0.0,"ADNI3, ADNI4",keep,cofattore,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Ethnicity,['PHC_Race'],RACE/Native_american,,<class 'numpy.bool'>,"False, True",None,1245.0,0.0,"ADNI3, ADNI4",keep,cofattore,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Ethnicity,['PHC_Race'],RACE/White,,<class 'numpy.bool'>,"True, False",None,1245.0,0.0,"ADNI3, ADNI4",keep,cofattore,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Diagnosi,['PHC_Diagnosis'],DX/CN,,<class 'numpy.bool'>,"False, True",None,1245.0,0.0,"ADNI3, ADNI4",keep,,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Diagnosi,['PHC_Diagnosis'],DX/Dementia,,<class 'numpy.bool'>,"True, False",None,1245.0,0.0,"ADNI3, ADNI4",keep,,
+ADSP Phenotype Harmonization Consortium (PHC) - Composite Biomarker Scores,ADSP_PHC_BIOMARKER,Diagnosi,['PHC_Diagnosis'],DX/MCI,,<class 'numpy.bool'>,"False, True",None,1245.0,0.0,"ADNI3, ADNI4",keep,,
 Diagnostic Summary - Baseline Changes,BLCHANGE,ID,PTID,PTID,,<class 'str'>,"023_S_0030, 023_S_0031, 100_S_0015, 022_S_0007, 011_S_0002",,9125.0,0.0,,keep,,
 Diagnostic Summary - Baseline Changes,BLCHANGE,Cohort,PHASE,COHORT,,<class 'str'>,"ADNI1, ADNIGO, ADNI2, ADNI3, ADNI4",,9125.0,0.0,,keep,,
 Diagnostic Summary - Baseline Changes,BLCHANGE,ID,RID,RID,,<class 'numpy.int64'>,,"7121.0, 2.0",9125.0,0.0,,keep,,
@@ -253,12 +258,104 @@ UCSF - Cross-Sectional FreeSurfer (6.0) [ADNI3],UCSFFSX6,Visit,,VISIT_MONTH,,<cl
 "UCSF - Longitudinal FreeSurfer (FreeSurfer Version 5.1) - Year 1 Base Image [ADNIGO,2]",UCSFFSL51Y1,Volume,ST88SV,RHippocampus,mm3,<class 'numpy.int64'>,,"5403.0, 1575.0",1356.0,0.0,"ADNI1, ADNI3, ADNI4",keep,predittore,volume
 "UCSF - Longitudinal FreeSurfer (FreeSurfer Version 5.1) - Year 1 Base Image [ADNIGO,2]",UCSFFSL51Y1,Volume,ST99CV,RMidTemp,mm3,<class 'numpy.int64'>,,"15752.0, 5044.0",1356.0,0.0,"ADNI1, ADNI3, ADNI4",keep,predittore,volume
 "UCSF - Longitudinal FreeSurfer (FreeSurfer Version 5.1) - Year 1 Base Image [ADNIGO,2]",UCSFFSL51Y1,Visit,,VISIT_MONTH,,<class 'numpy.int64'>,,"17.0, 0.0",1356.0,0.0,"ADNI1, ADNI3, ADNI4",keep,,
-UCSD - Derived Volumes [ADNI1],UCSDVOL,ID,RID,RID,,<class 'numpy.int64'>,None,"1430.0, 3.0",2495.0,0.0,pop not found,keep,,
-UCSD - Derived Volumes [ADNI1],UCSDVOL,Visit,EXAMDATE,EXAMDATE,,<class 'str'>,"2005-09-01, 2006-03-13, 2006-09-12, 2007-09-12, 2005-09-22",None,2495.0,0.0,pop not found,keep,,
-UCSD - Derived Volumes [ADNI1],UCSDVOL,Other,QCPASS,STATUS,,<class 'str'>,complete,None,2495.0,0.0,pop not found,keep,,
-UCSD - Derived Volumes [ADNI1],UCSDVOL,Volume,BRAIN,Brain,mm3,<class 'numpy.int64'>,None,"1361820.0, 644907.0",2495.0,0.0,pop not found,keep,predittore,volume
-UCSD - Derived Volumes [ADNI1],UCSDVOL,Volume,EICV,ICV,mm3,<class 'numpy.int64'>,None,"1951440.0, 1066310.0",2495.0,0.0,pop not found,keep,predittore,volume
-UCSD - Derived Volumes [ADNI1],UCSDVOL,Volume,VENTRICLES,Ventricles,mm3,<class 'numpy.float64'>,None,"156743.0, 7552.46",2495.0,0.0,pop not found,keep,predittore,volume
-UCSD - Derived Volumes [ADNI1],UCSDVOL,Volume,LHIPPOC,LHippocampus,mm3,<class 'numpy.float64'>,None,"5514.94, 1659.55",2495.0,0.0,pop not found,keep,predittore,volume
-UCSD - Derived Volumes [ADNI1],UCSDVOL,Volume,RHIPPOC,RHippocampus,mm3,<class 'numpy.float64'>,None,"5750.4, 1403.57",2495.0,0.0,pop not found,keep,predittore,volume
-UCSD - Derived Volumes [ADNI1],UCSDVOL,Visit,,VISIT_MONTH,,<class 'numpy.int64'>,None,"42.0, 0.0",2495.0,0.0,pop not found,keep,,
+UCSD - Derived Volumes [ADNI1],UCSDVOL,ID,RID,RID,,<class 'numpy.int64'>,,"1430.0, 3.0",2495.0,0.0,pop not found,keep,,
+UCSD - Derived Volumes [ADNI1],UCSDVOL,Visit,EXAMDATE,EXAMDATE,,<class 'str'>,"2005-09-01, 2006-03-13, 2006-09-12, 2007-09-12, 2005-09-22",,2495.0,0.0,pop not found,keep,,
+UCSD - Derived Volumes [ADNI1],UCSDVOL,Other,QCPASS,STATUS,,<class 'str'>,complete,,2495.0,0.0,pop not found,keep,,
+UCSD - Derived Volumes [ADNI1],UCSDVOL,Volume,BRAIN,Brain,mm3,<class 'numpy.int64'>,,"1361820.0, 644907.0",2495.0,0.0,pop not found,keep,predittore,volume
+UCSD - Derived Volumes [ADNI1],UCSDVOL,Volume,EICV,ICV,mm3,<class 'numpy.int64'>,,"1951440.0, 1066310.0",2495.0,0.0,pop not found,keep,predittore,volume
+UCSD - Derived Volumes [ADNI1],UCSDVOL,Volume,VENTRICLES,Ventricles,mm3,<class 'numpy.float64'>,,"156743.0, 7552.46",2495.0,0.0,pop not found,keep,predittore,volume
+UCSD - Derived Volumes [ADNI1],UCSDVOL,Volume,LHIPPOC,LHippocampus,mm3,<class 'numpy.float64'>,,"5514.94, 1659.55",2495.0,0.0,pop not found,keep,predittore,volume
+UCSD - Derived Volumes [ADNI1],UCSDVOL,Volume,RHIPPOC,RHippocampus,mm3,<class 'numpy.float64'>,,"5750.4, 1403.57",2495.0,0.0,pop not found,keep,predittore,volume
+UCSD - Derived Volumes [ADNI1],UCSDVOL,Visit,,VISIT_MONTH,,<class 'numpy.int64'>,,"42.0, 0.0",2495.0,0.0,pop not found,keep,,
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,ID,RID,RID,,,,,,,,keep,,
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,Visit,VISCODE2,VISCODE2,,,,,,,,keep,,
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,Visit,EXAMDATE,EXAMDATE,,,,,,,,keep,,
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,Cohort,STUDY,COHORT,,,,,,,,keep,,
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,Visit,RUNDATE,RUNDATE,,,,,,,,keep,,
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,Abeta,ABETA,AB42,pg/ml,,,,,,,keep,predittore,intervallo
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,Abeta,AB40,AB40,pg/ml,,,,,,,keep,predittore,intervallo
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,Tau,TAU,TTAU,pg/ml,,,,,,,keep,predittore,intervallo
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,Tau,PTAU,PTAU,pg/ml,,,,,,,keep,predittore,intervallo
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,Abeta,A4240,AB4240,pg/ml,,,,,,,keep,predittore,intervallo
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,,,VISIT_MONTH,,,,,,,,keep,,
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,,,TTAU_AB42,,,,,,,,keep,,
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,,,PTAU_AB42,,,,,,,,keep,,
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,,,Apositive,,,,,,,,keep,,
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,,,Tpositive,,,,,,,,keep,,
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,,,Npositive,,,,,,,,keep,,
+"UPENN - ADNI/DIAN Study CSF Elecsys Results [ADNI1,GO,2]",UPENNBIOMK_ADNIDIAN_ES_2017,,,VISIT_MONTH,,,,,,,,,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,ID,RID,RID,,,,,,,,keep,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,Visit,VISCODE2,VISCODE2,,,,,,,,keep,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,Visit,EXAMDATE,EXAMDATE,,,,,,,,keep,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,Cohort,PHASE,COHORT,,,,,,,,keep,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,Visit,RUNDATE,RUNDATE,,,,,,,,keep,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,Abeta,ABETA40,AB40,pg/ml,,,,,,,drop,predittore,intervallo
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,Abeta,ABETA42,AB42,pg/ml,,,,,,,keep,predittore,intervallo
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,Tau,TAU,TTAU,pg/ml,,,,,,,keep,predittore,intervallo
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,Tau,PTAU,PTAU,pg/ml,,,,,,,keep,predittore,intervallo
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,,,VISIT_MONTH,,,,,,,,keep,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,,,AB4240,,,,,,,,drop,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,,,TTAU_AB42,,,,,,,,keep,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,,,PTAU_AB42,,,,,,,,keep,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,,,Apositive,,,,,,,,keep,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,,,Tpositive,,,,,,,,keep,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,,,Npositive,,,,,,,,keep,,
+"UPENN CSF Biomarkers Roche Elecsys [ADNI1,GO,2,3]",UPENNBIOMK_ROCHE_ELECSYS,,,VISIT_MONTH,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,ID,,RID,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,visit,,VISCODE,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Age,,BIRTHYR,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,,CDRGLOB,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,,CDRSUM,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,,CDR_BASELINE,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Other,,CORT,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Visit,,CSFDATE,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,,CSF_CDRSB_BL,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,,CSF_CDR_BL,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Other,,CSF_DATE_BL,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Abeta,,CSF_ELC_AB40,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Abeta,,CSF_ELC_AB42,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Abeta,,CSF_ELC_AB4240,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Tau,,CSF_ELC_PTAU,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Tau,,CSF_ELC_TAU,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,APOE,,DIAN_APOE,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,,DIAN_CDRSB_BL,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,MMSE,,DIAN_MMSE,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Age,,DIAN_YEARS_BL,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Sex,,GENDER,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Visit,,LAST_VISIT_DATE,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Marry,,MARISTAT,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,,MRI_CDRSB_BL,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,,MRI_CDR_BL,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Visit,,MRI_DATE_BL,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Visit,,MRI_SCANDATE,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Volume,,MR_TOTT_PRECUNEUS,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Volume,,MR_TOTV_HIPPOCAMPUS,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Volume,,MR_TOTV_INTRACRANIAL,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Volume,,MR_TOTV_WMHYPOINTENSITIES,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,,PET_CDRSB_BL,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,CDR,,PET_CDR_BL,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Visit,,PET_DATE_BL,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Visit,,PET_SCANDATE,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Other,,PET_TYPE,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Abeta,,PIB_FSUVR_RSF_TOT_CORTMEAN,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Abeta,,PIB_FSUVR_RSF_TOT_CTX_PRECUNEUS,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Abeta,,PIB_FSUVR_RSF_TOT_HIPPOCAMPUS,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Abeta,,PIB_MSUVR_TOT_CORTMEAN,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Abeta,,PIB_MSUVR_TOT_PRECUNEUS,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Ethnicity,,RACE,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,Age,,VISITAGE,,,,,,,,,,
+The DIAN-ADNI Comparison Study,ADNI_DIAN_COMPARISON,visit,,VISIT_DATE_BL,,,,,,,,,,

@@ -1,5 +1,5 @@
 import pandas as pd
-from utils import load_predictors_and_cofactors, remove_unnecessary_values_from_list
+from utils import load_predictors_and_cofactors, remove_unnecessary_values_from_list, clean_generated_dataframe
 from leaspy import Data
 
 def simulate_data(model, dataset, gen_path, opt):
@@ -59,13 +59,16 @@ def simulate_data(model, dataset, gen_path, opt):
     if isinstance(df_simu, list):
         # Multiple datasets - save each separately
         for i, dataset in enumerate(df_simu):
+            # Clean the dataset before saving
+            dataset_cleaned = clean_generated_dataframe(dataset)
             filename = f'synthetic_data_generation_{i+1}.csv'
-            dataset.to_csv(gen_path + filename)
-            print(f'Generation {i+1} saved to: {gen_path}{filename} ({len(dataset)} samples)')
+            dataset_cleaned.to_csv(gen_path + filename)
+            print(f'Generation {i+1} saved to: {gen_path}{filename} ({len(dataset_cleaned)} samples)')
     else:
-        # Single combined dataset
-        df_simu.to_csv(gen_path + 'synthetic_data.csv')
+        # Single combined dataset - clean before saving
+        df_simu_cleaned = clean_generated_dataframe(df_simu)
+        df_simu_cleaned.to_csv(gen_path + 'synthetic_data.csv')
         print(f'Combined synthetic data saved to: {gen_path}synthetic_data.csv')
-        print(f'Generated {len(df_simu)} synthetic samples')
+        print(f'Generated {len(df_simu_cleaned)} synthetic samples')
 
     return df_simu

@@ -1,0 +1,21 @@
+{
+  "tstr": {
+    "tstr_accuracy": 0.6788079470198676,
+    "tstr_f1": 0.6526537307694134,
+    "trtr_accuracy": 0.7255334805003679,
+    "trtr_f1": 0.654493708736029,
+    "accuracy_degradation": 0.04672553348050035,
+    "f1_degradation": 0.0018399779666156135,
+    "passed": true,
+    "used_separate_synthetic": true,
+    "used_separate_real": true,
+    "synthetic_samples_used": 9205,
+    "real_samples_used": 8817,
+    "features_used": 7,
+    "split_by_patient": true,
+    "n_train_patients": 1153,
+    "n_test_patients": 506,
+    "n_train_visits": 6099,
+    "n_test_visits": 2718
+  }
+}

@@ -1,0 +1,29 @@
+================================================================================
+PRE-VALIDATION CHECK REPORT
+================================================================================
+
+Real data shape: (8819, 8)
+Synthetic data shape: (8919, 8)
+
+PASSED CHECKS (7):
+--------------------------------------------------------------------------------
+  ✅ Schema: columns match
+  ✅ Schema: column order matches
+  ✅ Sample size: ratio 1.01 is appropriate
+  ✅ Longitudinal: similar patient count
+  ✅ Longitudinal: similar visits/patient
+  ✅ Missing data: patterns are similar
+  ✅ Value ranges: all plausible
+
+WARNINGS (1):
+--------------------------------------------------------------------------------
+  ⚠️  1 columns have type mismatches
+
+CRITICAL ISSUES (0):
+--------------------------------------------------------------------------------
+  None
+
+================================================================================
+CONCLUSION
+================================================================================
+✅ Data is ready for full validation
