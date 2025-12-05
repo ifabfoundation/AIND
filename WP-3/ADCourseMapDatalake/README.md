@@ -98,9 +98,25 @@ ADCourseMapDatalake/
 ├── utils/                                  # File di configurazione
 │   └── algorithm_settings_calibration.json # Impostazioni algoritmo MCMC-SAEM
 │
+├── results/                                # [GENERATA] Output degli esperimenti
+│   └── experiment_{timestamp}/             # Cartella singolo esperimento
+│       ├── logs/                           # Log e metriche di training
+│       │   ├── train_noise.txt             # Rumore stimato per feature
+│       │   ├── validation_results.txt      # MAE ± CI per variabile
+│       │   └── calibration_parameters.csv  # Log iterazioni MCMC
+│       ├── images/                         # Grafici e visualizzazioni
+│       │   ├── mean_curves.png             # Traiettorie medie popolazione
+│       │   ├── distribution_hist_*.png     # Istogrammi reale vs sintetico
+│       │   └── CDF_hist_*.png              # CDF reale vs sintetico
+│       └── weights/                        # Pesi del modello addestrato
+│           ├── model_parameters.json       # Parametri modello
+│           └── average_parameters.json     # Parametri paziente medio
+│
 ├── README.md                               # Questa documentazione
 └── requirements.txt                        # Dipendenze Python
 ```
+
+> **Nota:** Le cartelle marcate con `[GENERATA]` vengono create automaticamente durante l'esecuzione degli script e sono escluse dal version control (vedi `.gitignore`).
 
 ---
 
