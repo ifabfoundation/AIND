@@ -161,12 +161,16 @@ LEVEL = 'cleaned_03'     # Datalake level
 # Utility validation settings (TSTR test)
 # Set this to use a DIFFERENT synthetic dataset for utility validation
 # If None, uses the main synthetic dataset (FILE_CODE + 'synthetic')
-UTILITY_SYNTHETIC_FILE_CODE = None  # e.g., 'ADNIMERGEsynthetic_v2'
+UTILITY_SYNTHETIC_FILE_CODE = 'ADNIMERGE_synthetic_utility_reversed'  # e.g., 'ADNIMERGEsynthetic_v2'
+
+# Set this to use a DIFFERENT real dataset for utility validation
+# If None, uses the main real dataset (FILE_CODE)
+UTILITY_REAL_FILE_CODE = 'ADNIMERGE_to_test_utility_reversed'  # e.g., 'ADNIMERGE_test_set'
 
 # Column settings
 ID_VAR = 'ID'            # ID column
 TIME_VAR = 'TIME'        # Time column (for longitudinal data)
-TARGET_VAR = None        # Target variable for utility validation (e.g., 'DX', 'MMSE_category')
+TARGET_VAR = 'DX'        # Target variable for utility validation (e.g., 'DX', 'MMSE_category')
 
 # Categorical features (WITHOUT 'generated_' prefix - will be matched after alignment)
 CATEGORICAL_FEATURES = []
@@ -181,8 +185,8 @@ PLOTS_DIR = 'validation_results'
 # MAIN WORKFLOW
 # ============================================================================
 
-def main(skip_align=False, age_matching=False, age_column='AGE',
-         utility_synthetic_file_code=None, target_var=None):
+def main(skip_align=False, age_matching=False, utility_only=False, age_column='AGE',
+         utility_synthetic_file_code=None, utility_real_file_code=None, target_var=None):
     """
     Main validation workflow with automatic preprocessing.
 
@@ -195,16 +199,25 @@ def main(skip_align=False, age_matching=False, age_column='AGE',
         - Filters synthetic data by age range similar to real data
         - Balances dataset sizes if needed
         - Runs only fidelity tests (KS + correlation)
+    utility_only : bool, default=False
+        If True, runs ONLY utility validation (TSTR test).
+        Skips fidelity, privacy, and other tests.
     age_column : str, default='AGE'
         Name of the age column (only used if age_matching=True)
     utility_synthetic_file_code : str, optional
         File code for a SEPARATE synthetic dataset to use ONLY for utility validation.
         If None, uses the main synthetic dataset for utility validation.
+    utility_real_file_code : str, optional
+        File code for a SEPARATE real dataset to use ONLY for utility validation.
+        If None, uses the main real dataset for utility validation.
     target_var : str, optional
         Target variable for utility validation. If None, uses TARGET_VAR from config.
     """
     print("=" * 80)
-    if age_matching:
+    if utility_only:
+        print("SYNTHETIC DATA VALIDATION - UTILITY ONLY MODE")
+        print("(TSTR test only)")
+    elif age_matching:
         print("SYNTHETIC DATA VALIDATION - AGE MATCHING MODE")
         print("(Fidelity tests only with age-filtered data)")
     elif skip_align:
@@ -276,8 +289,54 @@ def main(skip_align=False, age_matching=False, age_column='AGE',
             print(f"     Falling back to main synthetic dataset for utility validation")
             utility_synthetic_data = None
 
+    # Step 1.6: Load SEPARATE utility real dataset (if specified)
+    # Resolve utility real file code (CLI arg > config > None)
+    utility_real_code = utility_real_file_code or UTILITY_REAL_FILE_CODE
+    utility_real_data = None
+
+    if utility_real_code:
+        print("\n" + "-" * 40)
+        print("LOADING SEPARATE UTILITY REAL DATASET")
+        print("-" * 40)
+
+        try:
+            from dl_client import DatalakeClient
+
+            client = DatalakeClient()
+            print(f"  🔍 Searching for file_code='{utility_real_code}', level='{LEVEL}'...")
+
+            search = client.query_files(
+                query={
+                    'custom.level': LEVEL,
+                    'custom.file_code': utility_real_code
+                }
+            )
+
+            if not search or 'object_name' not in search:
+                print(f"  ⚠️  Utility real file not found: {utility_real_code}")
+                print(f"     Falling back to main real dataset for utility validation")
+            else:
+                print(f"  ⬇️  Downloading {search['object_name']}...")
+                zip_files = client.download_file(
+                    search['object_name'],
+                    extract_zip=True
+                )
+
+                if zip_files:
+                    file_name = list(zip_files.keys())[0]
+                    utility_real_data = zip_files[file_name]
+                    print(f"  ✅ Utility real data loaded: {utility_real_data.shape}")
+                else:
+                    print(f"  ⚠️  Failed to extract utility real file")
+
+        except Exception as e:
+            print(f"  ⚠️  Error loading utility real data: {e}")
+            print(f"     Falling back to main real dataset for utility validation")
+            utility_real_data = None
+
     # Step 2: Preprocess and align (optional)
     utility_synth_aligned = None  # Will be set if utility synthetic data exists
+    utility_real_aligned = None   # Will be set if utility real data exists
 
     if skip_align:
         print("\n" + "=" * 80)
@@ -287,10 +346,14 @@ def main(skip_align=False, age_matching=False, age_column='AGE',
         real_aligned = real_data
         synth_aligned = synthetic_data
 
-        # Keep utility synthetic as-is if loaded
+        # Keep utility datasets as-is if loaded (no alignment)
         if utility_synthetic_data is not None:
-            utility_synth_aligned = utility_synthetic_data
+            utility_synth_aligned = utility_synthetic_data.copy()
             print(f"   Utility Synthetic (no alignment): {utility_synth_aligned.shape}")
+
+        if utility_real_data is not None:
+            utility_real_aligned = utility_real_data.copy()
+            print(f"   Utility Real (no alignment): {utility_real_aligned.shape}")
     else:
         print("\n" + "=" * 80)
         print("STEP 2: PREPROCESSING AND ALIGNMENT")
@@ -303,11 +366,24 @@ def main(skip_align=False, age_matching=False, age_column='AGE',
             print(f"   Synthetic: {synth_aligned.shape}")
             print(f"   Common columns: {len(real_aligned.columns)}")
 
-            # Also align utility synthetic data if loaded
-            if utility_synthetic_data is not None:
-                print(f"\n  Aligning utility synthetic dataset...")
-                _, utility_synth_aligned = quick_align(real_data, utility_synthetic_data)
+            # Align utility datasets - align them WITH EACH OTHER (not with main datasets)
+            # This preserves columns like DX that exist in utility datasets but not in main datasets
+            if utility_synthetic_data is not None and utility_real_data is not None:
+                # Both utility datasets provided - align them with each other
+                print(f"\n  Aligning utility datasets with each other...")
+                utility_real_aligned, utility_synth_aligned = quick_align(utility_real_data, utility_synthetic_data)
+                print(f"   Utility Real aligned: {utility_real_aligned.shape}")
                 print(f"   Utility Synthetic aligned: {utility_synth_aligned.shape}")
+            elif utility_synthetic_data is not None:
+                # Only utility synthetic - keep as-is (will use main real_data for utility)
+                print(f"\n  Utility synthetic dataset will be used as-is (no separate utility real)")
+                utility_synth_aligned = utility_synthetic_data.copy()
+                print(f"   Utility Synthetic: {utility_synth_aligned.shape}")
+            elif utility_real_data is not None:
+                # Only utility real - keep as-is (will use main synthetic_data for utility)
+                print(f"\n  Utility real dataset will be used as-is (no separate utility synthetic)")
+                utility_real_aligned = utility_real_data.copy()
+                print(f"   Utility Real: {utility_real_aligned.shape}")
 
         except Exception as e:
             print(f"\n❌ Error during preprocessing: {e}")
@@ -385,7 +461,9 @@ def main(skip_align=False, age_matching=False, age_column='AGE',
         sys.exit(1)
 
     print("\n" + "=" * 80)
-    if age_matching:
+    if utility_only:
+        print("STEP 4: UTILITY VALIDATION (TSTR TEST)")
+    elif age_matching:
         print("STEP 4: FIDELITY VALIDATION (KS + CORRELATION)")
     else:
         print("STEP 4: FULL VALIDATION")
@@ -406,15 +484,30 @@ def main(skip_align=False, age_matching=False, age_column='AGE',
         # Resolve target variable (CLI arg > config > None)
         final_target_var = target_var or TARGET_VAR
 
-        # Show utility validation configuration
+        # Debug: show target variable and check if it exists in datasets
+        print(f"\n  🎯 Target variable: {final_target_var}")
+        if utility_real_aligned is not None:
+            print(f"     In utility_real_aligned: {final_target_var in utility_real_aligned.columns}")
+            print(f"     Utility real columns: {list(utility_real_aligned.columns)[:15]}...")
+        else:
+            print(f"     utility_real_aligned is None, will use main real dataset")
         if utility_synth_aligned is not None:
+            print(f"     In utility_synth_aligned: {final_target_var in utility_synth_aligned.columns}")
+        else:
+            print(f"     utility_synth_aligned is None, will use main synthetic dataset")
+
+        # Show utility validation configuration
+        if utility_synth_aligned is not None or utility_real_aligned is not None or final_target_var:
             print(f"\n📊 Utility Validation Configuration:")
-            print(f"   Separate synthetic dataset: YES ({utility_synth_aligned.shape[0]} samples)")
+            if utility_synth_aligned is not None:
+                print(f"   Separate synthetic dataset: YES ({utility_synth_aligned.shape[0]} samples)")
+            else:
+                print(f"   Separate synthetic dataset: NO (using main synthetic)")
+            if utility_real_aligned is not None:
+                print(f"   Separate real dataset: YES ({utility_real_aligned.shape[0]} samples)")
+            else:
+                print(f"   Separate real dataset: NO (using main real)")
             print(f"   Target variable: {final_target_var or 'Not specified (TSTR will be skipped)'}")
-        elif final_target_var:
-            print(f"\n📊 Utility Validation Configuration:")
-            print(f"   Separate synthetic dataset: NO (using main synthetic)")
-            print(f"   Target variable: {final_target_var}")
 
         validator = SyntheticDataValidator(
             real_data=real_aligned,
@@ -423,11 +516,15 @@ def main(skip_align=False, age_matching=False, age_column='AGE',
             id_var=ID_VAR,
             time_var=TIME_VAR,
             target_var=final_target_var,
-            utility_synthetic_data=utility_synth_aligned
+            utility_synthetic_data=utility_synth_aligned,
+            utility_real_data=utility_real_aligned
         )
 
         # Run appropriate validation based on mode
-        if age_matching:
+        if utility_only:
+            # Utility only mode: only TSTR test
+            results = validator.run_utility_only_validation()
+        elif age_matching:
             # Age matching mode: only fidelity tests
             results = validator.run_fidelity_only_validation()
         else:
@@ -523,6 +620,16 @@ Examples:
   # With separate utility synthetic dataset:
   python validate_with_preprocessing.py --utility-synthetic ADNIMERGEsynthetic_v2 --target DX
   python validate_with_preprocessing.py --utility-synthetic MyOtherSynthetic --target MMSE_category
+
+  # With separate utility real dataset:
+  python validate_with_preprocessing.py --utility-real ADNIMERGE_test --target DX
+
+  # With both separate utility datasets:
+  python validate_with_preprocessing.py --utility-synthetic ADNIMERGEsynthetic_v2 --utility-real ADNIMERGE_test --target DX
+
+  # Run ONLY utility validation (TSTR test):
+  python validate_with_preprocessing.py --utility-only --target DX
+  python validate_with_preprocessing.py --utility-only --utility-real ADNIMERGE_test --target DX
         """
     )
     parser.add_argument(
@@ -534,6 +641,11 @@ Examples:
         '--age-matching',
         action='store_true',
         help='Enable age-matching mode: filters synthetic data by age, balances datasets, runs only fidelity tests (KS + correlation)'
+    )
+    parser.add_argument(
+        '--utility-only',
+        action='store_true',
+        help='Run ONLY utility validation (TSTR test). Skips fidelity, privacy, and other tests.'
     )
     parser.add_argument(
         '--age-column',
@@ -548,6 +660,14 @@ Examples:
         dest='utility_synthetic_file_code',
         help='File code for a SEPARATE synthetic dataset to use ONLY for utility validation (TSTR test). '
              'If not specified, uses the main synthetic dataset.'
+    )
+    parser.add_argument(
+        '--utility-real',
+        type=str,
+        default=None,
+        dest='utility_real_file_code',
+        help='File code for a SEPARATE real dataset to use ONLY for utility validation (TSTR test). '
+             'If not specified, uses the main real dataset.'
     )
     parser.add_argument(
         '--target',
@@ -565,7 +685,9 @@ Examples:
     main(
         skip_align=args.skip_align,
         age_matching=args.age_matching,
+        utility_only=args.utility_only,
         age_column=args.age_column,
         utility_synthetic_file_code=args.utility_synthetic_file_code,
+        utility_real_file_code=args.utility_real_file_code,
         target_var=args.target_var
     )

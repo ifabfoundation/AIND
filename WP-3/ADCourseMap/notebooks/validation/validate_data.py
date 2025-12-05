@@ -594,7 +594,8 @@ class SyntheticDataValidator:
                  auto_detect_categorical: bool = True,
                  generate_plots: bool = True,
                  output_dir: str = 'validation_results',
-                 utility_synthetic_data: Optional[pd.DataFrame] = None):
+                 utility_synthetic_data: Optional[pd.DataFrame] = None,
+                 utility_real_data: Optional[pd.DataFrame] = None):
         """
         Initialize validator.
 
@@ -624,6 +625,11 @@ class SyntheticDataValidator:
             If None, uses the main synthetic_data for utility validation.
             This allows using a different synthetic dataset for utility testing
             (e.g., one generated with a different method or parameters).
+        utility_real_data : pd.DataFrame, optional
+            Separate real dataset to use ONLY for utility validation (TSTR test).
+            If None, uses the main real_data for utility validation.
+            This allows using a different real dataset for utility testing
+            (e.g., a held-out test set or data from a different source).
         """
         self.real_data = real_data.copy()
         self.synthetic_data = synthetic_data.copy()
@@ -641,6 +647,13 @@ class SyntheticDataValidator:
         else:
             self.utility_synthetic_data = None
 
+        # Store separate utility real data if provided
+        if utility_real_data is not None:
+            self.utility_real_data = utility_real_data.copy()
+            print(f"  📊 Separate utility real dataset provided: {utility_real_data.shape}")
+        else:
+            self.utility_real_data = None
+
         # Create output directory structure if plots are enabled
         if self.generate_plots:
             import os
@@ -652,7 +665,8 @@ class SyntheticDataValidator:
                 'stationarity': os.path.join(output_dir, 'stationarity'),
                 'ks_tests': os.path.join(output_dir, 'ks_tests'),
                 'correlation': os.path.join(output_dir, 'correlation'),
-                'similarity': os.path.join(output_dir, 'similarity')
+                'similarity': os.path.join(output_dir, 'similarity'),
+                'utility': os.path.join(output_dir, 'utility')
             }
 
             for subdir_name, subdir_path in self.subdirs.items():
@@ -663,7 +677,8 @@ class SyntheticDataValidator:
             print(f"     ├── stationarity/")
             print(f"     ├── ks_tests/")
             print(f"     ├── correlation/")
-            print(f"     └── similarity/")
+            print(f"     ├── similarity/")
+            print(f"     └── utility/")
 
         # Identify feature columns
         exclude_cols = [c for c in [id_var] if c is not None]
@@ -892,6 +907,117 @@ class SyntheticDataValidator:
 
         return self.results
 
+    def run_utility_only_validation(self) -> Dict:
+        """
+        Run ONLY utility validation (TSTR test).
+
+        This is a simplified validation mode that only checks practical utility
+        via the Train on Synthetic, Test on Real (TSTR) test.
+
+        Returns
+        -------
+        results : dict
+            Dictionary containing utility validation results
+        """
+        print("=" * 80)
+        print("UTILITY-ONLY SYNTHETIC DATA VALIDATION")
+        print("=" * 80)
+
+        # DIMENSION 2: UTILITY (TSTR)
+        print("\n" + "=" * 80)
+        print("UTILITY VALIDATION (TSTR Test)")
+        print("=" * 80)
+        self._validate_utility()
+
+        # SUMMARY
+        self._print_utility_summary()
+
+        return self.results
+
+    def _print_utility_summary(self):
+        """Print summary for utility-only validation and save to file."""
+        import os
+        from datetime import datetime
+
+        print("\n" + "=" * 80)
+        print("UTILITY VALIDATION SUMMARY")
+        print("=" * 80)
+
+        # Build summary lines for both printing and saving
+        summary_lines = []
+        summary_lines.append("=" * 80)
+        summary_lines.append("UTILITY VALIDATION SUMMARY (TSTR Test)")
+        summary_lines.append("=" * 80)
+        summary_lines.append(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        summary_lines.append("")
+
+        if 'tstr' in self.results:
+            tstr = self.results['tstr']
+            if tstr.get('skipped'):
+                reason = tstr.get('reason', 'Unknown')
+                print(f"\n⚠️  TSTR Test: SKIPPED ({reason})")
+                summary_lines.append(f"TSTR Test: SKIPPED ({reason})")
+            else:
+                status = "✅ PASS" if tstr.get('passed') else "❌ FAIL"
+                status_text = "PASS" if tstr.get('passed') else "FAIL"
+                print(f"\n{status} TSTR (Train on Synthetic, Test on Real)")
+                print(f"   TSTR Accuracy: {tstr.get('tstr_accuracy', 0):.4f}")
+                print(f"   TSTR F1-Score: {tstr.get('tstr_f1', 0):.4f}")
+                print(f"   TRTR Accuracy: {tstr.get('trtr_accuracy', 0):.4f} (baseline)")
+                print(f"   TRTR F1-Score: {tstr.get('trtr_f1', 0):.4f} (baseline)")
+                print(f"   Accuracy Degradation: {tstr.get('accuracy_degradation', 0):.4f}")
+                print(f"   F1 Degradation: {tstr.get('f1_degradation', 0):.4f}")
+
+                summary_lines.append(f"Result: {status_text}")
+                summary_lines.append(f"Pass Criteria: Degradation < 5%")
+                summary_lines.append("")
+                summary_lines.append("--- Performance Metrics ---")
+                summary_lines.append(f"TSTR (Train on Synthetic, Test on Real):")
+                summary_lines.append(f"  Accuracy: {tstr.get('tstr_accuracy', 0):.4f}")
+                summary_lines.append(f"  F1-Score: {tstr.get('tstr_f1', 0):.4f}")
+                summary_lines.append("")
+                summary_lines.append(f"TRTR (Train on Real, Test on Real) - Baseline:")
+                summary_lines.append(f"  Accuracy: {tstr.get('trtr_accuracy', 0):.4f}")
+                summary_lines.append(f"  F1-Score: {tstr.get('trtr_f1', 0):.4f}")
+                summary_lines.append("")
+                summary_lines.append("--- Degradation ---")
+                summary_lines.append(f"Accuracy Degradation: {tstr.get('accuracy_degradation', 0):.4f} ({tstr.get('accuracy_degradation', 0)*100:.2f}%)")
+                summary_lines.append(f"F1 Degradation: {tstr.get('f1_degradation', 0):.4f} ({tstr.get('f1_degradation', 0)*100:.2f}%)")
+
+                if tstr.get('split_by_patient'):
+                    print(f"\n   Split by patient:")
+                    print(f"     Train: {tstr.get('n_train_patients')} patients ({tstr.get('n_train_visits')} visits)")
+                    print(f"     Test: {tstr.get('n_test_patients')} patients ({tstr.get('n_test_visits')} visits)")
+
+                    summary_lines.append("")
+                    summary_lines.append("--- Data Split (by patient) ---")
+                    summary_lines.append(f"Train: {tstr.get('n_train_patients')} patients ({tstr.get('n_train_visits')} visits)")
+                    summary_lines.append(f"Test: {tstr.get('n_test_patients')} patients ({tstr.get('n_test_visits')} visits)")
+
+                if tstr.get('used_separate_synthetic'):
+                    print(f"\n   Used separate synthetic dataset: {tstr.get('synthetic_samples_used')} samples")
+                    summary_lines.append("")
+                    summary_lines.append(f"Separate synthetic dataset: {tstr.get('synthetic_samples_used')} samples")
+                if tstr.get('used_separate_real'):
+                    print(f"   Used separate real dataset: {tstr.get('real_samples_used')} samples")
+                    summary_lines.append(f"Separate real dataset: {tstr.get('real_samples_used')} samples")
+
+                summary_lines.append("")
+                summary_lines.append(f"Features used: {tstr.get('features_used', 'N/A')}")
+                summary_lines.append(f"Target variable: {self.target_var}")
+
+        summary_lines.append("")
+        summary_lines.append("=" * 80)
+
+        # Save to file if generate_plots is enabled and subdirs exist
+        if self.generate_plots and hasattr(self, 'subdirs') and 'utility' in self.subdirs:
+            summary_file = os.path.join(self.subdirs['utility'], 'tstr_summary.txt')
+            with open(summary_file, 'w') as f:
+                f.write('\n'.join(summary_lines))
+            print(f"\n   📄 Summary saved to: {summary_file}")
+
+        print("\n" + "=" * 80)
+
     def _validate_fidelity(self):
         """
         Validate statistical fidelity (Dimension 1).
@@ -1065,6 +1191,8 @@ class SyntheticDataValidator:
 
         Note: If utility_synthetic_data was provided at initialization,
         it will be used instead of the main synthetic_data for this test.
+        Similarly, if utility_real_data was provided, it will be used
+        instead of the main real_data for this test.
         """
         print("\n--- 2.1 TSTR (Train on Synthetic, Test on Real) ---")
 
@@ -1076,9 +1204,23 @@ class SyntheticDataValidator:
             synth_data_for_utility = self.synthetic_data
             print("  📊 Using main synthetic dataset for utility validation")
 
-        if self.target_var is None or self.target_var not in self.real_data.columns:
-            print("  ⚠ No target variable specified or found, skipping TSTR")
-            self.results['tstr'] = {'skipped': True}
+        # Determine which real dataset to use for utility validation
+        if self.utility_real_data is not None:
+            real_data_for_utility = self.utility_real_data
+            print("  📊 Using SEPARATE real dataset for utility validation")
+        else:
+            real_data_for_utility = self.real_data
+            print("  📊 Using main real dataset for utility validation")
+
+        if self.target_var is None:
+            print("  ⚠ No target variable specified, skipping TSTR")
+            self.results['tstr'] = {'skipped': True, 'reason': 'No target variable specified'}
+            return
+
+        if self.target_var not in real_data_for_utility.columns:
+            print(f"  ⚠ Target variable '{self.target_var}' not found in real data, skipping TSTR")
+            print(f"     Available columns: {list(real_data_for_utility.columns)[:10]}...")
+            self.results['tstr'] = {'skipped': True, 'reason': f"Target '{self.target_var}' not in real data"}
             return
 
         # Verify target variable exists in synthetic data too
@@ -1087,10 +1229,10 @@ class SyntheticDataValidator:
             self.results['tstr'] = {'skipped': True, 'reason': 'Target not in synthetic data'}
             return
 
-        # Prepare features and target
+        # Prepare features and target - use utility real data for feature detection
         feature_cols_numeric = [c for c in self.feature_cols
                                if c != self.target_var and
-                               c in self.real_data.select_dtypes(include=[np.number]).columns]
+                               c in real_data_for_utility.select_dtypes(include=[np.number]).columns]
 
         # Verify features exist in synthetic data
         synth_numeric_cols = synth_data_for_utility.select_dtypes(include=[np.number]).columns
@@ -1107,8 +1249,8 @@ class SyntheticDataValidator:
             return
 
         # Use intelligent imputation (median for numeric)
-        X_real = self._impute_missing_values(self.real_data, feature_cols_numeric)
-        y_real = self.real_data[self.target_var]
+        X_real = self._impute_missing_values(real_data_for_utility, feature_cols_numeric)
+        y_real = real_data_for_utility[self.target_var]
         X_synth = self._impute_missing_values(synth_data_for_utility, feature_cols_numeric)
         y_synth = synth_data_for_utility[self.target_var]
 
@@ -1116,20 +1258,75 @@ class SyntheticDataValidator:
         is_classification = len(y_real.unique()) < 20
 
         if not is_classification:
-            print("  � Target appears to be continuous, skipping TSTR (implement regression if needed)")
+            print("  ⚠ Target appears to be continuous, skipping TSTR (implement regression if needed)")
             self.results['tstr'] = {'skipped': True}
             return
 
-        # Split real data
-        try:
-            X_train_real, X_test_real, y_train_real, y_test_real = train_test_split(
-                X_real, y_real, test_size=0.3, random_state=42, stratify=y_real
-            )
-        except ValueError:
-            # If stratification fails, do regular split
-            X_train_real, X_test_real, y_train_real, y_test_real = train_test_split(
-                X_real, y_real, test_size=0.3, random_state=42
-            )
+        # Split real data - by patient if ID column is available
+        if self.id_var is not None and self.id_var in real_data_for_utility.columns:
+            # Split by patient (stratified by number of visits per patient)
+            print("  Splitting data by patient ID (stratified by visit count)...")
+
+            np.random.seed(42)
+            train_percentage = 0.7  # 70% train, 30% test
+
+            # Count visits per patient
+            visits_count = real_data_for_utility.groupby(self.id_var).size()
+
+            # Group patients by number of visits (stratification)
+            patients_per_visit_count = {}
+            for patient_id, count in visits_count.items():
+                if count not in patients_per_visit_count:
+                    patients_per_visit_count[count] = []
+                patients_per_visit_count[count].append(patient_id)
+
+            # Select train patients from each visit-count group
+            train_ids = []
+            for visit_count in patients_per_visit_count:
+                patient_list = patients_per_visit_count[visit_count]
+                n_train = max(1, int(train_percentage * len(patient_list)))
+                selected = np.random.choice(patient_list, size=n_train, replace=False).tolist()
+                train_ids.extend(selected)
+
+            # Create train/test masks based on patient IDs
+            train_mask = real_data_for_utility[self.id_var].isin(train_ids)
+            test_mask = ~train_mask
+
+            # Get positional indices for train/test split
+            # X_real is a DataFrame, so we use iloc for positional indexing
+            train_indices = real_data_for_utility.index[train_mask].tolist()
+            test_indices = real_data_for_utility.index[test_mask].tolist()
+
+            # Map to positions in the arrays
+            all_indices = real_data_for_utility.index.tolist()
+            train_positions = [all_indices.index(idx) for idx in train_indices]
+            test_positions = [all_indices.index(idx) for idx in test_indices]
+
+            X_train_real = X_real.iloc[train_positions]
+            X_test_real = X_real.iloc[test_positions]
+            y_train_real = y_real.iloc[train_positions]
+            y_test_real = y_real.iloc[test_positions]
+
+            n_train_patients = len(train_ids)
+            n_test_patients = len(set(real_data_for_utility[self.id_var]) - set(train_ids))
+            split_by_patient = True
+            print(f"  Split: {n_train_patients} train patients ({len(X_train_real)} visits), "
+                  f"{n_test_patients} test patients ({len(X_test_real)} visits)")
+        else:
+            # Fallback: random split on visits (original behavior)
+            print("  No ID column available, using random split on visits...")
+            split_by_patient = False
+            n_train_patients = None
+            n_test_patients = None
+            try:
+                X_train_real, X_test_real, y_train_real, y_test_real = train_test_split(
+                    X_real, y_real, test_size=0.3, random_state=42, stratify=y_real
+                )
+            except ValueError:
+                # If stratification fails, do regular split
+                X_train_real, X_test_real, y_train_real, y_test_real = train_test_split(
+                    X_real, y_real, test_size=0.3, random_state=42
+                )
 
         # TSTR: Train on Synthetic, Test on Real
         print("  Training model on synthetic data...")
@@ -1165,8 +1362,15 @@ class SyntheticDataValidator:
             'f1_degradation': float(f1_deg),
             'passed': passed,
             'used_separate_synthetic': self.utility_synthetic_data is not None,
+            'used_separate_real': self.utility_real_data is not None,
             'synthetic_samples_used': len(synth_data_for_utility),
-            'features_used': len(feature_cols_numeric)
+            'real_samples_used': len(real_data_for_utility),
+            'features_used': len(feature_cols_numeric),
+            'split_by_patient': split_by_patient,
+            'n_train_patients': n_train_patients,
+            'n_test_patients': n_test_patients,
+            'n_train_visits': len(X_train_real),
+            'n_test_visits': len(X_test_real)
         }
 
         status = " PASS" if passed else " FAIL"
