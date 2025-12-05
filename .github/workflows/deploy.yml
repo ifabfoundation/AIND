@@ -29,5 +29,5 @@ jobs:
       - name: Deploy folder via rsync
         run: |
           rsync -avzr --delete \
-            nome-cartella/ \
+            WP-3/ADCourseMapDatalake/ \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.REMOTE_PATH }}
