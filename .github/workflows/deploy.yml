@@ -1,0 +1,33 @@
+name: Deploy to Ada Cloud
+
+# Quando si attiva
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'WP-3/ADCourseMapDatalake/**'  # <-- CAMBIA con il nome della tua cartella
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. Scarica il codice del repo
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Configura SSH
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      # 3. Trasferisci i file
+      - name: Deploy folder via rsync
+        run: |
+          rsync -avzr --delete \
+            nome-cartella/ \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.REMOTE_PATH }}
