@@ -10,6 +10,129 @@ class MergerTools:
     def __init__(self):
         pass
 
+    def _convert_nan_to_none(self, obj):
+        """
+        Converte ricorsivamente tutti i NaN in None per la serializzazione JSON.
+        """
+        if isinstance(obj, (list, tuple)):
+            return [self._convert_nan_to_none(item) for item in obj]
+        elif isinstance(obj, dict):
+            return {key: self._convert_nan_to_none(value) for key, value in obj.items()}
+        elif isinstance(obj, (np.floating, float)) and (np.isnan(obj) or pd.isna(obj)):
+            return None
+        elif isinstance(obj, np.ndarray):
+            return [self._convert_nan_to_none(item) for item in obj]
+        elif pd.isna(obj):
+            return None
+        else:
+            return obj
+
+
+    def filter_df_category(self, df, category):
+        base_keys = ['RID', 'EXAMDATE', 'VISCODE', 'VISIT_MONTH', 'COHORT']
+
+        volumes_keys = ['MRI_SCANDATE','IMAGEUID', 'FSVERSION', 'FLDSTRENG', 'STATUS', 'ICV%ICV', 'Brain%ICV', 'Ventricles%ICV', 'Hippocampus%ICV', 
+                        'Entorhinal%ICV', 'Fusiform%ICV', 'MidTemp%ICV']
+
+        scale_keys = ['MMSE', 'RAVLT_immediate', 'FAQ', 'MOCA', 'CRSB', 'CRSGLOB', 'ADAS11', 'ADAS13']
+
+        biomarker_keys = ['CSF_DATE', 'PLASMA_DATE', 'PET_SCANDATE', 'METHOD_CSF', 'METHOD_PLASMA', 'MATHOD_PET', "AB40_CSF", "AB42_CSF", 
+                        "AB4240_CSF", "PT181_CSF", "TTAU_CSF", "PT181_AB42_CSF", "AB40_PL", "AB42_PL", "AB4240_PL", "PT181_PL", 
+                        "PT217_AB42_PL", "TTAU_PL", "nPT217_PL", "PT217_nPT217_PL", "ALPHASYN", "NFL_CSF", "NFL_PL", "GFAP", 
+                        "AMY_CENTILOIDS", "SUMMARY_SUVR", "PRECUNEUS_SUVR", "TAU_METAROI", "INFERIORPARIETAL_SUVR",
+                        "PARAHIPPOCAMPAL_SUVR", "LATERALOCCIPITAL_SUVR", "MIDDLETEMPORAL_SUVR", "INFERIOR_TEMPORAL_SUVR", 
+                        "ENTORHINAL_SUVR", "FUSIFORM_SUVR", "CSF_SUVR"]
+
+        cofactor_keys = ['AGE', 'AGE_AD_BEG', 'AGE_AD_DX', 'AGE_COG_BEG', 'AGE_bl', 'GENDER/female', 'GENDER/male', 'DX/CN', 'DX/Dementia', 'DX/MCI', 'EDUCAT', 
+                        'MARRY/divorced', 'MARRY/married', 'ETHNICITY/latino', 'ETHNICITY/not_latino', 'MARRY/single', 'MARRY/widowed', 'RACE/Asian', 'RACE/Black',
+                        'RACE/Mixed', 'RACE/Native_american', 'RACE/White', 'APOE', 'APOE_4', 'DIAN_MUTATION', 'Aprofile', 'Tprofile', 'Nprofile']
+
+        if category == 'volumes':
+            col_list = [x for x in df.columns if x in base_keys + volumes_keys]
+            df_new = df[col_list].copy(deep=True)
+        elif category == 'scale':
+            col_list = [x for x in df.columns if x in base_keys + scale_keys]
+            df_new = df[col_list].copy(deep=True)
+        elif category == 'biomarker':
+            col_list = [x for x in df.columns if x in base_keys + biomarker_keys]
+            df_new = df[col_list].copy(deep=True)
+        elif category == 'cofactor':
+            col_list = [x for x in df.columns if x in base_keys + cofactor_keys]
+            df_new = df[col_list].copy(deep=True)
+        else:
+            raise ValueError(f"Cathegory {category} not found")
+
+        check_list = [x for x in col_list if x not in base_keys] 
+        df_cleaned = df_new.dropna(subset=check_list, how='all')
+
+        return df_cleaned
+
+    def find_visit_matches(self,df1, df2, rid_col='RID', date_col='EXAMDATE', buffer_days=pd.Timedelta(days=0)):
+        """
+        Trova corrispondenze tra visite di due dataset longitudinali.
+        
+        Returns:
+            exact_matches: {(RID, EXAMDATE): [[indici_df1], [indici_df2]]}
+            buffer_matches: {(RID, EXAMDATE1, EXAMDATE2): [[indici_df1], [indici_df2]]}
+        """
+        # Copia per non modificare gli originali e assicura datetime
+        df1 = df1.copy()
+        df2 = df2.copy()
+        df1[date_col] = pd.to_datetime(df1[date_col])
+        df2[date_col] = pd.to_datetime(df2[date_col])
+        
+        exact_matches = {}
+        buffer_matches = {}
+        
+        # Pre-raggruppa df2 per RID -> accesso O(1) invece di filtrare ogni volta
+        df2_by_rid = {rid: group for rid, group in df2.groupby(rid_col)}
+        
+        # Itera su ogni combinazione (RID, EXAMDATE) in df1
+        for (rid, date1), group1 in df1.groupby([rid_col, date_col]):
+            # Se il paziente non esiste in df2, skip
+            if rid not in df2_by_rid:
+                continue
+            
+            group2_rid = df2_by_rid[rid]
+            indices1 = group1.index.tolist()
+            
+            # 1. Cerca match ESATTO sulla data
+            exact_mask = group2_rid[date_col] == date1
+            
+            if exact_mask.any():
+                indices2 = group2_rid[exact_mask].index.tolist()
+                exact_matches[(rid, date1)] = [indices1, indices2]
+            else:
+                # 2. Solo se NON c'è match esatto, cerca con BUFFER
+                diffs = (group2_rid[date_col] - date1).abs()
+                buffer_mask = (diffs > pd.Timedelta(0)) & (diffs <= buffer_days)
+                
+                if buffer_mask.any():
+                    buffer_rows = group2_rid[buffer_mask]
+                    # Raggruppa per data2 (potrebbero esserci più visite nella stessa data)
+                    for date2, subgroup2 in buffer_rows.groupby(date_col):
+                        indices2 = subgroup2.index.tolist()
+                        buffer_matches[(rid, date1, date2)] = [indices1, indices2]
+        
+        return exact_matches, buffer_matches
+
+    def list_index_visit_matches(self, matches):
+        """
+        Lista gli indici delle righe che matchano tra due dataframe.
+        """
+        index_list1 = []
+        index_list2 = []
+        for indici in matches.values():
+            for ind1 in indici[0]:
+                for ind2 in indici[1]:
+                    index_list1.append(ind1)
+                    index_list2.append(ind2)
+
+        index_1 = pd.Index(index_list1)
+        index_2 = pd.Index(index_list2)
+
+        return index_1, index_2
+
     def matrix_match(self,dfs, df_names, df_code, columns_list=['RID'], time_buffer=pd.Timedelta(days=0)):
         """
         Crea una matrice di match per (RID, EXAMDATE) tra i dataframe in dfs.
@@ -30,6 +153,10 @@ class MergerTools:
                 if columns_set.issubset(dfs[kI].columns) and columns_set.issubset(dfs[kJ].columns):
                     if ['RID', 'EXAMDATE'] == columns_list:
                         match_matrix.iloc[i, j] = len(self.date_matches_with_buffer(dfs[kI], dfs[kJ], time_buffer)[0])
+                    elif set(['RID', 'EXAMDATE']).issubset(set(columns_list)) and len(columns_list) > 2:
+                        # Estrai le variabili extra (tutte le colonne tranne RID e EXAMDATE)
+                        extra_vars = [col for col in columns_list if col not in ['RID', 'EXAMDATE']]
+                        match_matrix.iloc[i, j] = len(self.date_matches_with_buffer_and_extra_var(dfs[kI], dfs[kJ], extra_vars, time_buffer)[0])
                     else:
                         s1 = set(dfs[kI][columns_list].drop_duplicates().itertuples(index=False, name=None))
                         s2 = set(dfs[kJ][columns_list].drop_duplicates().itertuples(index=False, name=None))
@@ -137,13 +264,151 @@ class MergerTools:
 
         # --- Step 6: Info ---
         if print_info:
-            print(f"[date_matches_with_buffer] Exact: {len(exact_matches)}, "
-                f"Buffer ({time_buffer}): {len(buffered_matches)}, "
-                f"Totale: {len(matches)}")
+            print(f"[date_matches_with_buffer] \nExact: \t\t{len(exact_matches)}, \n"
+                f"Buffer ({time_buffer}): \t{len(buffered_matches)}, \n"
+                f"Totale: \t\t{len(matches)}")
 
         return matches, exact_matches, buffered_matches
 
-
+    def date_matches_with_buffer_and_extra_var(self, df1, df2, extra_vars, time_buffer=pd.Timedelta(days=0), print_info=False):
+        """
+        Trova match esatti + eventuali match entro buffer considerando RID, EXAMDATE e variabili extra.
+        Le date che hanno match esatto vengono *eliminate* dal confronto buffer
+        per evitare accoppiamenti falsi.
+        
+        Args:
+            df1: primo dataframe
+            df2: secondo dataframe
+            extra_vars: lista di nomi delle colonne extra da considerare nel matching (es. ['FSVERSION', 'IMAGEUID'])
+            time_buffer: buffer temporale per il matching delle date
+            print_info: se True stampa informazioni sui match
+            
+        Returns:
+            matches: dataframe con tutti i match (esatti + buffer)
+            exact_matches: dataframe con solo i match esatti
+            buffered_matches: dataframe con solo i match entro buffer
+        """
+        
+        # Normalizza extra_vars a lista se è una stringa singola (retrocompatibilità)
+        if isinstance(extra_vars, str):
+            extra_vars = [extra_vars]
+        elif not isinstance(extra_vars, list):
+            raise ValueError(f"extra_vars deve essere una stringa o una lista di stringhe, ricevuto: {type(extra_vars)}")
+        
+        # Verifica che tutte le colonne extra_vars esistano in entrambi i dataframe
+        for var in extra_vars:
+            if var not in df1.columns:
+                raise ValueError(f"Colonna '{var}' non trovata in df1")
+            if var not in df2.columns:
+                raise ValueError(f"Colonna '{var}' non trovata in df2")
+        
+        # --- Step 1: Preprocessing ---
+        cols_to_select = ['RID', 'EXAMDATE'] + extra_vars
+        d1 = df1[cols_to_select].drop_duplicates().copy(deep=True)
+        d2 = df2[cols_to_select].drop_duplicates().copy(deep=True)
+        
+        d1['EXAMDATE'] = pd.to_datetime(d1['EXAMDATE'])
+        d2['EXAMDATE'] = pd.to_datetime(d2['EXAMDATE'])
+        
+        merged = d1.merge(d2, on='RID', suffixes=('_1', '_2'))
+        merged['date_diff'] = (merged['EXAMDATE_1'] - merged['EXAMDATE_2']).abs()
+        extra_vars1 = [f'{var}_1' for var in extra_vars]
+        extra_vars2 = [f'{var}_2' for var in extra_vars]
+        
+        # --- Step 2: Match esatti (RID, EXAMDATE, tutte le extra_vars) ---
+        # Gestione NaN: due NaN sono considerati uguali per ogni variabile extra
+        # Tutte le variabili extra devono essere uguali
+        extra_vars_match_conditions = []
+        for var in extra_vars:
+            var_match = (
+                (merged[f'{var}_1'] == merged[f'{var}_2']) |
+                (merged[f'{var}_1'].isna() & merged[f'{var}_2'].isna())
+            )
+            extra_vars_match_conditions.append(var_match)
+        
+        # Combina tutte le condizioni: tutte devono essere True
+        if extra_vars_match_conditions:
+            extra_vars_match = extra_vars_match_conditions[0]
+            for condition in extra_vars_match_conditions[1:]:
+                extra_vars_match = extra_vars_match & condition
+        else:
+            extra_vars_match = pd.Series([True] * len(merged), index=merged.index)
+        
+        exact_matches = merged[
+            (merged['date_diff'] == pd.Timedelta(0)) &
+            extra_vars_match
+        ]
+        
+        # Lista (RID, EXAMDATE, tutte le extra_vars) da escludere dal buffer match
+        exact_keys_cols = ['RID', 'EXAMDATE_1'] + extra_vars1
+        exact_keys = set(
+            exact_matches[exact_keys_cols]
+            .drop_duplicates()
+            .itertuples(index=False, name=None)
+        )
+        
+        # Colonne da restituire nel risultato
+        result_cols = ['RID', 'EXAMDATE_1', 'EXAMDATE_2'] + extra_vars1 + extra_vars2
+        
+        # Se nessun buffer richiesto → ritorno match esatti e basta
+        if time_buffer == pd.Timedelta(days=0):
+            if print_info:
+                print(f"[date_matches_with_buffer_and_extra_var] Match esatti: {len(exact_matches)}")
+            if len(exact_matches) > 0:
+                matches = exact_matches[result_cols].drop_duplicates()
+            else:
+                matches = pd.DataFrame(columns=result_cols)
+            # Crea un DataFrame vuoto con le stesse colonne per buffered_matches
+            buffered_matches = pd.DataFrame(columns=result_cols)
+            return matches, exact_matches, buffered_matches
+        
+        # --- Step 3: Rimuovere *tutte le righe* che coinvolgono una combinazione già matchata esattamente ---
+        if exact_keys:
+            def check_exact_match(row):
+                key1 = tuple([row['RID'], row['EXAMDATE_1']] + [row[var] for var in extra_vars1])
+                key2 = tuple([row['RID'], row['EXAMDATE_2']] + [row[var] for var in extra_vars2])
+                return key1 in exact_keys or key2 in exact_keys
+            
+            merged_no_exact = merged[~merged.apply(check_exact_match, axis=1)]
+        else:
+            merged_no_exact = merged.copy()
+        
+        # --- Step 4: Match entro buffer (escludendo match esatti) con tutte le extra_vars uguali ---
+        # Gestione NaN: due NaN sono considerati uguali per ogni variabile extra
+        # Tutte le variabili extra devono essere uguali
+        extra_vars_match_buffer_conditions = []
+        for var in extra_vars:
+            var_match_buffer = (
+                (merged_no_exact[f'{var}_1'] == merged_no_exact[f'{var}_2']) |
+                (merged_no_exact[f'{var}_1'].isna() & merged_no_exact[f'{var}_2'].isna())
+            )
+            extra_vars_match_buffer_conditions.append(var_match_buffer)
+        
+        # Combina tutte le condizioni: tutte devono essere True
+        if extra_vars_match_buffer_conditions:
+            extra_vars_match_buffer = extra_vars_match_buffer_conditions[0]
+            for condition in extra_vars_match_buffer_conditions[1:]:
+                extra_vars_match_buffer = extra_vars_match_buffer & condition
+        else:
+            extra_vars_match_buffer = pd.Series([True] * len(merged_no_exact), index=merged_no_exact.index)
+        
+        buffered_matches = merged_no_exact[
+            (merged_no_exact['date_diff'] <= time_buffer) &
+            (merged_no_exact['date_diff'] > pd.Timedelta(0)) &
+            extra_vars_match_buffer
+        ]
+        
+        # --- Step 5: Unione finale ---
+        matches = pd.concat([exact_matches, buffered_matches], ignore_index=True)
+        matches = matches[result_cols].drop_duplicates()
+        
+        # --- Step 6: Info ---
+        if print_info:
+            print(f"[date_matches_with_buffer_and_extra_var] Exact: {len(exact_matches)}, "
+                f"Buffer ({time_buffer}): {len(buffered_matches)}, "
+                f"Totale: {len(matches)}")
+        
+        return matches, exact_matches, buffered_matches
 
     def get_indexes_from_matches(self,df1, df2, matches, columns_list=['RID', 'EXAMDATE']):
         """
@@ -194,7 +459,7 @@ class MergerTools:
 
         if print_info:
             if len(index_df1)!=len(index_df2):
-                print('Qualcosa è andato storto --> len(buffer_index1)!=len(buffer_index2)\nBisogna trovare ugual numero di indici uguali')
+                print('Qualcosa è andato storto --> len(buffer_index1)!=len(buffer_index2)\nBisogna trovare ugual numero di indici')
             elif len(index_df1) > 0:
                 print('\n\nCi sono match con TIME BUFFER --> necessario studiare riga per riga\n====> Perchè?\n1) si riferisce ad esami diversi ==> raname uno dei due EXAMDATE \n2) altenativamente ===> scegli quale EXAMDATE usare e sovrascriverlo sull\'altro per quei valori.\n')            
             else:
@@ -457,6 +722,137 @@ class MergerTools:
         raise FileNotFoundError(f'File JSON non trovato. Percorsi verificati: {candidates}')
 
 
+
+    def get_merged_df(self, df1, df2, category):
+
+        if category == 'volumes':
+            key_cols = ['RID', 'EXAMDATE', 'FSVERSION', 'IMAGEUID']
+        elif category == 'scale':
+            key_cols = ['RID', 'EXAMDATE']
+        elif category == 'biomarker':
+            key_cols = ['RID', 'EXAMDATE', 'METHOD']
+        elif category == 'cofactor':
+            key_cols = ['RID', 'EXAMDATE']
+
+        
+        print(f'### merging {category}')
+        df_merged = pd.merge(df1, df2, how='outer', suffixes=('_1', '_2')) # valutare se imporre anche FDLSTRENGth
+        print(f'-----> Merged df ({len(df_merged)} rows)')
+        row_to_drop = self.remove_duplicates_from_merged_df(df_merged, category, key_cols)
+        print(f'\t\t-----> duplicates removed ({len(row_to_drop)} rows)')
+        df_merged = df_merged.drop(row_to_drop)
+        print(f'-----> final df ({len(df_merged)} rows)')
+        return df_merged
+        
+
+    def remove_duplicates_from_merged_df(self, df, category=None, key_cols=['RID', 'EXAMDATE']):
+
+        # Raggruppa per le colonne chiave e raccogli gli indici
+        grouped_indices = df.groupby(key_cols).indices
+
+        # Filtra solo i gruppi con più di una riga (i duplicati)
+        duplicate_groups = {k: v.tolist() for k, v in grouped_indices.items() if len(v) > 1}
+        row_to_drop = []
+        for k in duplicate_groups.values():
+            if len(k) > 2:
+                print(f'WARNING -----> Duplicate group found with more than 2 rows: {k}')
+            if category == 'volume':
+                row_to_drop.append(self.volume_unification_criteria(k[0], k[1]))
+            elif category == 'scale':
+                row_to_drop.append(self.scale_unification_criteria(k[0], k[1]))
+            elif category == 'biomark':
+                row_to_drop.append(self.biomark_unification_criteria(k[0], k[1]))
+            elif category == 'cofactor':
+                row_to_drop.append(self.cofactor_unification_criteria(k[0], k[1]))
+            else:
+                row_to_drop.append(k[1])
+        return row_to_drop
+
+    def volume_unification_criteria(self, df, idx_1, idx_2, key_cols=['RID', 'EXAMDATE']):
+        """
+        Criteri di unificazione per righe di volume quando entrambe le sorgenti hanno valori.
+        
+        Logica di selezione basata su STATUS e FLDSTRENG:
+        
+        1. Se entrambi STATUS sono 'complete':
+           - Se FLDSTRENG_1 < FLDSTRENG_2 (valore numerico) → scegli row_2 (FLDSTRENG maggiore)
+           - Altrimenti → scegli row_1
+        
+        2. Se row_1 è 'complete' e row_2 è 'partial' o nan:
+           → scegli row_1 (priorità a 'complete')
+        
+        3. Se row_1 è 'partial' o nan e row_2 è 'complete':
+           → scegli row_2 (priorità a 'complete')
+        
+        4. Se entrambi sono 'partial' (o uno è nan):
+           - Se FLDSTRENG_1 < FLDSTRENG_2 → scegli row_2 (FLDSTRENG maggiore)
+           - Altrimenti → scegli row_1
+        
+        5. Se row_1 è nan e row_2 è 'partial':
+           - Se FLDSTRENG_1 > FLDSTRENG_2 → scegli row_1
+           - Altrimenti → scegli row_2
+        
+        6. Default:
+           → scegli row_1
+        
+        Args:
+            row_1: Serie pandas con colonne _1
+            row_2: Serie pandas con colonne _2
+        
+        Returns:
+            Serie pandas con la riga selezionata secondo i criteri
+        """
+        idx_to_drop = idx_2  # Default: scegli row_1
+        row_1 = df.loc[idx_1].copy()
+        row_2 = df.loc[idx_2].copy()
+        
+        def extract_fldstreng_value(val):
+            """Estrae il valore numerico da FLDSTRENG"""
+            if pd.isna(val):
+                return float('inf')
+            val_str = str(val)
+            match = re.search(r'([0-9.]+)', val_str)
+            if match:
+                return float(match.group(1))
+            return float('inf')
+        
+        if 'STATUS_1' in row_1.index and 'STATUS_2' in row_2.index:
+            if row_1['STATUS_1'] == 'complete' and row_2['STATUS_2'] == 'complete':
+                if 'FLDSTRENG_1' in row_1.index and 'FLDSTRENG_2' in row_2.index:
+                    fld1_val = extract_fldstreng_value(row_1['FLDSTRENG_1'])
+                    fld2_val = extract_fldstreng_value(row_2['FLDSTRENG_2'])
+                    if fld1_val < fld2_val:
+                        idx_to_drop = idx_1
+                    else:
+                        idx_to_drop = idx_2
+            elif row_1['STATUS_1'] == 'complete' and (row_2['STATUS_2'] == 'partial' or pd.isna(row_2['STATUS_2'])):
+                idx_to_drop = idx_2
+            elif (row_1['STATUS_1'] == 'partial' or pd.isna(row_1['STATUS_1'])) and row_2['STATUS_2'] == 'complete':
+                idx_to_drop = row_2
+            elif row_1['STATUS_1'] == 'partial' and (row_2['STATUS_2'] == 'partial' or pd.isna(row_2['STATUS_2'])):
+                if 'FLDSTRENG_1' in row_1.index and 'FLDSTRENG_2' in row_2.index:
+                    fld1_val = extract_fldstreng_value(row_1['FLDSTRENG_1'])
+                    fld2_val = extract_fldstreng_value(row_2['FLDSTRENG_2'])
+                    if fld1_val < fld2_val:
+                        idx_to_drop = idx_1
+                    else:
+                        idx_to_drop = idx_2
+            elif pd.isna(row_1['STATUS_1']) and row_2['STATUS_2'] == 'partial':
+                if 'FLDSTRENG_1' in row_1.index and 'FLDSTRENG_2' in row_2.index:
+                    fld1_val = extract_fldstreng_value(row_1['FLDSTRENG_1'])
+                    fld2_val = extract_fldstreng_value(row_2['FLDSTRENG_2'])
+                    if fld1_val > fld2_val:
+                        idx_to_drop = idx_2
+                    else:
+                        idx_to_drop = idx_1
+            else:
+                idx_to_drop = idx_2
+
+        return idx_to_drop
+
+
+
+################################################# OLD FUNCTIONS #################################################
     def get_merged_col_reference(self, col1, col2, diff_idx, col_name, subject_id):
         '''
         Funzione per ottenere la colonna matchata per le colonne di riferimento.
@@ -484,7 +880,23 @@ class MergerTools:
             for x in diff_idx:
                 merged_col.loc[x] = self.select_cohort(col1.loc[x], col2.loc[x], new_cohort=True)
             return merged_col
-        
+        elif col_name == 'STATUS':
+            def choose(v1, v2):
+                # Regola 1: se uno è "complete", vince "complete"
+                if v1 == "complete" or v2 == "complete":
+                    return "complete"
+                # Regola 2: se uno è "partial", vince "partial"
+                if v1 == "partial" or v2 == "partial":
+                    return "partial"
+                # Regola 3: altrimenti prendi il primo non-None / non-NaN
+                return v1 if v1 not in (None, float('nan')) else v2
+
+            # combine applica la funzione solo agli elementi che differiscono o contengono NaN
+            merged_col = col1.combine(col2, choose)
+            return merged_col
+        elif col_name == 'METHOD':
+            print(f'{subject_id} \n### METHOD_1 != METHOD_2 ---> should be handled before')
+            return col1.copy().fillna(col2)
         else:
             print(f'### {col_name} is not a reference column studied, it will be merged with the simple method')
             return col1.copy().fillna(col2)
@@ -505,9 +917,6 @@ class MergerTools:
        
         return in_trend, in_range
 
-
-
-    
 
     def get_merged_float_range_and_trend(self, col1, col2, mean_col, merged_col, in_trend, trend, min_val, max_val, idx, col_name):
         '''
@@ -676,35 +1085,71 @@ class MergerTools:
         mean_col = col1.combine(col2, lambda x, y: (x + y) / 2 if not pd.isna(x) and not pd.isna(y) else x if pd.isna(x) else y, fill_value=np.nan)
         # verifico se la differenza tra i due valori è maggiore del 10% della media
         diff_col = col1.combine(col2, lambda x, y: abs(x - y) if not pd.isna(x) and not pd.isna(y) else np.nan, fill_value=np.nan)
-        #diff_in_col = np.max([(col1.shift(0) - col1.shift(-1)).iloc[:-1].max(), (col2.shift(0) - col2.shift(-1)).iloc[:-1].max()])
-        diff_check_mean = (diff_col > 0.2*mean_col).fillna(False)
-        #diff_check_in_col = (diff_col > diff_in_col).fillna(False)
-        if not all(~diff_check_mean):           
-            print(f'------> ATTENZIONE: {col_name} diff >>> 20% media tra visite')
-            
+        diff_in_col = np.nanmax([(col1.shift(0) - col1.shift(-1)).abs().iloc[:-1].max(), (col2.shift(0) - col2.shift(-1)).abs().iloc[:-1].max()])
+        diff_check_mean = (diff_col > 0.2*(mean_col.median())).fillna(False)
+        diff_check_in_col = (diff_col > diff_in_col).fillna(False)
+        
+        if not all(~diff_check_mean) and rid is not None:           
+            print(f'------> ATTENZIONE: {col_name} diff >>> 20% media tra visite ({round(0.2*(mean_col.median()), 4)})')
             # Aggiorna il file JSON se rid è disponibile
-            if rid is not None:
-                json_file_path = 'diff_tracking.json'
-                # Carica il file JSON se esiste, altrimenti crea un dizionario vuoto
-                if os.path.exists(json_file_path):
-                    with open(json_file_path, 'r', encoding='utf-8') as f:
-                        diff_dict = json.load(f)
-                else:
-                    diff_dict = {}
-                # Converte diff_check in lista di booleani
-                diff_check_list_mean = diff_check_mean.tolist()
-                #diff_check_list_in_col = diff_check_in_col.tolist()
-                
-                # Se col_name è già nelle chiavi, appende alla lista esistente
-                if col_name in diff_dict:
-                    diff_dict[col_name].append([rid, diff_check_list_mean])#, diff_check_list_in_col])
-                else:
-                    # Altrimenti aggiunge la nuova chiave con una lista contenente [rid, lista_booleani]
-                    diff_dict[col_name] = [[rid, diff_check_list_mean]]#, diff_check_list_in_col]]
-                
-                # Salva il dizionario aggiornato nel file JSON
-                with open(json_file_path, 'w', encoding='utf-8') as f:
-                    json.dump(diff_dict, f, indent=4, ensure_ascii=False)
+            json_file_path = 'diff_mean_tracking.json'
+            # Carica il file JSON se esiste, altrimenti crea un dizionario vuoto
+            if os.path.exists(json_file_path):
+                with open(json_file_path, 'r', encoding='utf-8') as f:
+                    diff_dict = json.load(f)
+            else:
+                diff_dict = {}
+            # Converte diff_check in lista di booleani
+            diff_check_list_mean = diff_check_mean.tolist()
+            
+            # Converte diff_col.values in lista e converte NaN in None per JSON
+            diff_col_values = list(diff_col.values)
+            diff_col_values_clean = self._convert_nan_to_none(diff_col_values)
+            
+            # Se col_name è già nelle chiavi, appende alla lista esistente
+            if col_name in diff_dict:
+                diff_dict[col_name].append([rid, 0.2*(mean_col.median()), diff_check_list_mean, diff_col_values_clean])
+            else:
+                # Altrimenti aggiunge la nuova chiave con una lista contenente [rid, lista_booleani]
+                diff_dict[col_name] = [[rid, 0.2*(mean_col.median()), diff_check_list_mean, diff_col_values_clean]]
+            
+            # Converte NaN in None prima di salvare
+            diff_dict_clean = self._convert_nan_to_none(diff_dict)
+            
+            # Salva il dizionario aggiornato nel file JSON
+            with open(json_file_path, 'w', encoding='utf-8') as f:
+                json.dump(diff_dict_clean, f, indent=4, ensure_ascii=False)
+        
+        if not all(~diff_check_in_col) and rid is not None:           
+            print(f'------> ATTENZIONE: {col_name} diff >>> diff in col tra visite ({round(diff_in_col, 4)})')
+            # Aggiorna il file JSON se rid è disponibile
+            json_file_path = 'diff_in_col_tracking.json'
+            # Carica il file JSON se esiste, altrimenti crea un dizionario vuoto
+            if os.path.exists(json_file_path):
+                with open(json_file_path, 'r', encoding='utf-8') as f:
+                    diff_dict = json.load(f)
+            else:
+                diff_dict = {}
+            # Converte diff_check in lista di booleani
+            diff_check_list_in_col = diff_check_in_col.tolist()
+            
+            # Converte diff_col.values in lista e converte NaN in None per JSON
+            diff_col_values = list(diff_col.values)
+            diff_col_values_clean = self._convert_nan_to_none(diff_col_values)
+            
+            # Se col_name è già nelle chiavi, appende alla lista esistente
+            if col_name in diff_dict:
+                diff_dict[col_name].append([rid, diff_in_col, diff_check_list_in_col, diff_col_values_clean])
+            else:
+                # Altrimenti aggiunge la nuova chiave con una lista contenente [rid, lista_booleani]
+                diff_dict[col_name] = [[rid, diff_in_col, diff_check_list_in_col, diff_col_values_clean]]
+            
+            # Converte NaN in None prima di salvare
+            diff_dict_clean = self._convert_nan_to_none(diff_dict)
+            
+            # Salva il dizionario aggiornato nel file JSON
+            with open(json_file_path, 'w', encoding='utf-8') as f:
+                json.dump(diff_dict_clean, f, indent=4, ensure_ascii=False)
 
         # verifico se tutte le colonne sono dentro il range e seguono il trend
         in_trend, in_range = self.check_trend_and_range(col1, col2, mean_col, trend, min_val, max_val)
@@ -761,6 +1206,7 @@ class MergerTools:
         ### RIFERIMENTI
         # keys dei VOLUMI, rifereimenti valori e andamento patologico (trend)
         volume_ref = self.get_json_file('volume_values_settings.json')
+        volume_keys = list(volume_ref.keys())+['IMAGEUID', 'FSVERSION', 'FLDSTRENG', 'STATUS']
         
         # keys delle SCALE e BIOMARCATORI, rifereimenti valori e andamento patologico (trend) 
         norm_ref = self.get_json_file('normalization_settings.json')
@@ -780,11 +1226,12 @@ class MergerTools:
         ### CREAZIONE MERGE per il soggetto con righe accoppiate
         base_cols = [c for c in ['RID', 'DX_1', 'DX_2'] if c in df_compare.columns]
         df_merge = df_compare[base_cols].copy()
-
+        
         col_exact_match = []
         col_equal_with_Nan = []
         col_diff = []
         row_diff = {}
+
         
         col_to_merge = [c for c in col_list if c not in base_cols]
         #print(f'col_to_merge {col_to_merge}')
@@ -822,7 +1269,7 @@ class MergerTools:
                 row_diff[col] = diff_idx
             
             ### COLONNE DI RIFERIMENTO
-            if col in ref_col:
+            if col in ref_col+['STATUS', 'METHOD']:
                 df_merge[col] = self.get_merged_col_reference(df_compare[col1], df_compare[col2], diff_idx, col_name=col, subject_id=subject_id)
             ### VOLUMI
             elif col in volume_ref.keys():

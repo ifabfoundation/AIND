@@ -7,6 +7,7 @@ import re
 import os
 from dateutil.relativedelta import relativedelta
 from dl_client import DatalakeClient
+import re
 
 def load_cutoffs(path: str) -> dict:
     with open(path, "r") as f:
@@ -205,6 +206,103 @@ class DataCleaner:
         df_copy[col_name] = df_copy[col_name].map({1: 'complete', 0: 'partial'})
         return df_copy
     
+
+    def volume_quality_filter(self,df):
+        df_qc = df.copy()
+
+        # 1) Rimuovi righe con OVERALLQC fail o NaN
+        if "OVERALLQC" not in df_qc.columns:
+            print('NO Quality Check parameters present in the dataframe')
+            return df_qc
+
+        mask_fail = df_qc["OVERALLQC"].astype(str).str.lower().isin(["fail"])
+        mask_nan = df_qc["OVERALLQC"].isna()
+        df_qc = df_qc.loc[~(mask_fail | mask_nan)].copy()
+
+        ### 2) Colonne dei volumi (normalizzate!)
+        # Filtra solo le colonne che esistono
+        hippo_cols      = [c for c in ["LHippocampus", "RHippocampus", "Hippocampus"] if c in df_qc.columns]
+        entorhinal_cols = [c for c in ["LEntorhinal", "REntorhinal", "Entorhinal"] if c in df_qc.columns]
+        fusiform_cols   = [c for c in ["LFusiform", "RFusiform", "Fusiform"] if c in df_qc.columns]
+        midtemp_cols    = [c for c in ["LMidTemp", "RMidTemp", "MidTemp"] if c in df_qc.columns]
+        ventricle_cols  = [c for c in ["LVentricles", "RVentricles", "Ventricles"] if c in df_qc.columns]
+        icv_cols        = [c for c in ["ICV", "EICV"] if c in df_qc.columns]
+
+        volume_cols = (
+            hippo_cols + entorhinal_cols + fusiform_cols +
+            midtemp_cols + ventricle_cols + icv_cols
+        )
+
+        ### 3) Maschere QC
+        overall = df_qc["OVERALLQC"].astype(str).str.lower()
+
+        m_complete = (overall == "Pass")
+        m_hippo    = overall.str.contains("hippo")
+        m_partial  = (overall == "Partial")
+
+        ### -------------------------
+        ###  OVERALL = HIPPO
+        ### -------------------------
+        keep_hippo = hippo_cols + icv_cols
+        null_hippo = [c for c in volume_cols if c not in keep_hippo]
+        df_qc.loc[m_hippo, null_hippo] = np.nan
+
+        ### -------------------------
+        ###  OVERALL = PARTIAL
+        ### -------------------------
+        # Inizializza le maschere QC (gestisce anche i NaN)
+        temp_complete = pd.Series([False] * len(df_qc), index=df_qc.index)
+        vent_complete = pd.Series([False] * len(df_qc), index=df_qc.index)
+        hippo_complete = pd.Series([False] * len(df_qc), index=df_qc.index)
+        
+        # TEMPQC
+        if "TEMPQC" in df_qc.columns:
+            # Gestisce NaN: se è NaN, rimane False (non Pass)
+            temp_complete = (~df_qc["TEMPQC"].isna()) & (df_qc["TEMPQC"].astype(str).str.lower() == "pass")
+            df_qc.loc[m_partial & temp_complete, entorhinal_cols + fusiform_cols + midtemp_cols] = \
+                df_qc.loc[m_partial & temp_complete, entorhinal_cols + fusiform_cols + midtemp_cols]
+
+        # VENTQC
+        if "VENTQC" in df_qc.columns:
+            # Gestisce NaN: se è NaN, rimane False (non Pass)
+            vent_complete = (~df_qc["VENTQC"].isna()) & (df_qc["VENTQC"].astype(str).str.lower() == "pass")
+            df_qc.loc[m_partial & vent_complete, ventricle_cols] = \
+                df_qc.loc[m_partial & vent_complete, ventricle_cols]
+
+        # HIPPOQC
+        if "LHIPQC" in df_qc.columns and "RHIPQC" in df_qc.columns:
+            # Gestisce NaN: se uno dei due è NaN, rimane False (non Pass)
+            hippo_complete = (~df_qc["LHIPQC"].isna()) & (~df_qc["RHIPQC"].isna()) & \
+                             (df_qc["LHIPQC"].astype(str).str.lower() == "pass") & \
+                             (df_qc["RHIPQC"].astype(str).str.lower() == "pass")
+            df_qc.loc[m_partial & hippo_complete, hippo_cols] = \
+                df_qc.loc[m_partial & hippo_complete, hippo_cols]
+
+        # se c'è qc per Hippo totale?
+        if "HIPPOQC" in df_qc.columns:
+            # Gestisce NaN: se è NaN, rimane False (non Pass)
+            hippo_complete = (~df_qc["HIPPOQC"].isna()) & (df_qc["HIPPOQC"].astype(str).str.lower() == "pass")
+            df_qc.loc[m_partial & hippo_complete, hippo_cols] = \
+                df_qc.loc[m_partial & hippo_complete, hippo_cols]
+
+        # Imposta NaN alle colonne non mantenute
+        for col in volume_cols:
+            if col in icv_cols:
+                continue  # ICV sempre mantenuto
+
+            keep_mask = (
+                (col in entorhinal_cols + fusiform_cols + midtemp_cols and "TEMPQC" in df_qc.columns and temp_complete)
+                | (col in ventricle_cols and "VENTQC" in df_qc.columns and vent_complete)
+                | (col in hippo_cols and "LHIPQC" in df_qc.columns and "RHIPQC" in df_qc.columns and hippo_complete)
+                | (col in hippo_cols and "HIPPOQC" in df_qc.columns and hippo_complete)
+            )
+
+            df_qc.loc[m_partial & ~keep_mask, col] = np.nan
+
+        return df_qc
+
+
+
     def find_exam_code(self, df, date_column = 'EXAMDATE', viscode_reference = 'VISCODE', patient_id_column = 'RID', essential_variables: list = []):
         '''
         This function finds the exam code for each patient based on the date of the visit.
