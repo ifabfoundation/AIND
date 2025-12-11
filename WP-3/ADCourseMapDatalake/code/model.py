@@ -429,7 +429,7 @@ class LeaspyModel():
         return final_dataset
 
 
-    def generate_virtual_data_with_cofactors(self, data, num_subjects, mean_visits, std_visits, merge_generations):
+    def generate_virtual_data_with_cofactors(self, data, num_subjects, mean_visits, std_visits, merge_generations, max_num_combinations=0):
         """
         Generate virtual data based on random cofactor combinations.
 
@@ -466,7 +466,11 @@ class LeaspyModel():
         cofactor_combinations = df_data[cofactor_names].drop_duplicates()
 
         # Sample random combinations from existing ones
-        num_combinations = min(10, len(cofactor_combinations))
+        if max_num_combinations:
+            num_combinations = min(max_num_combinations, len(cofactor_combinations))
+        else:
+            num_combinations = len(cofactor_combinations)
+            
         sampled_indices = random.sample(range(len(cofactor_combinations)), num_combinations)
         selected_combinations = []
 
