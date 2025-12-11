@@ -31,41 +31,25 @@ class MergerTools:
     def filter_df_category(self, df, category):
         base_keys = ['RID', 'EXAMDATE', 'VISCODE', 'VISIT_MONTH', 'COHORT']
 
-        volumes_keys = ['MRI_SCANDATE','IMAGEUID', 'FSVERSION', 'FLDSTRENG', 'STATUS', 'ICV%ICV', 'Brain%ICV', 'Ventricles%ICV', 'Hippocampus%ICV', 
-                        'Entorhinal%ICV', 'Fusiform%ICV', 'MidTemp%ICV']
+        category_keys = {'volumes': ['MRI_SCANDATE','IMAGEUID', 'FSVERSION', 'FLDSTRENG', 'STATUS', 'ICV%ICV', 'Brain%ICV', 'Ventricles%ICV', 'Hippocampus%ICV', 'Entorhinal%ICV', 'Fusiform%ICV', 'MidTemp%ICV'],
+                        'scale': ['MMSE', 'RAVLT_immediate', 'FAQ', 'MOCA', 'CRSB', 'CRSGLOB', 'ADAS11', 'ADAS13'],
+                        'csf': ['CSF_DATE', 'METHOD_CSF', "AB40_CSF", "AB42_CSF", "AB4240_CSF", "PT181_CSF", "TTAU_CSF", "PT181_AB42_CSF", ],
+                        'plasma': ["AB40_PL", "AB42_PL", "AB4240_PL", "PT181_PL", "PT217_AB42_PL", "TTAU_PL", "nPT217_PL", "PT217_nPT217_PL", "ALPHASYN", "NFL_PL", "GFAP"],
+                        'pet': ["AMY_CENTILOIDS", "SUMMARY_SUVR", "PRECUNEUS_SUVR", "TAU_METAROI", "INFERIORPARIETAL_SUVR", "PARAHIPPOCAMPAL_SUVR", "LATERALOCCIPITAL_SUVR", "MIDDLETEMPORAL_SUVR", "INFERIOR_TEMPORAL_SUVR", "ENTORHINAL_SUVR", "FUSIFORM_SUVR", "CSF_SUVR"],
+                        'cofactor': ['AGE', 'AGE_AD_BEG', 'AGE_AD_DX', 'AGE_COG_BEG', 'AGE_bl', 'GENDER/female', 'GENDER/male', 'DX/CN', 'DX/Dementia', 'DX/MCI', 'EDUCAT',  'MARRY/divorced', 'MARRY/married', 'ETHNICITY/latino', 'ETHNICITY/not_latino', 'MARRY/single', 'MARRY/widowed', 'RACE/Asian', 'RACE/Black', 'RACE/Mixed', 'RACE/Native_american', 'RACE/White', 'APOE', 'APOE_4', 'DIAN_MUTATION', 'Aprofile', 'Tprofile', 'Nprofile']}
 
-        scale_keys = ['MMSE', 'RAVLT_immediate', 'FAQ', 'MOCA', 'CRSB', 'CRSGLOB', 'ADAS11', 'ADAS13']
+        keys = category_keys[category]
 
-        biomarker_keys = ['CSF_DATE', 'PLASMA_DATE', 'PET_SCANDATE', 'METHOD_CSF', 'METHOD_PLASMA', 'MATHOD_PET', "AB40_CSF", "AB42_CSF", 
-                        "AB4240_CSF", "PT181_CSF", "TTAU_CSF", "PT181_AB42_CSF", "AB40_PL", "AB42_PL", "AB4240_PL", "PT181_PL", 
-                        "PT217_AB42_PL", "TTAU_PL", "nPT217_PL", "PT217_nPT217_PL", "ALPHASYN", "NFL_CSF", "NFL_PL", "GFAP", 
-                        "AMY_CENTILOIDS", "SUMMARY_SUVR", "PRECUNEUS_SUVR", "TAU_METAROI", "INFERIORPARIETAL_SUVR",
-                        "PARAHIPPOCAMPAL_SUVR", "LATERALOCCIPITAL_SUVR", "MIDDLETEMPORAL_SUVR", "INFERIOR_TEMPORAL_SUVR", 
-                        "ENTORHINAL_SUVR", "FUSIFORM_SUVR", "CSF_SUVR"]
-
-        cofactor_keys = ['AGE', 'AGE_AD_BEG', 'AGE_AD_DX', 'AGE_COG_BEG', 'AGE_bl', 'GENDER/female', 'GENDER/male', 'DX/CN', 'DX/Dementia', 'DX/MCI', 'EDUCAT', 
-                        'MARRY/divorced', 'MARRY/married', 'ETHNICITY/latino', 'ETHNICITY/not_latino', 'MARRY/single', 'MARRY/widowed', 'RACE/Asian', 'RACE/Black',
-                        'RACE/Mixed', 'RACE/Native_american', 'RACE/White', 'APOE', 'APOE_4', 'DIAN_MUTATION', 'Aprofile', 'Tprofile', 'Nprofile']
-
-        if category == 'volumes':
-            col_list = [x for x in df.columns if x in base_keys + volumes_keys]
+        if len(set(df.columns)&set(keys)) > 0:
+            col_list = [x for x in df.columns if x in base_keys + keys]
             df_new = df[col_list].copy(deep=True)
-        elif category == 'scale':
-            col_list = [x for x in df.columns if x in base_keys + scale_keys]
-            df_new = df[col_list].copy(deep=True)
-        elif category == 'biomarker':
-            col_list = [x for x in df.columns if x in base_keys + biomarker_keys]
-            df_new = df[col_list].copy(deep=True)
-        elif category == 'cofactor':
-            col_list = [x for x in df.columns if x in base_keys + cofactor_keys]
-            df_new = df[col_list].copy(deep=True)
+            check_list = [x for x in col_list if x not in base_keys] 
+            cleaned_df = df_new.dropna(subset=check_list, how='all')
         else:
-            raise ValueError(f"Cathegory {category} not found")
+            print(f"WARNING: il df non contiene colonne di {category}")
+            cleaned_df = pd.DataFrame()
 
-        check_list = [x for x in col_list if x not in base_keys] 
-        df_cleaned = df_new.dropna(subset=check_list, how='all')
-
-        return df_cleaned
+        return cleaned_df
 
     def find_visit_matches(self,df1, df2, rid_col='RID', date_col='EXAMDATE', buffer_days=pd.Timedelta(days=0)):
         """
@@ -760,8 +744,12 @@ class MergerTools:
                 row_to_drop.append(self.volume_unification_criteria(k[0], k[1]))
             elif category == 'scale':
                 row_to_drop.append(self.scale_unification_criteria(k[0], k[1]))
-            elif category == 'biomark':
-                row_to_drop.append(self.biomark_unification_criteria(k[0], k[1]))
+            elif category == 'csf':
+                row_to_drop.append(self.csf_unification_criteria(k[0], k[1]))
+            elif category == 'plasma':
+                row_to_drop.append(self.plasma_unification_criteria(k[0], k[1]))
+            elif category == 'pet':
+                row_to_drop.append(self.pet_unification_criteria(k[0], k[1]))
             elif category == 'cofactor':
                 row_to_drop.append(self.cofactor_unification_criteria(k[0], k[1]))
             else:
