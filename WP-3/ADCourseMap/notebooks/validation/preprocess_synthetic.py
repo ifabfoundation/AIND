@@ -272,7 +272,7 @@ def preprocess_and_validate(real_data: pd.DataFrame,
 
         validation_results = validator.run_full_validation()
         validator.save_report('validation_report.json')
-        validator.generate_visualizations(output_dir='validation_plots')
+        validator.generate_visualizations(output_dir='validation_results')
 
         results['validation'] = validation_results
 

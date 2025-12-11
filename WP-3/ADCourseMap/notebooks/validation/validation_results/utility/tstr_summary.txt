@@ -1,0 +1,32 @@
+================================================================================
+UTILITY VALIDATION SUMMARY (TSTR Test)
+================================================================================
+Generated: 2025-12-01 17:18:31
+
+Result: PASS
+Pass Criteria: Degradation < 5%
+
+--- Performance Metrics ---
+TSTR (Train on Synthetic, Test on Real):
+  Accuracy: 0.6788
+  F1-Score: 0.6527
+
+TRTR (Train on Real, Test on Real) - Baseline:
+  Accuracy: 0.7255
+  F1-Score: 0.6545
+
+--- Degradation ---
+Accuracy Degradation: 0.0467 (4.67%)
+F1 Degradation: 0.0018 (0.18%)
+
+--- Data Split (by patient) ---
+Train: 1153 patients (6099 visits)
+Test: 506 patients (2718 visits)
+
+Separate synthetic dataset: 9205 samples
+Separate real dataset: 8817 samples
+
+Features used: 7
+Target variable: DX
+
+================================================================================

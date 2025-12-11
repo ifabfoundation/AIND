@@ -1,0 +1,112 @@
+{
+    "Ventricles%ICV": [
+        0.11,
+        7.3,
+        "increasing"
+    ],
+    "Hippocampus%ICV": [
+        0.22,
+        0.66,
+        "inverse"
+    ],
+    "Entorhinal%ICV": [
+        0.07,
+        0.39,
+        "inverse"
+    ],
+    "Fusiform%ICV": [
+        0.63,
+        1.62,
+        "inverse"
+    ],
+    "MidTemp%ICV": [
+        0.7,
+        1.8,
+        "inverse"
+    ],
+    "Ventricles": [
+        9942.24	,
+        116400.08,
+        "increasing"
+    ],
+    "Hippocampus": [
+        3898.88,
+        9385.0,
+        "inverse"
+    ],
+    "Entorhinal": [
+        1595.45,
+        5572.55,
+        "inverse"
+    ],
+    "Fusiform": [
+        10739.3,
+        23874.05,
+        "inverse"
+    ],
+    "MidTemp": [
+        11546.9	,
+        26670.55,
+        "inverse"
+    ],
+    "ICV": [
+        1178000.0,
+        1950280.0,
+        "inverse"
+    ],
+    "RVentricles": [
+        4491.72,
+        57941.106,
+        "increasing"
+    ],
+    "RHippocampus": [
+        1866.23,
+        4715.54,
+        "inverse"
+    ],
+    "REntorhinal": [
+        695.0,
+        2900.02,
+        "inverse"
+    ],
+    "RFusiform": [
+        5114.03,
+        12232.97,
+        "inverse"
+    ],
+    "RMidTemp": [
+        5323.8,
+        13798.0,
+        "inverse"
+    ],
+    "LVentricles": [
+        4491.72,
+        57941.106,
+        "increasing"
+    ],
+    "LHippocampus": [
+        1866.23,
+        4715.54,
+        "inverse"
+    ],
+    "LEntorhinal": [
+        695.0,
+        2900.02,
+        "inverse"
+    ],
+    "LFusiform": [
+        5114.03,
+        12232.97,
+        "inverse"
+    ],
+    "LMidTemp": [
+        5323.8,
+        13798.0,
+        "inverse"
+    ],
+    "Brain": [
+        754149.98,
+        1244134.8,
+        "increasing"
+    ]
+}

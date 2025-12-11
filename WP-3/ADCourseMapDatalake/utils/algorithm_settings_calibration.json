@@ -1,0 +1,41 @@
+{
+    "name": "mcmc_saem",
+    "seed": 9748,
+    "algorithm_initialization_method": null,
+    "model_initialization_method": "default",
+    "device": "cpu",
+    "parameters": {
+        "progress_bar": true,
+        "n_iter": 3000,
+        "n_burn_in_iter": null,
+        "n_burn_in_iter_frac": 0.9,
+        "burn_in_step_power": 0.8,
+        "random_order_variables": true,
+        "sampler_ind": "Gibbs",
+        "sampler_ind_params": {
+            "acceptation_history_length": 25,
+            "mean_acceptation_rate_target_bounds": [
+                0.25,
+                0.5
+            ],
+            "adaptive_std_factor": 0.25
+        },
+        "sampler_pop": "Gibbs",
+        "sampler_pop_params": {
+            "random_order_dimension": true,
+            "acceptation_history_length": 25,
+            "mean_acceptation_rate_target_bounds": [
+                0.25,
+                0.5
+            ],
+            "adaptive_std_factor": 0.25
+        },
+        "annealing": {
+            "do_annealing": true,
+            "initial_temperature": 100,
+            "n_plateau": 100,
+            "n_iter": 500,
+            "n_iter_frac": null
+        }
+    }
+}
