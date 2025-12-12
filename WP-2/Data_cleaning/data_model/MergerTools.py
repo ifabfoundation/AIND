@@ -693,6 +693,8 @@ class MergerTools:
         key_cols = config.get('key_cols', ['RID', 'EXAMDATE'])
         
         print(f'### merging {category}')
+        print(f'df1 rows: {len(df1)}')  
+        print(f'df2 rows: {len(df2)}')  
         df_merged = pd.merge(df1, df2, how='outer', suffixes=('_1', '_2'))
         print(f'-----> Merged df ({len(df_merged)} rows)')
         
@@ -709,13 +711,13 @@ class MergerTools:
         # Regole di conflitto (uguali per tutte le categorie)
         regole_conflitto = {
             'COHORT': self._risolvi_cohort,
-            'VISCODE': self._risolvi_viscode,
+            #'VISCODE': self._risolvi_viscode,
         }
         
         df = df.copy()
         
-        # STEP 1: Consolida i duplicati (riempi NaN, applica regole)
-        df = self._consolida_duplicati(df, key_cols, regole_conflitto, colonne_escluse)
+        # STEP 1: Consolida le righe con lo stesso RID e EXAMDATE(riempi NaN, applica regole) anche non duplicati
+        df = self._consolida_duplicati(df, ['RID', 'EXAMDATE'], regole_conflitto, colonne_escluse)
         
         # STEP 2: Scegli quale riga tenere per ogni gruppo di duplicati
         grouped_indices = df.groupby(key_cols).indices
