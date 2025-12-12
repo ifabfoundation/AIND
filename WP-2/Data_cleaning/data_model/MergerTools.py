@@ -54,7 +54,44 @@ class MergerTools:
                                 'RACE/Mixed', 'RACE/Native_american', 'RACE/White', 'APOE', 'APOE_4', 'DIAN_MUTATION', 'Aprofile', 'Tprofile', 'Nprofile']}
 
     def __init__(self):
-        pass
+        # Carica ogni JSON una sola volta
+        normalization_full = self.get_json_file('normalization_settings.json')
+        volume_full = self.get_json_file('volume_values_settings.json')
+        cofactor_full = self.get_json_file('cofattori_values_settings.json')
+        
+        # Filtra per categoria
+        self.trend_reference = {
+            'volumes': self._filter_dict(volume_full, 'volumes'),
+            'scale': self._filter_dict(normalization_full, 'scale'),
+            'csf': self._filter_dict(normalization_full, 'csf'),
+            'plasma': self._filter_dict(normalization_full, 'plasma'),
+            'pet': self._filter_dict(normalization_full, 'pet'),
+            'cofactor': self._filter_dict(cofactor_full, 'cofactor'),
+        }
+        
+    def _filter_dict(self, full_dict, category):
+        """Filtra dizionario per le chiavi della categoria."""
+        valid_keys = self.CATEGORY_KEYS.get(category, [])
+        return {k: v for k, v in full_dict.items() if k in valid_keys}
+
+    def get_json_file(self, file_name):
+        """
+        Cerca il file di configurazione JSON sia nella cartella corrente
+        (Data_cleaning) sia in quella superiore (WP-2) per garantire
+        retrocompatibilità con vecchi percorsi.
+        """
+        base_dir = os.path.dirname(__file__)
+        candidates = [
+            os.path.join(base_dir, file_name),
+            os.path.join(os.path.dirname(base_dir), file_name),
+        ]
+
+        for json_path in candidates:
+            if os.path.exists(json_path):
+                with open(json_path, 'r') as f:
+                    return json.load(f)
+
+        raise FileNotFoundError(f'File JSON non trovato. Percorsi verificati: {candidates}')
 
     def _convert_nan_to_none(self, obj):
         """
@@ -667,24 +704,7 @@ class MergerTools:
 
         return temp_merge
 
-    def get_json_file(self, file_name):
-        """
-        Cerca il file di configurazione JSON sia nella cartella corrente
-        (Data_cleaning) sia in quella superiore (WP-2) per garantire
-        retrocompatibilità con vecchi percorsi.
-        """
-        base_dir = os.path.dirname(__file__)
-        candidates = [
-            os.path.join(base_dir, file_name),
-            os.path.join(os.path.dirname(base_dir), file_name),
-        ]
 
-        for json_path in candidates:
-            if os.path.exists(json_path):
-                with open(json_path, 'r') as f:
-                    return json.load(f)
-
-        raise FileNotFoundError(f'File JSON non trovato. Percorsi verificati: {candidates}')
 
 
 
@@ -859,9 +879,9 @@ class MergerTools:
         idx_0, idx_1 = row_indices[0], row_indices[1]
         
         if category == 'volume':
-            return self.volume_unification_criteria(df,idx_0, idx_1, key_cols=self.CATEGORY_KEYS[category])
+            return self.volume_unification_criteria(df,idx_0, idx_1)
         elif category == 'scale':
-            return self.scale_unification_criteria(df,idx_0, idx_1, key_cols=self.CATEGORY_KEYS[category])
+            return self.scale_unification_criteria(df,idx_0, idx_1, check_cols=self.CATEGORY_KEYS[category], category=category)
         elif category == 'csf':
             return self.csf_unification_criteria(df,idx_0, idx_1, key_cols=self.CATEGORY_KEYS[category])
         elif category == 'plasma':
@@ -873,7 +893,7 @@ class MergerTools:
         else:
             return idx_1  # default: droppa la seconda
 
-    def volume_unification_criteria(self, df, idx_1, idx_2, key_cols=['RID', 'EXAMDATE']):
+    def volume_unification_criteria(self, df, idx_1, idx_2):
         """
         Criteri di unificazione per righe di volume quando entrambe le sorgenti hanno valori.
         
@@ -956,6 +976,147 @@ class MergerTools:
         return idx_to_drop
 
 
+    def _get_previous_row(self, df, idx_1, rid, examdate):
+        """
+        Trova la riga precedente con stesso RID e EXAMDATE inferiore.
+        Prova idx_1-1, se EXAMDATE uguale prova idx_1-2.
+        """
+        loc = df.index.get_loc(idx_1)
+        
+        for offset in [1, 2]:
+            if loc - offset < 0:
+                return None
+            
+            row_prev = df.iloc[loc - offset]
+            
+            if row_prev['RID'] != rid:
+                return None
+            
+            if row_prev['EXAMDATE'] < examdate:
+                return row_prev
+            
+            if row_prev['EXAMDATE'] > examdate:
+                return None
+        
+        return None
+
+
+    def _check_trend(self, val, val_prev, trend):
+        """Verifica se val rispetta il trend rispetto a val_prev."""
+        if pd.isna(val) or pd.isna(val_prev):
+            return False
+        
+        if trend == 'increasing':
+            return val >= val_prev
+        elif trend == 'inverse':
+            return val <= val_prev
+        
+        return False
+
+
+    def _build_check_lists(self, row_1, row_2, row_prev, check_cols, category):
+        """
+        Costruisce check_1 e check_2.
+        True se: valori uguali tra row_1/row_2, oppure rispetta il trend.
+        False se: valore NaN, oppure non rispetta il trend.
+        """
+        check_1 = []
+        check_2 = []
+        
+        for col in check_cols:
+            if col not in row_1.index or col not in row_2.index:
+                continue
+            
+            val_1 = row_1[col]
+            val_2 = row_2[col]
+            
+            # Valori uguali (incluso entrambi NaN) → True per entrambi
+            both_nan = pd.isna(val_1) and pd.isna(val_2)
+            if both_nan or val_1 == val_2:
+                check_1.append(True)
+                check_2.append(True)
+                continue
+            
+            # Valori diversi → verifica trend
+            val_prev = row_prev[col] if row_prev is not None else None
+            trend = self.trend_reference[category].get(col, [None, None])[1]
+            
+            check_1.append(False if pd.isna(val_1) else self._check_trend(val_1, val_prev, trend))
+            check_2.append(False if pd.isna(val_2) else self._check_trend(val_2, val_prev, trend))
+        
+        return check_1, check_2
+
+
+    def scale_unification_criteria(self, df, idx_1, idx_2, check_cols, category):
+        """
+        Determina quale riga droppare tra due righe duplicate.
+        
+        Criteri di decisione (in ordine di priorità):
+        ─────────────────────────────────────────────
+        1. UPDATE_STAMP (se presente):
+        - Tiene la riga con timestamp più recente
+        - Se uno mancante → tiene quello valido
+        
+        2. Se timestamp uguali o entrambi mancanti → CONFRONTO TREND:
+        a) Trova riga precedente (stesso RID, EXAMDATE inferiore)
+        b) Per ogni colonna in check_cols:
+            - Valori uguali tra row_1 e row_2 → True per entrambe
+            - Valore NaN → False
+            - Altrimenti verifica rispetto del trend (da JSON):
+                · 'increasing': val >= val_prev
+                · 'inverse': val <= val_prev
+        c) Droppa la riga con meno True
+        
+        3. Default / pareggio / riga precedente non trovata → drop idx_2
+        
+        Parameters
+        ----------
+        df : pd.DataFrame
+        idx_1, idx_2 : index
+            Indici delle due righe duplicate
+        check_cols : list
+            Colonne da verificare per il confronto trend
+        
+        Returns
+        -------
+        idx_to_drop : index
+        """
+        idx_to_drop = idx_2  # Default
+        row_1 = df.loc[idx_1].copy()
+        row_2 = df.loc[idx_2].copy()
+
+        # === CRITERIO 1: UPDATE_STAMP ===
+        if 'update_stamp' in row_1.index and 'update_stamp' in row_2.index:
+            stamp_1 = pd.to_datetime(row_1['update_stamp'])
+            stamp_2 = pd.to_datetime(row_2['update_stamp'])
+            
+            stamp_1_missing = pd.isna(stamp_1)
+            stamp_2_missing = pd.isna(stamp_2)
+            
+            both_missing = stamp_1_missing and stamp_2_missing
+            both_equal = (not stamp_1_missing) and (not stamp_2_missing) and (stamp_1 == stamp_2)
+            
+            if both_missing or both_equal:
+                # === CRITERIO 2: CONFRONTO TREND ===
+                rid = row_1['RID']
+                examdate = row_1['EXAMDATE']
+                
+                row_prev = self._get_previous_row(df, idx_1, rid, examdate)
+                
+                if row_prev is not None:
+                    check_1, check_2 = self._build_check_lists(row_1, row_2, row_prev, check_cols)
+                    
+                    if sum(check_1) < sum(check_2):
+                        idx_to_drop = idx_1
+                
+            elif stamp_1_missing:
+                idx_to_drop = idx_1
+            elif stamp_2_missing:
+                idx_to_drop = idx_2
+            elif stamp_2 > stamp_1:
+                idx_to_drop = idx_1
+
+        return idx_to_drop
 
 ################################################# OLD FUNCTIONS #################################################
     def get_merged_col_reference(self, col1, col2, diff_idx, col_name, subject_id):
