@@ -37,7 +37,7 @@ class MergerTools:
         },
         'cofactor': {
             'key_cols': ['RID', 'EXAMDATE'],
-            'colonne_escluse': [],
+            'colonne_escluse': ['APOE'],
         },
     }
 
@@ -68,7 +68,7 @@ class MergerTools:
             'pet': self._filter_dict(normalization_full, 'pet'),
             'cofactor': self._filter_dict(cofactor_full, 'cofactor'),
         }
-        
+
     def _filter_dict(self, full_dict, category):
         """Filtra dizionario per le chiavi della categoria."""
         valid_keys = self.CATEGORY_KEYS.get(category, [])
@@ -110,7 +110,43 @@ class MergerTools:
         else:
             return obj
 
-
+    def calculate_visit_month(self,df, rid_col='RID', date_col='EXAMDATE', visit_col='VISIT_MONTH'):
+        """
+        Calcola VISIT_MONTH per ogni soggetto come differenza in mesi dalla prima visita.
+        
+        Parameters
+        ----------
+        df : pd.DataFrame
+            DataFrame contenente i dati delle visite
+        rid_col : str, default 'RID'
+            Nome della colonna identificativo soggetto
+        date_col : str, default 'EXAMDATE'
+            Nome della colonna con le date delle visite
+        visit_col : str, default 'VISIT_MONTH'
+            Nome della colonna di output per i mesi
+        
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame con la colonna VISIT_MONTH aggiornata
+        """
+        
+        # Copia per evitare modifiche inplace
+        df = df.copy()
+        
+        # Converti in datetime se non lo è già
+        if not pd.api.types.is_datetime64_any_dtype(df[date_col]):
+            df[date_col] = pd.to_datetime(df[date_col])
+        
+        # Calcola la data della prima visita per ogni soggetto
+        first_exam = df.groupby(rid_col)[date_col].transform('min')
+        
+        # Calcola VISIT_MONTH come differenza in mesi
+        # Usa Int64 (nullable) per gestire eventuali NaN nelle date
+        df[visit_col] = ((df[date_col] - first_exam).dt.days / 30.44).round().astype('Int64')
+        
+        return df
+            
     def filter_df_category(self, df, category):
         
         base_keys = self.BASE_KEYS
@@ -127,6 +163,7 @@ class MergerTools:
 
         return cleaned_df
 
+    '''
     def find_visit_matches(self,df1, df2, rid_col='RID', date_col='EXAMDATE', buffer_days=pd.Timedelta(days=0)):
         """
         Trova corrispondenze tra visite di due dataset longitudinali.
@@ -174,7 +211,139 @@ class MergerTools:
                         indices2 = subgroup2.index.tolist()
                         buffer_matches[(rid, date1, date2)] = [indices1, indices2]
         
+        return exact_matches,buffer_matches
+        '''
+
+    def find_visit_matches(self, df1, df2, rid_col='RID', date_col='EXAMDATE', buffer_days=pd.Timedelta(days=80)):
+        """
+        Trova corrispondenze tra visite di due dataset longitudinali.
+        Ogni indice di df1 e df2 compare AL MASSIMO in un match.
+        Priorità: exact match > buffer match (più vicino temporalmente).
+        
+        Returns:
+            exact_matches: {(RID, EXAMDATE): [[indici_df1], [indici_df2]]}
+            buffer_matches: {(RID, EXAMDATE1, EXAMDATE2): [[indici_df1], [indici_df2]]}
+        """
+        # Normalizza buffer_days
+        if isinstance(buffer_days, (int, float)):
+            buffer_days = pd.Timedelta(days=buffer_days)
+        
+        # Copia e converte date
+        df1 = df1.copy()
+        df2 = df2.copy()
+        df1[date_col] = pd.to_datetime(df1[date_col])
+        df2[date_col] = pd.to_datetime(df2[date_col])
+        
+        exact_matches = {}
+        buffer_matches = {}
+        used_idx1 = set()
+        used_idx2 = set()
+        
+        # Pre-raggruppa per (RID, EXAMDATE) -> accesso O(1)
+        df1_by_rid_date = {key: group for key, group in df1.groupby([rid_col, date_col])}
+        df2_by_rid_date = {key: group for key, group in df2.groupby([rid_col, date_col])}
+        
+        # Pre-raggruppa le date di df2 per RID (per efficienza nel PASSO 2)
+        df2_dates_by_rid = {}
+        for (rid, date) in df2_by_rid_date.keys():
+            if rid not in df2_dates_by_rid:
+                df2_dates_by_rid[rid] = []
+            df2_dates_by_rid[rid].append(date)
+        
+        # =====================================================
+        # PASSO 1: Trova TUTTI i match ESATTI
+        # =====================================================
+        for (rid, date1), group1 in df1_by_rid_date.items():
+            if (rid, date1) not in df2_by_rid_date:
+                continue
+            
+            group2 = df2_by_rid_date[(rid, date1)]
+            indices1 = group1.index.tolist()
+            indices2 = group2.index.tolist()
+            
+            exact_matches[(rid, date1)] = [indices1, indices2]
+            used_idx1.update(indices1)
+            used_idx2.update(indices2)
+        
+        # =====================================================
+        # PASSO 2: Raccogli TUTTI i potenziali buffer matches
+        # =====================================================
+        potential_buffers = []
+        
+        for (rid, date1) in df1_by_rid_date.keys():
+            if rid not in df2_dates_by_rid:
+                continue
+            
+            for date2 in df2_dates_by_rid[rid]:
+                # Skip match esatti (già gestiti)
+                if date1 == date2:
+                    continue
+                
+                diff_td = abs(date2 - date1)
+                if diff_td > buffer_days:
+                    continue
+                
+                potential_buffers.append({
+                    'rid': rid,
+                    'date1': date1,
+                    'date2': date2,
+                    'diff_td': diff_td
+                })
+        
+        # =====================================================
+        # PASSO 3: Ordina per vicinanza e assegna greedy
+        # =====================================================
+        potential_buffers.sort(key=lambda x: x['diff_td'])
+        
+        for pb in potential_buffers:
+            rid, date1, date2 = pb['rid'], pb['date1'], pb['date2']
+            
+            group1 = df1_by_rid_date[(rid, date1)]
+            group2 = df2_by_rid_date[(rid, date2)]
+            
+            # Filtra indici disponibili (stesso metodo per entrambi)
+            available_idx1 = group1.index.difference(used_idx1)
+            available_idx2 = group2.index.difference(used_idx2)
+            
+            if available_idx1.empty or available_idx2.empty:
+                continue
+            
+            buffer_matches[(rid, date1, date2)] = [available_idx1.tolist(), available_idx2.tolist()]
+            used_idx1.update(available_idx1)
+            used_idx2.update(available_idx2)
+        
         return exact_matches, buffer_matches
+
+
+    def verify_visit_matches(self, exact_matches, buffer_matches):
+        """
+        Verifica e stampa se ci sono sovrapposizioni tra exact e buffer matches.
+        """
+        def extract_indices(matches, pos):
+            return {idx for indices_pair in matches.values() for idx in indices_pair[pos]}
+        
+        exact_idx1 = extract_indices(exact_matches, 0)
+        exact_idx2 = extract_indices(exact_matches, 1)
+        buffer_idx1 = extract_indices(buffer_matches, 0)
+        buffer_idx2 = extract_indices(buffer_matches, 1)
+        
+        overlap_idx1 = exact_idx1 & buffer_idx1
+        overlap_idx2 = exact_idx2 & buffer_idx2
+        
+        # Verifica df1
+        if overlap_idx1:
+            print(f"⚠️  OVERLAP df1: {len(overlap_idx1)} indici in comune")
+            print(f"    Indici: {sorted(overlap_idx1)}")
+        
+        # Verifica df2
+        if overlap_idx2:
+            print(f"⚠️  OVERLAP df2: {len(overlap_idx2)} indici in comune")
+            print(f"    Indici: {sorted(overlap_idx2)}")
+        
+        # Esito finale
+        if not overlap_idx1 and not overlap_idx2:
+            print("✓ Verifica matches superata: nessun overlap tra exact e buffer")
+
 
     def list_index_visit_matches(self, matches):
         """
@@ -716,6 +885,7 @@ class MergerTools:
         print(f'df1 rows: {len(df1)}')  
         print(f'df2 rows: {len(df2)}')  
         df_merged = pd.merge(df1, df2, how='outer', suffixes=('_1', '_2'))
+        df_merged = df_merged.sort_values(by=['RID', 'EXAMDATE']).reset_index(drop=True)
         print(f'-----> Merged df ({len(df_merged)} rows)')
         
         df_clean = self.remove_duplicates_from_merged_df(df_merged, category)
@@ -1104,7 +1274,7 @@ class MergerTools:
                 row_prev = self._get_previous_row(df, idx_1, rid, examdate)
                 
                 if row_prev is not None:
-                    check_1, check_2 = self._build_check_lists(row_1, row_2, row_prev, check_cols)
+                    check_1, check_2 = self._build_check_lists(row_1, row_2, row_prev, check_cols, category)
                     
                     if sum(check_1) < sum(check_2):
                         idx_to_drop = idx_1
