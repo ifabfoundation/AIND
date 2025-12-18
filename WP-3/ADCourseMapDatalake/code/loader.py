@@ -47,9 +47,9 @@ def loader(opt):
     #dataset = normalize_dataset_minmax(dataset, column_list_to_normalize_minmax_scale)
 
     # Normalize volumes
-    #column_list_to_normalize_volumes = get_volumes_normalization_columns(opt.level, opt.file_code)
-    #volumes_normalization_values = get_volumes_normalization_values(opt.level, opt.file_code)
-    #dataset = normalize_dataset_volumes(dataset, column_list_to_normalize_volumes, volumes_normalization_values)
+    column_list_to_normalize_volumes = get_volumes_normalization_columns(opt.level, opt.file_code)
+    volumes_normalization_values = get_volumes_normalization_values(opt.level, opt.file_code)
+    dataset = normalize_dataset_volumes(dataset, column_list_to_normalize_volumes, volumes_normalization_values)
     
     # Handle subsets if required
     if opt.sub_data:

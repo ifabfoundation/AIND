@@ -7,8 +7,91 @@ import os
 import json
 
 class MergerTools:
+
+    # ==========================================================================
+    # COSTANTI DI CLASSE
+    # ==========================================================================
+    
+    COHORT_GERARCHIA = ['ADNI1', 'ADNIGO', 'ADNI2', 'ADNI3', 'ADNI4']
+    
+    CATEGORY_CONFIG = {
+        'volumes': {
+            'key_cols': ['RID', 'EXAMDATE', 'FSVERSION', 'IMAGEUID'],
+            'colonne_escluse': ['MRI_SCANDATE','IMAGEUID', 'FSVERSION', 'FLDSTRENG', 'STATUS', 'ICV%ICV', 'Brain%ICV', 'Ventricles%ICV', 'Hippocampus%ICV', 'Entorhinal%ICV', 'Fusiform%ICV', 'MidTemp%ICV'],
+        },
+        'scale': {
+            'key_cols': ['RID', 'EXAMDATE'],
+            'colonne_escluse': [],
+        },
+        'csf': {
+            'key_cols': ['RID', 'EXAMDATE', 'METHOD'],
+            'colonne_escluse': [],
+        },
+        'plasma': {
+            'key_cols': ['RID', 'EXAMDATE', 'METHOD'],
+            'colonne_escluse': [],
+        },
+        'pet': {
+            'key_cols': ['RID', 'EXAMDATE', 'METHOD'],
+            'colonne_escluse': [],
+        },
+        'cofactor': {
+            'key_cols': ['RID', 'EXAMDATE'],
+            'colonne_escluse': ['APOE'],
+        },
+    }
+
+    BASE_KEYS = ['RID', 'EXAMDATE', 'VISCODE', 'VISIT_MONTH', 'COHORT', 'update_stamp']
+
+    CATEGORY_KEYS = {'volumes': ['MRI_SCANDATE','IMAGEUID', 'FSVERSION', 'FLDSTRENG', 'STATUS', 'ICV%ICV', 'Brain%ICV', 'Ventricles%ICV', 'Hippocampus%ICV', 'Entorhinal%ICV', 'Fusiform%ICV', 'MidTemp%ICV'],
+                    'scale': ['MMSE', 'RAVLT_immediate', 'FAQ', 'MOCA', 'CDRSB', 'CDRGLOB', 'ADAS11', 'ADAS13'],
+                    'csf': ['CSF_DATE', 'METHOD_CSF', "AB40_CSF", "AB42_CSF", "AB4240_CSF", "PT181_CSF", "TTAU_CSF", "PT181_AB42_CSF", ],
+                    'plasma': ["AB40_PL", "AB42_PL", "AB4240_PL", "PT181_PL", "PT217_AB42_PL", "TTAU_PL", "nPT217_PL", "PT217_nPT217_PL", "ALPHASYN", "NFL_PL", "GFAP"],
+                    'pet': ["AMY_CENTILOIDS", "SUMMARY_SUVR", "PRECUNEUS_SUVR", "TAU_METAROI", "INFERIORPARIETAL_SUVR", "PARAHIPPOCAMPAL_SUVR", "LATERALOCCIPITAL_SUVR",
+                            "MIDDLETEMPORAL_SUVR", "INFERIOR_TEMPORAL_SUVR", "ENTORHINAL_SUVR", "FUSIFORM_SUVR", "CSF_SUVR"],
+                    'cofactor': ['AGE', 'AGE_AD_BEG', 'AGE_AD_DX', 'AGE_COG_BEG', 'AGE_bl', 'GENDER/female', 'GENDER/male', 'DX/CN', 'DX/Dementia', 'DX/MCI', 'EDUCAT',  
+                                'MARRY/divorced', 'MARRY/married', 'ETHNICITY/latino', 'ETHNICITY/not_latino', 'MARRY/single', 'MARRY/widowed', 'RACE/Asian', 'RACE/Black', 
+                                'RACE/Mixed', 'RACE/Native_american', 'RACE/White', 'APOE', 'APOE_4', 'DIAN_MUTATION', 'Aprofile', 'Tprofile', 'Nprofile']}
+
     def __init__(self):
-        pass
+        # Carica ogni JSON una sola volta
+        normalization_full = self.get_json_file('normalization_settings.json')
+        volume_full = self.get_json_file('volume_values_settings.json')
+        cofactor_full = self.get_json_file('cofattori_values_settings.json')
+        
+        # Filtra per categoria
+        self.trend_reference = {
+            'volumes': self._filter_dict(volume_full, 'volumes'),
+            'scale': self._filter_dict(normalization_full, 'scale'),
+            'csf': self._filter_dict(normalization_full, 'csf'),
+            'plasma': self._filter_dict(normalization_full, 'plasma'),
+            'pet': self._filter_dict(normalization_full, 'pet'),
+            'cofactor': self._filter_dict(cofactor_full, 'cofactor'),
+        }
+
+    def _filter_dict(self, full_dict, category):
+        """Filtra dizionario per le chiavi della categoria."""
+        valid_keys = self.CATEGORY_KEYS.get(category, [])
+        return {k: v for k, v in full_dict.items() if k in valid_keys}
+
+    def get_json_file(self, file_name):
+        """
+        Cerca il file di configurazione JSON sia nella cartella corrente
+        (Data_cleaning) sia in quella superiore (WP-2) per garantire
+        retrocompatibilità con vecchi percorsi.
+        """
+        base_dir = os.path.dirname(__file__)
+        candidates = [
+            os.path.join(base_dir, file_name),
+            os.path.join(os.path.dirname(base_dir), file_name),
+        ]
+
+        for json_path in candidates:
+            if os.path.exists(json_path):
+                with open(json_path, 'r') as f:
+                    return json.load(f)
+
+        raise FileNotFoundError(f'File JSON non trovato. Percorsi verificati: {candidates}')
 
     def _convert_nan_to_none(self, obj):
         """
@@ -27,18 +110,47 @@ class MergerTools:
         else:
             return obj
 
-
+    def calculate_visit_month(self,df, rid_col='RID', date_col='EXAMDATE', visit_col='VISIT_MONTH'):
+        """
+        Calcola VISIT_MONTH per ogni soggetto come differenza in mesi dalla prima visita.
+        
+        Parameters
+        ----------
+        df : pd.DataFrame
+            DataFrame contenente i dati delle visite
+        rid_col : str, default 'RID'
+            Nome della colonna identificativo soggetto
+        date_col : str, default 'EXAMDATE'
+            Nome della colonna con le date delle visite
+        visit_col : str, default 'VISIT_MONTH'
+            Nome della colonna di output per i mesi
+        
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame con la colonna VISIT_MONTH aggiornata
+        """
+        
+        # Copia per evitare modifiche inplace
+        df = df.copy()
+        
+        # Converti in datetime se non lo è già
+        if not pd.api.types.is_datetime64_any_dtype(df[date_col]):
+            df[date_col] = pd.to_datetime(df[date_col])
+        
+        # Calcola la data della prima visita per ogni soggetto
+        first_exam = df.groupby(rid_col)[date_col].transform('min')
+        
+        # Calcola VISIT_MONTH come differenza in mesi
+        # Usa Int64 (nullable) per gestire eventuali NaN nelle date
+        df[visit_col] = ((df[date_col] - first_exam).dt.days / 30.44).round().astype('Int64')
+        
+        return df
+            
     def filter_df_category(self, df, category):
-        base_keys = ['RID', 'EXAMDATE', 'VISCODE', 'VISIT_MONTH', 'COHORT']
-
-        category_keys = {'volumes': ['MRI_SCANDATE','IMAGEUID', 'FSVERSION', 'FLDSTRENG', 'STATUS', 'ICV%ICV', 'Brain%ICV', 'Ventricles%ICV', 'Hippocampus%ICV', 'Entorhinal%ICV', 'Fusiform%ICV', 'MidTemp%ICV'],
-                        'scale': ['MMSE', 'RAVLT_immediate', 'FAQ', 'MOCA', 'CRSB', 'CRSGLOB', 'ADAS11', 'ADAS13'],
-                        'csf': ['CSF_DATE', 'METHOD_CSF', "AB40_CSF", "AB42_CSF", "AB4240_CSF", "PT181_CSF", "TTAU_CSF", "PT181_AB42_CSF", ],
-                        'plasma': ["AB40_PL", "AB42_PL", "AB4240_PL", "PT181_PL", "PT217_AB42_PL", "TTAU_PL", "nPT217_PL", "PT217_nPT217_PL", "ALPHASYN", "NFL_PL", "GFAP"],
-                        'pet': ["AMY_CENTILOIDS", "SUMMARY_SUVR", "PRECUNEUS_SUVR", "TAU_METAROI", "INFERIORPARIETAL_SUVR", "PARAHIPPOCAMPAL_SUVR", "LATERALOCCIPITAL_SUVR", "MIDDLETEMPORAL_SUVR", "INFERIOR_TEMPORAL_SUVR", "ENTORHINAL_SUVR", "FUSIFORM_SUVR", "CSF_SUVR"],
-                        'cofactor': ['AGE', 'AGE_AD_BEG', 'AGE_AD_DX', 'AGE_COG_BEG', 'AGE_bl', 'GENDER/female', 'GENDER/male', 'DX/CN', 'DX/Dementia', 'DX/MCI', 'EDUCAT',  'MARRY/divorced', 'MARRY/married', 'ETHNICITY/latino', 'ETHNICITY/not_latino', 'MARRY/single', 'MARRY/widowed', 'RACE/Asian', 'RACE/Black', 'RACE/Mixed', 'RACE/Native_american', 'RACE/White', 'APOE', 'APOE_4', 'DIAN_MUTATION', 'Aprofile', 'Tprofile', 'Nprofile']}
-
-        keys = category_keys[category]
+        
+        base_keys = self.BASE_KEYS
+        keys = self.CATEGORY_KEYS[category]
 
         if len(set(df.columns)&set(keys)) > 0:
             col_list = [x for x in df.columns if x in base_keys + keys]
@@ -51,6 +163,7 @@ class MergerTools:
 
         return cleaned_df
 
+    '''
     def find_visit_matches(self,df1, df2, rid_col='RID', date_col='EXAMDATE', buffer_days=pd.Timedelta(days=0)):
         """
         Trova corrispondenze tra visite di due dataset longitudinali.
@@ -98,7 +211,139 @@ class MergerTools:
                         indices2 = subgroup2.index.tolist()
                         buffer_matches[(rid, date1, date2)] = [indices1, indices2]
         
+        return exact_matches,buffer_matches
+        '''
+
+    def find_visit_matches(self, df1, df2, rid_col='RID', date_col='EXAMDATE', buffer_days=pd.Timedelta(days=80)):
+        """
+        Trova corrispondenze tra visite di due dataset longitudinali.
+        Ogni indice di df1 e df2 compare AL MASSIMO in un match.
+        Priorità: exact match > buffer match (più vicino temporalmente).
+        
+        Returns:
+            exact_matches: {(RID, EXAMDATE): [[indici_df1], [indici_df2]]}
+            buffer_matches: {(RID, EXAMDATE1, EXAMDATE2): [[indici_df1], [indici_df2]]}
+        """
+        # Normalizza buffer_days
+        if isinstance(buffer_days, (int, float)):
+            buffer_days = pd.Timedelta(days=buffer_days)
+        
+        # Copia e converte date
+        df1 = df1.copy()
+        df2 = df2.copy()
+        df1[date_col] = pd.to_datetime(df1[date_col])
+        df2[date_col] = pd.to_datetime(df2[date_col])
+        
+        exact_matches = {}
+        buffer_matches = {}
+        used_idx1 = set()
+        used_idx2 = set()
+        
+        # Pre-raggruppa per (RID, EXAMDATE) -> accesso O(1)
+        df1_by_rid_date = {key: group for key, group in df1.groupby([rid_col, date_col])}
+        df2_by_rid_date = {key: group for key, group in df2.groupby([rid_col, date_col])}
+        
+        # Pre-raggruppa le date di df2 per RID (per efficienza nel PASSO 2)
+        df2_dates_by_rid = {}
+        for (rid, date) in df2_by_rid_date.keys():
+            if rid not in df2_dates_by_rid:
+                df2_dates_by_rid[rid] = []
+            df2_dates_by_rid[rid].append(date)
+        
+        # =====================================================
+        # PASSO 1: Trova TUTTI i match ESATTI
+        # =====================================================
+        for (rid, date1), group1 in df1_by_rid_date.items():
+            if (rid, date1) not in df2_by_rid_date:
+                continue
+            
+            group2 = df2_by_rid_date[(rid, date1)]
+            indices1 = group1.index.tolist()
+            indices2 = group2.index.tolist()
+            
+            exact_matches[(rid, date1)] = [indices1, indices2]
+            used_idx1.update(indices1)
+            used_idx2.update(indices2)
+        
+        # =====================================================
+        # PASSO 2: Raccogli TUTTI i potenziali buffer matches
+        # =====================================================
+        potential_buffers = []
+        
+        for (rid, date1) in df1_by_rid_date.keys():
+            if rid not in df2_dates_by_rid:
+                continue
+            
+            for date2 in df2_dates_by_rid[rid]:
+                # Skip match esatti (già gestiti)
+                if date1 == date2:
+                    continue
+                
+                diff_td = abs(date2 - date1)
+                if diff_td > buffer_days:
+                    continue
+                
+                potential_buffers.append({
+                    'rid': rid,
+                    'date1': date1,
+                    'date2': date2,
+                    'diff_td': diff_td
+                })
+        
+        # =====================================================
+        # PASSO 3: Ordina per vicinanza e assegna greedy
+        # =====================================================
+        potential_buffers.sort(key=lambda x: x['diff_td'])
+        
+        for pb in potential_buffers:
+            rid, date1, date2 = pb['rid'], pb['date1'], pb['date2']
+            
+            group1 = df1_by_rid_date[(rid, date1)]
+            group2 = df2_by_rid_date[(rid, date2)]
+            
+            # Filtra indici disponibili (stesso metodo per entrambi)
+            available_idx1 = group1.index.difference(used_idx1)
+            available_idx2 = group2.index.difference(used_idx2)
+            
+            if available_idx1.empty or available_idx2.empty:
+                continue
+            
+            buffer_matches[(rid, date1, date2)] = [available_idx1.tolist(), available_idx2.tolist()]
+            used_idx1.update(available_idx1)
+            used_idx2.update(available_idx2)
+        
         return exact_matches, buffer_matches
+
+
+    def verify_visit_matches(self, exact_matches, buffer_matches):
+        """
+        Verifica e stampa se ci sono sovrapposizioni tra exact e buffer matches.
+        """
+        def extract_indices(matches, pos):
+            return {idx for indices_pair in matches.values() for idx in indices_pair[pos]}
+        
+        exact_idx1 = extract_indices(exact_matches, 0)
+        exact_idx2 = extract_indices(exact_matches, 1)
+        buffer_idx1 = extract_indices(buffer_matches, 0)
+        buffer_idx2 = extract_indices(buffer_matches, 1)
+        
+        overlap_idx1 = exact_idx1 & buffer_idx1
+        overlap_idx2 = exact_idx2 & buffer_idx2
+        
+        # Verifica df1
+        if overlap_idx1:
+            print(f"⚠️  OVERLAP df1: {len(overlap_idx1)} indici in comune")
+            print(f"    Indici: {sorted(overlap_idx1)}")
+        
+        # Verifica df2
+        if overlap_idx2:
+            print(f"⚠️  OVERLAP df2: {len(overlap_idx2)} indici in comune")
+            print(f"    Indici: {sorted(overlap_idx2)}")
+        
+        # Esito finale
+        if not overlap_idx1 and not overlap_idx2:
+            print("✓ Verifica matches superata: nessun overlap tra exact e buffer")
+
 
     def list_index_visit_matches(self, matches):
         """
@@ -628,135 +873,197 @@ class MergerTools:
 
         return temp_merge
 
-    def select_cohort(self, cohort1, cohort2, new_cohort=True):
-        """
-        Seleziona la cohorte con graduatoria maggiore o minore tra due cohorti.
-        Classifica delle cohorti:
-        - ADNI1 : 0
-        - ADNIGO: 1
-        - ADNI2: 2
-        - ADNI3: 3
-        - ADNI4: 4
-        
-        Args:
-            cohort1: prima cohorte (stringa)
-            cohort2: seconda cohorte (stringa)
-            new_cohort: se True restituisce la cohorte con graduatoria maggiore, 
-                       se False restituisce quella con graduatoria minore
-            
-        Returns:
-            Stringa della cohorte selezionata
-        """
-        # Classifica delle cohorti
-        cohort_ranking = {
-            'ADNI1': 0,
-            'ADNIGO': 1,
-            'ADNI2': 2,
-            'ADNI3': 3,
-            'ADNI4': 4
-        }
-        
-        def get_cohort_rank(cohort):
-            """Restituisce la graduatoria della cohorte."""
-            if pd.isna(cohort) or cohort is None:
-                return None
-            
-            cohort_str = str(cohort).strip().upper()
-            return cohort_ranking.get(cohort_str, None)
-        
-        # Ottieni le graduatorie
-        rank1 = get_cohort_rank(cohort1)
-        rank2 = get_cohort_rank(cohort2)
-        
-        # Gestisci i casi con valori None
-        if rank1 is None and rank2 is None:
-            return cohort1 if cohort1 is not None else cohort2
-            print('Le due cohorti differiscono da quelle di ADNI: ', cohort1, cohort2)
-        if rank1 is None:
-            return cohort2
-        if rank2 is None:
-            return cohort1
-        
-        # Confronta le graduatorie e restituisci la cohorte corrispondente
-        if new_cohort:
-            # Seleziona quella con graduatoria maggiore
-            return cohort1 if rank1 >= rank2 else cohort2
-        else:
-            # Seleziona quella con graduatoria minore
-            return cohort1 if rank1 <= rank2 else cohort2
 
-
-    def get_json_file(self, file_name):
-        """
-        Cerca il file di configurazione JSON sia nella cartella corrente
-        (Data_cleaning) sia in quella superiore (WP-2) per garantire
-        retrocompatibilità con vecchi percorsi.
-        """
-        base_dir = os.path.dirname(__file__)
-        candidates = [
-            os.path.join(base_dir, file_name),
-            os.path.join(os.path.dirname(base_dir), file_name),
-        ]
-
-        for json_path in candidates:
-            if os.path.exists(json_path):
-                with open(json_path, 'r') as f:
-                    return json.load(f)
-
-        raise FileNotFoundError(f'File JSON non trovato. Percorsi verificati: {candidates}')
 
 
 
     def get_merged_df(self, df1, df2, category):
-
-        if category == 'volumes':
-            key_cols = ['RID', 'EXAMDATE', 'FSVERSION', 'IMAGEUID']
-        elif category == 'scale':
-            key_cols = ['RID', 'EXAMDATE']
-        elif category == 'biomarker':
-            key_cols = ['RID', 'EXAMDATE', 'METHOD']
-        elif category == 'cofactor':
-            key_cols = ['RID', 'EXAMDATE']
-
+        config = self.CATEGORY_CONFIG.get(category, {})
+        key_cols = config.get('key_cols', ['RID', 'EXAMDATE'])
         
         print(f'### merging {category}')
-        df_merged = pd.merge(df1, df2, how='outer', suffixes=('_1', '_2')) # valutare se imporre anche FDLSTRENGth
+        print(f'df1 rows: {len(df1)}')  
+        print(f'df2 rows: {len(df2)}')  
+        df_merged = pd.merge(df1, df2, how='outer', suffixes=('_1', '_2'))
+        df_merged = df_merged.sort_values(by=['RID', 'EXAMDATE']).reset_index(drop=True)
         print(f'-----> Merged df ({len(df_merged)} rows)')
-        row_to_drop = self.remove_duplicates_from_merged_df(df_merged, category, key_cols)
-        print(f'\t\t-----> duplicates removed ({len(row_to_drop)} rows)')
-        df_merged = df_merged.drop(row_to_drop)
-        print(f'-----> final df ({len(df_merged)} rows)')
-        return df_merged
         
-
-    def remove_duplicates_from_merged_df(self, df, category=None, key_cols=['RID', 'EXAMDATE']):
-
-        # Raggruppa per le colonne chiave e raccogli gli indici
+        df_clean = self.remove_duplicates_from_merged_df(df_merged, category)
+        print(f'-----> Final df ({len(df_clean)} rows)')
+        
+        return df_clean
+    
+    def remove_duplicates_from_merged_df(self, df, category):
+        config = self.CATEGORY_CONFIG.get(category, {})
+        key_cols = config.get('key_cols', ['RID', 'EXAMDATE'])
+        colonne_escluse = config.get('colonne_escluse', [])
+        
+        # Regole di conflitto (uguali per tutte le categorie)
+        regole_conflitto = {
+            'COHORT': self._risolvi_cohort,
+            #'VISCODE': self._risolvi_viscode,
+        }
+        
+        df = df.copy()
+        
+        # STEP 1: Consolida le righe con lo stesso RID e EXAMDATE(riempi NaN, applica regole) anche non duplicati
+        df = self._consolida_duplicati(df, ['RID', 'EXAMDATE'], regole_conflitto, colonne_escluse)
+        
+        # STEP 2: Scegli quale riga tenere per ogni gruppo di duplicati
         grouped_indices = df.groupby(key_cols).indices
-
-        # Filtra solo i gruppi con più di una riga (i duplicati)
         duplicate_groups = {k: v.tolist() for k, v in grouped_indices.items() if len(v) > 1}
-        row_to_drop = []
-        for k in duplicate_groups.values():
-            if len(k) > 2:
-                print(f'WARNING -----> Duplicate group found with more than 2 rows: {k}')
-            if category == 'volume':
-                row_to_drop.append(self.volume_unification_criteria(k[0], k[1]))
-            elif category == 'scale':
-                row_to_drop.append(self.scale_unification_criteria(k[0], k[1]))
-            elif category == 'csf':
-                row_to_drop.append(self.csf_unification_criteria(k[0], k[1]))
-            elif category == 'plasma':
-                row_to_drop.append(self.plasma_unification_criteria(k[0], k[1]))
-            elif category == 'pet':
-                row_to_drop.append(self.pet_unification_criteria(k[0], k[1]))
-            elif category == 'cofactor':
-                row_to_drop.append(self.cofactor_unification_criteria(k[0], k[1]))
-            else:
-                row_to_drop.append(k[1])
-        return row_to_drop
+        
+        rows_to_drop = []
+        for row in duplicate_groups.values():
+            if len(row) > 2:
+                print(f'WARNING -----> Duplicate group found with more than 2 rows: {row}')
+            
+            row_to_drop = self._get_row_to_drop(df, row, category)
+            rows_to_drop.append(row_to_drop)
+        
+        print(f'\t\t-----> duplicates removed ({len(rows_to_drop)} rows)')
+        df = df.drop(rows_to_drop)
+        
+        return df
+    
+    # ==========================================================================
+    # METODI PRIVATI - RISOLUZIONE CONFLITTI
+    # ==========================================================================
+    
+    def _risolvi_cohort(self, valori):
+        """
+        COHORT: unifica sempre al valore più alto della gerarchia.
+        Restituisce una lista con lo stesso valore per tutte le righe.
+        
+        ADNI4 > ADNI3 > ADNI2 > ADNIGO > ADNI1 > qualsiasi altro valore
+        """
+        valori_validi = [v for v in valori if pd.notna(v)]
+        
+        if not valori_validi:
+            return list(valori)  # Tutti NaN, non modificare
+        
+        valori_in_gerarchia = [v for v in valori_validi if v in self.COHORT_GERARCHIA]
+        
+        if valori_in_gerarchia:
+            valore_unificato = max(valori_in_gerarchia, key=lambda x: self.COHORT_GERARCHIA.index(x))
+        else:
+            valore_unificato = valori_validi[0]
+        
+        return [valore_unificato] * len(valori)
+    
+    def _risolvi_viscode(self, valori):
+        """
+        VISCODE: logica differenziata.
+        - NaN prende sempre il valore dell'altra riga
+        - Valido = 'bl' oppure inizia con 'm'
+        - Entrambi validi ma diversi → ognuno tiene il suo
+        - Uno valido, uno no → il non valido prende il valido
+        - Entrambi non validi → ognuno tiene il suo
+        """
+        def is_valid(v):
+            if pd.isna(v):
+                return False
+            return v == 'bl' or str(v).startswith('m')
+        
+        risultato = list(valori)
+        
+        # Step 1: Riempi i NaN con il primo valore non-NaN
+        valori_non_nan = [v for v in valori if pd.notna(v)]
+        
+        if not valori_non_nan:
+            return risultato  # Tutti NaN, niente da fare
+        
+        fill_value = valori_non_nan[0]
+        risultato = [fill_value if pd.isna(v) else v for v in risultato]
+        
+        # Step 2: Se tutti uguali, nessun conflitto
+        if len(set(risultato)) == 1:
+            return risultato
+        
+        # Step 3: Risolvi conflitti tra valori diversi
+        validi_mask = [is_valid(v) for v in risultato]
+        num_validi = sum(validi_mask)
+        
+        if num_validi == len(risultato):
+            # Tutti validi ma diversi → ognuno tiene il suo
+            pass
+        elif num_validi > 0:
+            # Alcuni validi, alcuni no → i non validi prendono il primo valido
+            primo_valido = next(v for v, is_val in zip(risultato, validi_mask) if is_val)
+            risultato = [v if is_valid(v) else primo_valido for v in risultato]
+        else:
+            # Nessun valido → ognuno tiene il suo
+            pass
+        
+        return risultato
+    
+    # ==========================================================================
+    # METODI PRIVATI - HELPER
+    # ==========================================================================
+    
+    def _consolida_duplicati(self, df, key_cols, regole_conflitto=None, colonne_escluse=None):
+        """
+        Consolida le righe duplicate: riempie i NaN e applica regole speciali.
+        
+        - Colonne in colonne_escluse: non vengono toccate
+        - Colonne in regole_conflitto: la funzione gestisce NaN + conflitti
+        - Colonne normali: riempi NaN, conflitti restano invariati
+        """
+        regole_conflitto = regole_conflitto or {}
+        colonne_escluse = set(colonne_escluse or [])
+        
+        grouped = df.groupby(key_cols)
+        
+        for keys, indices in grouped.indices.items():
+            if len(indices) <= 1:
+                continue
+            
+            idx_list = indices.tolist()
+            
+            for col in df.columns:
+                if col in key_cols or col in colonne_escluse:
+                    continue
+                
+                valori = df.loc[idx_list, col]
+                valori_non_nan = valori.dropna()
+                
+                if col in regole_conflitto:
+                    # Colonna con regola speciale
+                    nuovi_valori = regole_conflitto[col](valori.tolist())
+                    for i, idx in enumerate(idx_list):
+                        df.loc[idx, col] = nuovi_valori[i]
+                else:
+                    # Colonna normale: riempi solo i NaN
+                    if len(valori_non_nan) > 0:
+                        valore_fill = valori_non_nan.iloc[0]
+                        mask_nan = valori.isna()
+                        idx_da_riempire = [idx_list[i] for i, is_nan in enumerate(mask_nan) if is_nan]
+                        df.loc[idx_da_riempire, col] = valore_fill
+        
+        return df
+    
+    def _get_row_to_drop(self, df, row_indices, category):
+        """
+        Applica la regola specifica per categoria e restituisce l'indice da droppare.
+        """
+        idx_0, idx_1 = row_indices[0], row_indices[1]
+        
+        if category == 'volume':
+            return self.volume_unification_criteria(df,idx_0, idx_1)
+        elif category == 'scale':
+            return self.scale_unification_criteria(df,idx_0, idx_1, check_cols=self.CATEGORY_KEYS[category], category=category)
+        elif category == 'csf':
+            return self.csf_unification_criteria(df,idx_0, idx_1, key_cols=self.CATEGORY_KEYS[category])
+        elif category == 'plasma':
+            return self.plasma_unification_criteria(df,idx_0, idx_1, key_cols=self.CATEGORY_KEYS[category])
+        elif category == 'pet':
+            return self.pet_unification_criteria(df,idx_0, idx_1, key_cols=self.CATEGORY_KEYS[category])
+        elif category == 'cofactor':
+            return self.cofactor_unification_criteria(df,idx_0, idx_1, key_cols=self.CATEGORY_KEYS[category])
+        else:
+            return idx_1  # default: droppa la seconda
 
-    def volume_unification_criteria(self, df, idx_1, idx_2, key_cols=['RID', 'EXAMDATE']):
+    def volume_unification_criteria(self, df, idx_1, idx_2):
         """
         Criteri di unificazione per righe di volume quando entrambe le sorgenti hanno valori.
         
@@ -839,6 +1146,147 @@ class MergerTools:
         return idx_to_drop
 
 
+    def _get_previous_row(self, df, idx_1, rid, examdate):
+        """
+        Trova la riga precedente con stesso RID e EXAMDATE inferiore.
+        Prova idx_1-1, se EXAMDATE uguale prova idx_1-2.
+        """
+        loc = df.index.get_loc(idx_1)
+        
+        for offset in [1, 2]:
+            if loc - offset < 0:
+                return None
+            
+            row_prev = df.iloc[loc - offset]
+            
+            if row_prev['RID'] != rid:
+                return None
+            
+            if row_prev['EXAMDATE'] < examdate:
+                return row_prev
+            
+            if row_prev['EXAMDATE'] > examdate:
+                return None
+        
+        return None
+
+
+    def _check_trend(self, val, val_prev, trend):
+        """Verifica se val rispetta il trend rispetto a val_prev."""
+        if pd.isna(val) or pd.isna(val_prev):
+            return False
+        
+        if trend == 'increasing':
+            return val >= val_prev
+        elif trend == 'inverse':
+            return val <= val_prev
+        
+        return False
+
+
+    def _build_check_lists(self, row_1, row_2, row_prev, check_cols, category):
+        """
+        Costruisce check_1 e check_2.
+        True se: valori uguali tra row_1/row_2, oppure rispetta il trend.
+        False se: valore NaN, oppure non rispetta il trend.
+        """
+        check_1 = []
+        check_2 = []
+        
+        for col in check_cols:
+            if col not in row_1.index or col not in row_2.index:
+                continue
+            
+            val_1 = row_1[col]
+            val_2 = row_2[col]
+            
+            # Valori uguali (incluso entrambi NaN) → True per entrambi
+            both_nan = pd.isna(val_1) and pd.isna(val_2)
+            if both_nan or val_1 == val_2:
+                check_1.append(True)
+                check_2.append(True)
+                continue
+            
+            # Valori diversi → verifica trend
+            val_prev = row_prev[col] if row_prev is not None else None
+            trend = self.trend_reference[category].get(col, [None, None])[1]
+            
+            check_1.append(False if pd.isna(val_1) else self._check_trend(val_1, val_prev, trend))
+            check_2.append(False if pd.isna(val_2) else self._check_trend(val_2, val_prev, trend))
+        
+        return check_1, check_2
+
+
+    def scale_unification_criteria(self, df, idx_1, idx_2, check_cols, category):
+        """
+        Determina quale riga droppare tra due righe duplicate.
+        
+        Criteri di decisione (in ordine di priorità):
+        ─────────────────────────────────────────────
+        1. UPDATE_STAMP (se presente):
+        - Tiene la riga con timestamp più recente
+        - Se uno mancante → tiene quello valido
+        
+        2. Se timestamp uguali o entrambi mancanti → CONFRONTO TREND:
+        a) Trova riga precedente (stesso RID, EXAMDATE inferiore)
+        b) Per ogni colonna in check_cols:
+            - Valori uguali tra row_1 e row_2 → True per entrambe
+            - Valore NaN → False
+            - Altrimenti verifica rispetto del trend (da JSON):
+                · 'increasing': val >= val_prev
+                · 'inverse': val <= val_prev
+        c) Droppa la riga con meno True
+        
+        3. Default / pareggio / riga precedente non trovata → drop idx_2
+        
+        Parameters
+        ----------
+        df : pd.DataFrame
+        idx_1, idx_2 : index
+            Indici delle due righe duplicate
+        check_cols : list
+            Colonne da verificare per il confronto trend
+        
+        Returns
+        -------
+        idx_to_drop : index
+        """
+        idx_to_drop = idx_2  # Default
+        row_1 = df.loc[idx_1].copy()
+        row_2 = df.loc[idx_2].copy()
+
+        # === CRITERIO 1: UPDATE_STAMP ===
+        if 'update_stamp' in row_1.index and 'update_stamp' in row_2.index:
+            stamp_1 = pd.to_datetime(row_1['update_stamp'])
+            stamp_2 = pd.to_datetime(row_2['update_stamp'])
+            
+            stamp_1_missing = pd.isna(stamp_1)
+            stamp_2_missing = pd.isna(stamp_2)
+            
+            both_missing = stamp_1_missing and stamp_2_missing
+            both_equal = (not stamp_1_missing) and (not stamp_2_missing) and (stamp_1 == stamp_2)
+            
+            if both_missing or both_equal:
+                # === CRITERIO 2: CONFRONTO TREND ===
+                rid = row_1['RID']
+                examdate = row_1['EXAMDATE']
+                
+                row_prev = self._get_previous_row(df, idx_1, rid, examdate)
+                
+                if row_prev is not None:
+                    check_1, check_2 = self._build_check_lists(row_1, row_2, row_prev, check_cols, category)
+                    
+                    if sum(check_1) < sum(check_2):
+                        idx_to_drop = idx_1
+                
+            elif stamp_1_missing:
+                idx_to_drop = idx_1
+            elif stamp_2_missing:
+                idx_to_drop = idx_2
+            elif stamp_2 > stamp_1:
+                idx_to_drop = idx_1
+
+        return idx_to_drop
 
 ################################################# OLD FUNCTIONS #################################################
     def get_merged_col_reference(self, col1, col2, diff_idx, col_name, subject_id):
