@@ -31,6 +31,26 @@ class LeaspyModel():
         self.algo_setting_personalization = AlgorithmSettings(opt.algo_setting_personalization, seed=self.seed) # Algo settings for personalization
         self.leaspy_plot = Plotting(self.model.model) # Used to plot curvers
 
+    def _get_features_bounds(self):
+        """
+        Get features bounds dynamically from metadata.
+        Combines scale normalization values and volume normalization values.
+        Transforms format from [min, max, direction] to (min, max).
+        """
+        features_bounds = {}
+
+        # Get scale normalization values (e.g., ADAS11, MMSE, etc.)
+        scale_values = get_scale_normalization_values(self.level, self.file_code)
+        for key, values in scale_values.items():
+            features_bounds[key] = (values[0], values[1])
+
+        # Get volume normalization values (e.g., Hippocampus%ICV, etc.)
+        volume_values = get_volumes_normalization_values(self.level, self.file_code)
+        for key, values in volume_values.items():
+            features_bounds[key] = (values[0], values[1])
+
+        return features_bounds
+
     def initialize(self, data):
         self.model.model.initialize(data)
 
@@ -232,31 +252,18 @@ class LeaspyModel():
         visit_std = n_visit['N visits'].std()
         pred_sub = len(n_visit)
 
-        features_bounds = {
-            # Ordinal scales (intrinsic bounds)
-            'CDRSB': (0, 18),
-            'ADAS11': (0, 70),
-            'ADAS13': (0, 70),
-            'MMSE': (0, 30),
-            'FAQ': (0, 30),
-            'RAVLT_immediate': (0, 75),
-            # Continuous (from percentiles 1-99)
-            'Hippocampus%ICV': (0.22, 0.66),
-            'Ventricles%ICV': (0.11, 7.3),
-            'Entorhinal%ICV': (0.07, 0.39),
-            'Fusiform%ICV': (0.63, 1.62),
-            'MidTemp%ICV': (0.7, 1.8),
-        }
+        # Get features bounds dynamically from metadata
+        features_bounds = self._get_features_bounds()
 
         age_bounds = self.__calibrate_age_bounds(ip, df_data)
         print(f"Recommended reparametrized_age_bounds: {age_bounds}")
 
         # Similuated data
         settings_simulate = AlgorithmSettings(
-            'simulation', 
-            seed=self.seed, 
-            number_of_subjects=pred_sub, 
-            mean_number_of_visits=visit_mean, 
+            'simulation',
+            seed=self.seed,
+            number_of_subjects=pred_sub,
+            mean_number_of_visits=visit_mean,
             std_number_of_visits=visit_std,
             #reparametrized_age_bounds=age_bounds,
             noise='model',
@@ -299,21 +306,8 @@ class LeaspyModel():
         visit_std = n_visit['N visits'].std()
         pred_sub = len(n_visit)
 
-        features_bounds = {
-            # Ordinal scales (intrinsic bounds)
-            'CDRSB': (0, 18),
-            'ADAS11': (0, 70),
-            'ADAS13': (0, 70),
-            'MMSE': (0, 30),
-            'FAQ': (0, 30),
-            'RAVLT_immediate': (0, 75),
-            # Continuous (from percentiles 1-99)
-            'Hippocampus%ICV': (0.22, 0.66),
-            'Ventricles%ICV': (0.11, 7.3),
-            'Entorhinal%ICV': (0.07, 0.39),
-            'Fusiform%ICV': (0.63, 1.62),
-            'MidTemp%ICV': (0.7, 1.8),
-        }
+        # Get features bounds dynamically from metadata
+        features_bounds = self._get_features_bounds()
 
         age_bounds = self.__calibrate_age_bounds(ip, df_data)
         print(f"Recommended reparametrized_age_bounds: {age_bounds}")
@@ -478,6 +472,9 @@ class LeaspyModel():
             combination_dict = cofactor_combinations.iloc[idx].to_dict()
             selected_combinations.append(combination_dict)
 
+        # Get features bounds dynamically from metadata
+        features_bounds = self._get_features_bounds()
+
         # Calculate subjects per combination
         subjects_per_combination = num_subjects // num_combinations
         remaining_subjects = num_subjects % num_combinations
@@ -549,20 +546,30 @@ class LeaspyModel():
                 cofactor_filter = list(working_combination.values())
                 print(f"  Using cofactors: {working_combination} ({matching_subjects} matching subjects)")
 
-                settings_simulate = AlgorithmSettings('simulation',
-                                                   seed=self.seed + i,
-                                                   number_of_subjects=current_subjects,
-                                                   mean_number_of_visits=mean_visits,
-                                                   std_number_of_visits=std_visits,
-                                                   cofactor=cofactor_state,
-                                                   cofactor_state=cofactor_filter)
+                settings_simulate = AlgorithmSettings(
+                    'simulation',
+                    seed=self.seed + i,
+                    number_of_subjects=current_subjects,
+                    mean_number_of_visits=mean_visits,
+                    std_number_of_visits=std_visits,
+                    cofactor=cofactor_state,
+                    cofactor_state=cofactor_filter,
+                    noise='model',
+                    features_bbounds=features_bounds,
+                    sources_method='full_kde',
+                )
             else:
                 print(f"  No sufficient cofactor filtering, generating without constraints")
-                settings_simulate = AlgorithmSettings('simulation',
-                                                   seed=self.seed + i,
-                                                   number_of_subjects=current_subjects,
-                                                   mean_number_of_visits=mean_visits,
-                                                   std_number_of_visits=std_visits)
+                settings_simulate = AlgorithmSettings(
+                    'simulation',
+                    seed=self.seed + i,
+                    number_of_subjects=current_subjects,
+                    mean_number_of_visits=mean_visits,
+                    std_number_of_visits=std_visits,
+                    noise='model',
+                    features_bbounds=features_bounds,
+                    sources_method='full_kde',
+                )
 
             # Generate simulated data for this cofactor combination
             simulated_data = self.model.simulate(ip, data, settings_simulate)
