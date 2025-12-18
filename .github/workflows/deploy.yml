@@ -34,6 +34,6 @@ jobs:
            --exclude 'weights/' \
            --exclude '*.out' \
            --exclude '*.err' \
-           --exclude myvenv/
+           --exclude 'myvenv/' \
             WP-3/ADCourseMapDatalake/ \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.REMOTE_PATH }}
