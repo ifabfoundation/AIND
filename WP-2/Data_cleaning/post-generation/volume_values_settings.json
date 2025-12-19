@@ -1,4 +1,8 @@
-{
+{   "Brain%ICV": [
+        60.16,
+        73.36,
+        "inverse"
+    ],
     "Ventricles%ICV": [
         0.11,
         7.3,
