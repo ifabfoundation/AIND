@@ -24,6 +24,11 @@
         18,
         "increasing"
     ],
+    "CDRGLOB": [
+        0,
+        3,
+        "increasing"
+    ],
     "ADAS11": [
         0,
         70,
@@ -31,7 +36,619 @@
     ],
     "ADAS13": [
         0,
-        70,
+        85,
         "increasing"
-    ]
+    ], 
+
+    "AB40_CSF": {
+        "elecsys": [
+            6333.2,
+            33907.4,
+            "inverse"
+        ],
+        "lumipulse": [
+            5476.2,
+            21446.76,
+            "inverse"
+        ],
+        "elisa": [
+            5209.0546,
+            15659.436,
+            "inverse"
+        ],
+        "massospectrometry": [
+            3483.5,
+            15231.82,
+            "inverse"
+        ],
+        "mesoscalediscovery": [
+            3675.3,
+            11141.16,
+            "inverse"
+        ],
+        "unknown": [
+            1,
+            99,
+            "inverse"
+        ]
+    },
+
+    "AB42_CSF": {
+        "elecsys": [
+            272.106,
+            2923.62,
+            "inverse"
+        ],
+        "lumipulse": [
+            227.0,
+            1970.6,
+            "inverse"
+        ],
+        "elisa": [
+            297.4034,
+            1708.0574,
+            "inverse"
+        ],
+        "alzbio3": [
+            85.871,
+            290.29,
+            "inverse"
+        ],
+        "massospectrometry": [
+            299.5,
+            2656.8,
+            "inverse"
+        ],
+        "mesoscalediscovery": [
+            161.88,
+            1139.1,
+            "inverse"
+        ],
+        "saladax": [
+            98.7 ,
+            808.0,
+            "inverse"
+        ],
+        "unknown": [
+            1,
+            99,
+            "inverse"
+        ]
+    },
+
+    "AB4240_CSF": {
+        "elecsys": [
+            0.0209,
+            0.1157,
+            "inverse"
+        ],
+        "lumipulse": [
+            0.0252,
+            0.1072,
+            "inverse"
+        ],
+        "elisa": [
+            0.0361,
+            0.1503,
+            "inverse"
+        ],
+        "massospectrometry": [
+            0.0509,
+            0.2309,
+            "inverse"
+        ],
+        "mesoscalediscovery": [
+            0.0297,
+            0.1205,
+            "inverse"
+        ],
+        "unknown": [
+            1,
+            99,
+            "inverse"
+        ]
+    },
+
+    "PT181_CSF": {
+        "elecsys": [
+            9.3992,
+            96.26,
+            "increasing"
+        ],
+        "alzbio3": [
+            11.1,
+            126.15,
+            "increasing"
+        ],
+        "unknown": [
+            1,
+            99,
+            "increasing"
+        ]
+    },
+
+    "TTAU_CSF": {
+        "elecsys": [
+            107.048,
+            811.0,
+            "increasing"
+        ],
+        "mesoscalediscovery": [
+            123.78,
+            1042.67,
+            "increasing"
+        ],
+        "alzbio3": [
+            24.0,
+            276.56,
+            "increasing"
+        ],
+        "saladax": [
+            99.62,
+            808.6,
+            "increasing"
+        ],
+        "unknown": [
+            1,
+            99,
+            "increasing"
+        ]
+    }, 
+
+    "PT181_AB42_CSF": {
+        "elecsys": [
+            0.0074,
+            0.2113,
+            "increasing"
+        ],
+        "alzbio3": [
+            0.0504,
+            1.0684,
+            "increasing"
+        ],
+        "unknown": [
+            1,
+            99,
+            "increasing"
+        ]
+    },
+    "TTAU_AB42_CSF": {
+        "elecsys": [
+            0.0887,
+            1.9217,
+            "increasing"
+        ],
+        "alzbio3": [
+            0.1207,
+            2.3478,
+            "increasing"
+        ],
+        "mesoscalediscovery": [
+            0.2173,
+            3.8546,
+            "increasing"
+        ],
+        "saladax": [
+            0.2509,
+            4.0191,
+            "increasing"
+        ],
+        "unknown": [
+            1,
+            99,
+            "increasing"
+        ]
+    }, 
+
+    "AB40_PL": {
+        "simoa": [
+            89.451,
+            307.752,
+            "inverse"
+        ],
+        "massospectrometry": [
+            285.9777,
+            831.5726,
+            "inverse"
+        ],
+        "quanterix": [
+            141.5576,
+            542.3328,
+            "inverse"
+        ]
+    },
+
+    "AB42_PL": {
+        "simoa": [
+            4.687,
+            12.026,
+            "inverse"
+        ],
+        "massospectrometry": [
+            29.4746,
+            84.8812,
+            "inverse"
+        ],
+        "quanterix": [
+            11.6257 ,
+            44.4181,
+            "inverse"
+        ]
+    },
+
+    "AB4240_PL": {
+        "massospectrometry": [
+            0.076,
+            0.135,
+            "inverse"
+        ],
+        "quanterix": [
+            0.0582,
+            0.1205,
+            "inverse"
+        ]
+    },
+
+    "PT181_PL": {
+        
+        "lumipulse": [
+            2.6424,
+            2.8776,
+            "increasing"
+        ],
+        "simoa": [
+            6.262,
+            86.814,
+            "increasing"
+        ]
+    },
+
+    "PT217_AB42_PL": {
+        "quanterix": [
+            0.0015,
+            0.0719,
+            "increasing"
+        ]
+    },
+
+    "TTAU_PL": {
+        "simoa": [
+            0.357,
+            8.3572,
+            "increasing"
+        ]
+    }, 
+
+    "PT181_AB42_PL": {
+        "quanterix": [
+            0.0015,
+            0.0719,
+            "increasing"
+        ]
+    }, 
+
+    "PT217_PL": {
+        "massospectrometry": [
+            0.65,
+            13.4561,
+            "increasing"
+        ],
+        "quanterix": [
+            0.038,
+            1.5482,
+            "increasing"
+        ]
+    },
+
+    "nPT217_PL": {
+        "massospectrometry": [
+            23.5012,
+            128.2975,
+            "increasing"
+        ]
+    },
+
+    "PT217_nPT217_PL": {
+        
+        "massospectrometry": [
+            0.73,
+            18.4044,
+            "increasing"
+        ]
+    },
+    
+    "ALPHASYN": {
+        "luminex": [
+            0.2,
+            5.2608,
+            "increasing"
+        ]
+    },
+    
+    "NFL_CSF": {
+        "elisa": [
+            507.86,
+            5897.82,
+            "increasing"
+        ]
+    },
+
+    "NFL_PL": {
+        "simoa": [
+            11.745,
+            67.678,
+            "increasing"
+        ],
+        "quanterix": [
+            5.9189,
+            84.123,
+            "increasing"
+        ],
+        "elisa": [
+            12.6,
+            138.252,
+            "increasing"
+        ]
+    },
+
+    "GFAP": {
+        "simoa": [
+            44.596,
+            450.186,
+            "increasing"
+        ],
+        "quanterix": [
+            43.3029,
+            575.668,
+            "increasing"
+        ]
+    },
+
+    "AMY_CENTILOIDS": {
+        "NAV": [
+            -3.36,
+            153.52,
+            "increasing"
+        ],
+        "FBB": [
+            -10.0,
+            151.0,
+            "increasing"
+        ],
+        "FBP": [
+            -25.0,
+            155.0,
+            "increasing"
+        ]
+    },
+  
+    "SUMMARY_SUVR": {
+        "NAV": [
+            0.9347,
+            2.3755,
+            "increasing"
+        ],
+        "FBB": [
+            0.9061,
+            1.9276,
+            "increasing"
+        ],
+        "FBP": [
+            0.872,
+            1.8294,
+            "increasing"
+        ]
+    },
+  
+    "PRECUNEUS_SUVR": {
+        "FTP": [
+            0.878,
+            3.6718,
+            "increasing"
+        ],
+
+        "unknown": [
+            0.7518,
+            4.6196,
+            "increasing"
+        ]
+    },
+
+  
+    "TAU_METAROI": {
+        "FTP": [
+            0.9762 ,
+            3.2309,
+            "increasing"
+        ],
+        "FBB": [
+            0.836,
+            1.648,
+            "increasing"
+        ],
+        "FBP": [
+            0.8122,
+            1.5383,
+            "increasing"
+        ],
+        "NAV": [
+            0.9743,
+            1.9762,
+            "increasing"
+        ],
+        "unknown": [
+            0.8094,
+            5.2413,
+            "increasing"
+        ]
+    },
+  
+    "CTX_INFERIORPARIETAL_SUVR": {
+        "FTP": [
+            0.9337,
+            4.365,
+            "increasing"
+        ],
+        "unknown": [
+            0.8252,
+            7.0642,
+            "increasing"
+        ]
+    },
+
+    "CTX_PARAHIPPOCAMPAL_SUVR": {
+        "FTP": [
+            0.8852,
+            2.8173,
+            "increasing"
+        ],
+        
+        "unknown": [
+            0.7186,
+            4.7944,
+            "increasing"
+        ]
+    },
+  
+    "CTX_LATERALOCCIPITAL_SUVR": {
+        "FTP": [
+            0.8988,
+            4.5803,
+            "increasing"
+        ],
+        
+        "unknown": [
+            0.9136,
+            7.7214,
+            "increasing"
+        ]
+    },
+  
+    "CTX_MIDDLETEMPORAL_SUVR": {
+        "FTP": [
+            0.9698,
+            3.7738,
+            "increasing"
+        ],
+        
+        "unknown": [
+            0.8551,
+            5.2792,
+            "increasing"
+        ]
+    },
+
+    "INFERIOR_TEMPORAL_SUVR": {
+        "FTP": [
+            1.012,
+            4.0903,
+            "increasing"
+        ],
+        "FBB": [
+            0.8888,
+            1.9729,
+            "increasing"
+        ],
+        
+        "NAV": [
+            0.9837,
+            2.424,
+            "increasing"
+        ],
+        
+        "FBP": [
+            0.8672,
+            1.8602,
+            "increasing"
+        ],
+        "unknown": [
+            0.8372,
+            5.9623,
+            "increasing"
+        ]
+    },
+
+    "CTX_ENTORHINAL_SUVR": {
+        "FTP": [
+            0.8762,
+            2.958,
+            "increasing"
+        ],
+        "FBB": [
+            0.7598,
+            1.368,
+            "increasing"
+        ],
+        "NAV": [
+            0.9562,
+            1.5686,
+            "increasing"
+        ],
+        "FBP": [
+            0.7142,
+            1.2784,
+            "increasing"
+        ],
+        "unknown": [
+            0.7198,
+            5.559,
+            "increasing"
+        ]
+    },
+
+    "ENTORHINAL_SUVR": {
+        "FTP": [
+            0.8762,
+            2.958,
+            "increasing"
+        ],
+        "FBB": [
+            0.7598,
+            1.368,
+            "increasing"
+        ],
+        "NAV": [
+            0.9562,
+            1.5686,
+            "increasing"
+        ],
+        "FBP": [
+            0.7142,
+            1.2784,
+            "increasing"
+        ],
+        "unknown": [
+            0.7198,
+            5.559,
+            "increasing"
+        ]
+    },
+
+    "CTX_FUSIFORM_SUVR": {
+        "FTP": [
+            0.9675,
+            3.8654,
+            "increasing"
+        ],
+
+        "unknown": [
+            0.7919,
+            6.6752,
+            "increasing"
+        ]
+    },
+  
+    "CSF_SUVR": {
+        "FTP": [
+            0.1678,
+            1.3657,
+            "increasing"
+        ],
+
+        "unknown": [
+            0.0125,
+            1.3087,
+            "increasing"
+        ]
+    }
 }

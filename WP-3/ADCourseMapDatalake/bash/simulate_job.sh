@@ -20,6 +20,7 @@ echo "Data e ora di inizio: $(date)"
 # Esegui lo script Python sui nodi assegnati
 # Ogni processo riceverà un SLURM_PROCID univoco
 #srun python /home/IFAB/WORK/ADCourseMap/code/main.py --n_iter 100000 --device cpu --level cleaned_02 --n_burn_in_iter_frac 0.7 --burn_in_step_power 0.9 --source_dimension 3 
-srun python /home/IFAB/WORK/ADCourseMap/code/main.py --level cleaned_03 --device cpu --file_code ADNIMERGE --same_data_stats 1 --simulation True
+#srun python /home/IFAB/WORK/ADCourseMap/code/main.py --level cleaned_03 --device cpu --file_code ADNIMERGE --same_data_stats 1 --simulation True
+srun python /home/IFAB/WORK/ADCourseMap/code/main.py --level merged_comb --device cpu --file_code FINALMERGE_FSVERSION_4-3_METHOD_CSF_elecsys_METHOD_PET_FBP --same_data_stats 1 --simulation True
 
 echo "Job completato: $(date)"

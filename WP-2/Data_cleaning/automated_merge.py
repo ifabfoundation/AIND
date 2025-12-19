@@ -93,8 +93,8 @@ PREDITTORI_COLUMNS = {
     'volumes': ['Brain%ICV', 'Ventricles%ICV', 'Hippocampus%ICV',
                 'Entorhinal%ICV', 'Fusiform%ICV', 'MidTemp%ICV'],
     'scale': ['MMSE', 'RAVLT_immediate', 'FAQ', 'MOCA', 'CDRSB', 'CDRGLOB', 'ADAS11', 'ADAS13'],
-    'csf': ['CSF_DATE', 'METHOD_CSF', 'AB40_CSF', 'AB42_CSF', 'AB4240_CSF',
-            'PT181_CSF', 'TTAU_CSF', 'PT181_AB42_CSF'],
+    'csf': ['CSF_DATE', 'AB40_CSF', 'AB42_CSF', 'AB4240_CSF',
+            'PT181_CSF', 'TTAU_CSF', 'PT181_AB42_CSF', 'TTAU_AB42_CSF'],
     'plasma': ['AB40_PL', 'AB42_PL', 'AB4240_PL', 'PT181_PL', 'PT217_AB42_PL',
                'TTAU_PL', 'nPT217_PL', 'PT217_nPT217_PL', 'ALPHASYN', 'NFL_PL', 'GFAP'],
     'pet': ['AMY_CENTILOIDS', 'SUMMARY_SUVR', 'PRECUNEUS_SUVR', 'TAU_METAROI',
@@ -390,6 +390,68 @@ def generate_all_combinations(filter_values: dict) -> list:
 
 
 # =============================================================================
+# FUNZIONI DI PULIZIA RIGHE CON EXAMDATE=NaN
+# =============================================================================
+
+def count_non_nan_in_volume_cols(row: pd.Series) -> int:
+    """Conta valori NON-NaN nelle colonne volumetriche."""
+    cols = [c for c in VOLUME_COLS if c in row.index]
+    return row[cols].notna().sum()
+
+
+def clean_rows_with_nan_examdate(df: pd.DataFrame, min_valid_cols: int = 3,
+                                  verbose: bool = True) -> pd.DataFrame:
+    """
+    Gestisce righe con EXAMDATE=NaN:
+    - Se hanno meno di min_valid_cols colonne VOLUME_COLS valide -> elimina
+    - Se hanno almeno min_valid_cols valide -> mantiene (useranno VISCODE per match)
+
+    Args:
+        df: DataFrame da pulire
+        min_valid_cols: minimo numero di colonne VOLUME_COLS non-NaN per mantenere la riga
+        verbose: se True, stampa info
+
+    Returns:
+        DataFrame pulito
+    """
+    df = df.copy()
+
+    # Trova righe con EXAMDATE=NaN
+    mask_nan_date = df[DATE_COL].isna()
+    n_nan_date = mask_nan_date.sum()
+
+    if n_nan_date == 0:
+        if verbose:
+            print("  Nessuna riga con EXAMDATE=NaN")
+        return df
+
+    if verbose:
+        print(f"  Trovate {n_nan_date} righe con EXAMDATE=NaN")
+
+    # Per ogni riga con EXAMDATE=NaN, conta colonne VOLUME valide
+    indices_to_drop = []
+    indices_to_keep = []
+
+    for idx in df[mask_nan_date].index:
+        row = df.loc[idx]
+        n_valid = count_non_nan_in_volume_cols(row)
+
+        if n_valid < min_valid_cols:
+            indices_to_drop.append(idx)
+        else:
+            indices_to_keep.append(idx)
+
+    if verbose:
+        print(f"    - Righe da eliminare (< {min_valid_cols} VOLUME_COLS valide): {len(indices_to_drop)}")
+        print(f"    - Righe da mantenere (useranno VISCODE): {len(indices_to_keep)}")
+
+    # Elimina righe senza dati utili
+    df_clean = df.drop(indices_to_drop)
+
+    return df_clean
+
+
+# =============================================================================
 # FUNZIONI DI SELEZIONE RIGA MIGLIORE
 # =============================================================================
 
@@ -468,35 +530,108 @@ def select_best_from_group(df_group: pd.DataFrame) -> int:
 
 def remove_duplicates_volumes(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
     """
-    Rimuove duplicati (stesso RID + EXAMDATE) dal dataset VOLUMES.
+    Rimuove duplicati dal dataset VOLUMES.
+
+    Strategia:
+    1. Prima pulisce righe con EXAMDATE=NaN e senza dati utili
+    2. Deduplicazione standard su (RID, EXAMDATE) per righe con data valida
+    3. Deduplicazione su (RID, VISCODE) per righe con EXAMDATE=NaN
     """
     df = df.copy()
 
-    duplicates = df.groupby([RID_COL, DATE_COL]).filter(lambda x: len(x) > 1)
-
-    if duplicates.empty:
-        if verbose:
-            print("  Nessun duplicato trovato")
-        return df
-
-    n_groups = duplicates.groupby([RID_COL, DATE_COL]).ngroups
-
-    if verbose:
-        print(f"  Trovati {len(duplicates)} righe duplicate in {n_groups} gruppi")
+    # STEP 1: Pulisci righe con EXAMDATE=NaN senza dati utili
+    df = clean_rows_with_nan_examdate(df, min_valid_cols=3, verbose=verbose)
 
     indices_to_drop = []
 
-    for (rid, date), group in duplicates.groupby([RID_COL, DATE_COL]):
-        best_idx = select_best_from_group(group)
-        dropped = [i for i in group.index if i != best_idx]
-        indices_to_drop.extend(dropped)
+    # STEP 2: Deduplicazione standard per righe con EXAMDATE valida
+    df_with_date = df[df[DATE_COL].notna()]
 
-    df_clean = df.drop(indices_to_drop)
+    if not df_with_date.empty:
+        duplicates = df_with_date.groupby([RID_COL, DATE_COL]).filter(lambda x: len(x) > 1)
 
-    if verbose:
-        print(f"  Rimosse {len(indices_to_drop)} righe, rimaste {len(df_clean)}")
+        if not duplicates.empty:
+            n_groups = duplicates.groupby([RID_COL, DATE_COL]).ngroups
+            if verbose:
+                print(f"  Duplicati (RID+EXAMDATE): {len(duplicates)} righe in {n_groups} gruppi")
+
+            for (rid, date), group in duplicates.groupby([RID_COL, DATE_COL]):
+                best_idx = select_best_from_group(group)
+                dropped = [i for i in group.index if i != best_idx]
+                indices_to_drop.extend(dropped)
+
+    # STEP 3: Deduplicazione con VISCODE per righe con EXAMDATE=NaN
+    df_nan_date = df[df[DATE_COL].isna()]
+
+    if not df_nan_date.empty and 'VISCODE' in df.columns:
+        duplicates_viscode = df_nan_date.groupby([RID_COL, 'VISCODE']).filter(lambda x: len(x) > 1)
+
+        if not duplicates_viscode.empty:
+            n_groups_viscode = duplicates_viscode.groupby([RID_COL, 'VISCODE']).ngroups
+            if verbose:
+                print(f"  Duplicati (RID+VISCODE, EXAMDATE=NaN): {len(duplicates_viscode)} righe in {n_groups_viscode} gruppi")
+
+            for (rid, viscode), group in duplicates_viscode.groupby([RID_COL, 'VISCODE']):
+                best_idx = select_best_from_group(group)
+                dropped = [i for i in group.index if i != best_idx]
+                indices_to_drop.extend(dropped)
+
+    # Rimuovi tutti i duplicati identificati
+    if indices_to_drop:
+        df_clean = df.drop(indices_to_drop)
+        if verbose:
+            print(f"  Rimosse {len(indices_to_drop)} righe duplicate, rimaste {len(df_clean)}")
+    else:
+        df_clean = df
+        if verbose:
+            print("  Nessun duplicato trovato")
 
     return df_clean
+
+
+def deduplicate_final(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
+    """
+    Deduplicazione finale dopo merge per gestire righe con EXAMDATE=NaN.
+
+    Usa (RID, VISCODE) come chiave per identificare duplicati quando EXAMDATE=NaN.
+    Seleziona la riga migliore basandosi sui criteri standard.
+
+    Args:
+        df: DataFrame da deduplicare
+        verbose: se True, stampa info
+
+    Returns:
+        DataFrame deduplicato
+    """
+    df = df.copy()
+
+    if 'VISCODE' not in df.columns:
+        return df
+
+    indices_to_drop = []
+
+    # Trova duplicati su (RID, VISCODE) dove EXAMDATE è NaN
+    df_nan_date = df[df[DATE_COL].isna()]
+
+    if not df_nan_date.empty:
+        duplicates = df_nan_date.groupby([RID_COL, 'VISCODE']).filter(lambda x: len(x) > 1)
+
+        if not duplicates.empty:
+            n_groups = duplicates.groupby([RID_COL, 'VISCODE']).ngroups
+            if verbose:
+                print(f"    Dedup finale (RID+VISCODE, EXAMDATE=NaN): {len(duplicates)} righe in {n_groups} gruppi")
+
+            for (rid, viscode), group in duplicates.groupby([RID_COL, 'VISCODE']):
+                best_idx = select_best_from_group(group)
+                dropped = [i for i in group.index if i != best_idx]
+                indices_to_drop.extend(dropped)
+
+    if indices_to_drop:
+        df = df.drop(indices_to_drop)
+        if verbose:
+            print(f"    Rimosse {len(indices_to_drop)} righe duplicate finali")
+
+    return df
 
 
 def check_match_cardinality(matches: dict, verbose: bool = False) -> tuple:
@@ -757,6 +892,9 @@ def merge_single_pair(df_base: pd.DataFrame, df_add: pd.DataFrame,
 
     # Merge finale
     df_merged = merge_datasets(df_base, df_add, exact_matches, buffer_to_merge)
+
+    # Deduplicazione finale per righe con EXAMDATE=NaN
+    df_merged = deduplicate_final(df_merged, verbose=verbose)
 
     if verbose:
         print(f"    Result: {len(df_merged)} rows")

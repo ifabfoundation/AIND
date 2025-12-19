@@ -263,6 +263,42 @@ def prepare_dataset(dataset, predictors, cofactors, exclude = [], prediction_mod
     
     # Remove rows with NaN values in the TIME column
     dataset = dataset.dropna(subset=['TIME'])
+
+    # Remove duplicate visits
+    n_before = len(dataset)
+    dataset = dataset.drop_duplicates(subset=['ID', 'TIME'], keep='first')
+    n_duplicates = n_before - len(dataset)
+    if n_duplicates > 0:
+        print(f"Removed {n_duplicates} duplicate visits (same ID and TIME)")
+
+    # Convert non numeric predictos
+    for col in dataset.columns:
+        if col in predictors and dataset[col].dtype == 'object':
+            dataset[col] = pd.to_numeric(dataset[col], errors='coerce')
+            print(f"Converted column '{col}' to numeric")
+
+    # Convert boolean cofactors to integers (handles pure bool, mixed bool/int, or object with True/False/0/1)
+    for col in dataset.columns:
+        if col in cofactors:
+            if dataset[col].dtype == 'bool':
+                dataset[col] = dataset[col].astype(int)
+                print(f"Converted boolean cofactor '{col}' to integer")
+            elif dataset[col].dtype == 'object':
+                # Check if the column contains only boolean-like values
+                unique_vals = set(dataset[col].dropna().unique())
+                bool_like_vals = {True, False, 0, 1, '0', '1', 'True', 'False', 'true', 'false'}
+                if unique_vals.issubset(bool_like_vals):
+                    # Map all boolean-like values to integers
+                    bool_map = {True: 1, False: 0, 1: 1, 0: 0, '1': 1, '0': 0,
+                                'True': 1, 'False': 0, 'true': 1, 'false': 0}
+                    dataset[col] = dataset[col].map(bool_map).astype('Int64')
+                    print(f"Converted mixed boolean cofactor '{col}' to integer")
+
+    # Remove columns with all NaN
+    nan_cols = dataset.columns[dataset.isna().all()].tolist()
+    if nan_cols:
+        print(f"Removing columns with all NaN values: {nan_cols}")
+        dataset = dataset.drop(columns=nan_cols)
     
     if not prediction_mode:
         # Count visits per ID
