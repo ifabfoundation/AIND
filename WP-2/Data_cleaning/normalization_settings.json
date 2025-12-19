@@ -483,7 +483,7 @@
         ]
     },
   
-    "INFERIORPARIETAL_SUVR": {
+    "CTX_INFERIORPARIETAL_SUVR": {
         "FTP": [
             0.9337,
             4.365,
@@ -496,7 +496,7 @@
         ]
     },
 
-    "PARAHIPPOCAMPAL_SUVR": {
+    "CTX_PARAHIPPOCAMPAL_SUVR": {
         "FTP": [
             0.8852,
             2.8173,
@@ -510,7 +510,7 @@
         ]
     },
   
-    "LATERALOCCIPITAL_SUVR": {
+    "CTX_LATERALOCCIPITAL_SUVR": {
         "FTP": [
             0.8988,
             4.5803,
@@ -524,7 +524,7 @@
         ]
     },
   
-    "MIDDLETEMPORAL_SUVR": {
+    "CTX_MIDDLETEMPORAL_SUVR": {
         "FTP": [
             0.9698,
             3.7738,
@@ -568,6 +568,34 @@
         ]
     },
 
+    "CTX_ENTORHINAL_SUVR": {
+        "FTP": [
+            0.8762,
+            2.958,
+            "increasing"
+        ],
+        "FBB": [
+            0.7598,
+            1.368,
+            "increasing"
+        ],
+        "NAV": [
+            0.9562,
+            1.5686,
+            "increasing"
+        ],
+        "FBP": [
+            0.7142,
+            1.2784,
+            "increasing"
+        ],
+        "unknown": [
+            0.7198,
+            5.559,
+            "increasing"
+        ]
+    },
+
     "ENTORHINAL_SUVR": {
         "FTP": [
             0.8762,
@@ -596,7 +624,7 @@
         ]
     },
 
-    "FUSIFORM_SUVR": {
+    "CTX_FUSIFORM_SUVR": {
         "FTP": [
             0.9675,
             3.8654,
