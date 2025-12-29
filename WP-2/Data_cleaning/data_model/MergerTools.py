@@ -5,6 +5,7 @@ import numpy as np
 import re
 import os
 import json
+from typing import Tuple, List, Dict, Any, Callable
 
 class MergerTools:
 
@@ -25,7 +26,7 @@ class MergerTools:
         },
         'csf': {
             'key_cols': ['RID', 'EXAMDATE', 'METHOD'],
-            'colonne_escluse': [],
+            'colonne_escluse': ['METHOD', "AB40_CSF", "AB42_CSF", "AB4240_CSF", "PT181_CSF", "TTAU_CSF", "PT181_AB42_CSF", "TTAU_AB42_CSF" ],
         },
         'plasma': {
             'key_cols': ['RID', 'EXAMDATE', 'METHOD'],
@@ -37,23 +38,48 @@ class MergerTools:
         },
         'cofactor': {
             'key_cols': ['RID', 'EXAMDATE'],
-            'colonne_escluse': ['APOE'],
+            'colonne_escluse': [],
         },
     }
 
-    BASE_KEYS = ['RID', 'EXAMDATE', 'VISCODE', 'VISIT_MONTH', 'COHORT', 'update_stamp']
+    BASE_KEYS = ['RID', 'EXAMDATE', 'SCANDATE', 'VISCODE', 'VISIT_MONTH', 'COHORT', 'update_stamp', 'METHOD']
 
     CATEGORY_KEYS = {'volumes': ['MRI_SCANDATE','IMAGEUID', 'FSVERSION', 'FLDSTRENG', 'STATUS', 'ICV%ICV', 'Brain%ICV', 'Ventricles%ICV', 'Hippocampus%ICV', 'Entorhinal%ICV', 'Fusiform%ICV', 'MidTemp%ICV'],
                     'scale': ['MMSE', 'RAVLT_immediate', 'FAQ', 'MOCA', 'CDRSB', 'CDRGLOB', 'ADAS11', 'ADAS13'],
-                    'csf': ['CSF_DATE', 'METHOD_CSF', "AB40_CSF", "AB42_CSF", "AB4240_CSF", "PT181_CSF", "TTAU_CSF", "PT181_AB42_CSF", ],
-                    'plasma': ["AB40_PL", "AB42_PL", "AB4240_PL", "PT181_PL", "PT217_AB42_PL", "TTAU_PL", "nPT217_PL", "PT217_nPT217_PL", "ALPHASYN", "NFL_PL", "GFAP"],
-                    'pet': ["AMY_CENTILOIDS", "SUMMARY_SUVR", "PRECUNEUS_SUVR", "TAU_METAROI", "INFERIORPARIETAL_SUVR", "PARAHIPPOCAMPAL_SUVR", "LATERALOCCIPITAL_SUVR",
-                            "MIDDLETEMPORAL_SUVR", "INFERIOR_TEMPORAL_SUVR", "ENTORHINAL_SUVR", "FUSIFORM_SUVR", "CSF_SUVR"],
+                    'csf': ["AB40_CSF", "AB42_CSF", "AB4240_CSF", "PT181_CSF", "TTAU_CSF", "PT181_AB42_CSF", "TTAU_AB42_CSF" ],
+                    'plasma': [ "AB40_PL", "AB42_PL", "AB4240_PL", "PT181_PL", "PT217_AB42_PL", "TTAU_PL", "nPT217_PL", "PT217_nPT217_PL", "ALPHA_SYN", "NFL_PL", "GFAP"],
+                    'pet': [ 'TRACER', "AMY_CENTILOIDS", "SUMMARY_SUVR", "PRECUNEUS_SUVR", "TAU_METAROI", 
+                                "INFERIORPARIETAL_SUVR", "PARAHIPPOCAMPAL_SUVR", "LATERALOCCIPITAL_SUVR",
+                                "MIDDLETEMPORAL_SUVR", "INFERIOR_TEMPORAL_SUVR", "ENTORHINAL_SUVR", 
+                                "FUSIFORM_SUVR"],
                     'cofactor': ['AGE', 'AGE_AD_BEG', 'AGE_AD_DX', 'AGE_COG_BEG', 'AGE_bl', 'GENDER/female', 'GENDER/male', 'DX/CN', 'DX/Dementia', 'DX/MCI', 'EDUCAT',  
                                 'MARRY/divorced', 'MARRY/married', 'ETHNICITY/latino', 'ETHNICITY/not_latino', 'MARRY/single', 'MARRY/widowed', 'RACE/Asian', 'RACE/Black', 
                                 'RACE/Mixed', 'RACE/Native_american', 'RACE/White', 'APOE', 'APOE_4', 'DIAN_MUTATION', 'Aprofile', 'Tprofile', 'Nprofile']}
+    COFACTOR_CONFIG = {
+        'immutable': [
+            'APOE', 'APOE_4', 'DIAN_MUTATION', 'AGE_bl'
+        ],
+        'immutable_single_df': ['AGE_AD_BEG', 'AGE_AD_DX', 'AGE_COG_BEG'],
+        'mutable_single_df': ['Aprofile', 'Tprofile', 'Nprofile'],
+        
+        # Gruppi dummy per tipo
+        'dummy_groups_immutable': {
+            'GENDER': ['GENDER/female', 'GENDER/male'],
+            'ETHNICITY': ['ETHNICITY/latino', 'ETHNICITY/not_latino'],
+            'RACE': ['RACE/Asian', 'RACE/Black', 'RACE/Mixed', 'RACE/Native_american', 'RACE/White'],
+        },
+        'dummy_groups_mutable': {
+            'DX': ['DX/CN', 'DX/MCI', 'DX/Dementia']
+            # MARRY rimosso: ha logica speciale (sorgente a livello RID + forward-fill)
+        },
+        'dummy_marry': ['MARRY/divorced', 'MARRY/married', 'MARRY/single', 'MARRY/widowed'],
+        
+        'custom_resolvers': ['COHORT', 'AGE'], 
+        'forward_fill_cols': ['EDUCAT']
+    }
+    
 
-    def __init__(self):
+    def __init__(self, fix_dummy_violations: bool = False):
         # Carica ogni JSON una sola volta
         normalization_full = self.get_json_file('normalization_settings.json')
         volume_full = self.get_json_file('volume_values_settings.json')
@@ -68,6 +94,22 @@ class MergerTools:
             'pet': self._filter_dict(normalization_full, 'pet'),
             'cofactor': self._filter_dict(cofactor_full, 'cofactor'),
         }
+
+        self.fix_dummy_violations = fix_dummy_violations
+        self._resolvers: Dict[str, Callable] = {
+            'COHORT': self._resolve_cohort,
+            'AGE': self._resolve_age,
+        }
+        
+        # Unione di tutti i gruppi dummy per validazione finale
+        self._all_dummy_groups = {
+            **self.COFACTOR_CONFIG['dummy_groups_immutable'],
+            **self.COFACTOR_CONFIG['dummy_groups_mutable'],
+            'MARRY': self.COFACTOR_CONFIG['dummy_marry']
+        }
+
+
+
 
     def _filter_dict(self, full_dict, category):
         """Filtra dizionario per le chiavi della categoria."""
@@ -155,7 +197,7 @@ class MergerTools:
         if len(set(df.columns)&set(keys)) > 0:
             col_list = [x for x in df.columns if x in base_keys + keys]
             df_new = df[col_list].copy(deep=True)
-            check_list = [x for x in col_list if x not in base_keys] 
+            check_list = [x for x in col_list if x not in base_keys and x not in ['METHOD']] 
             cleaned_df = df_new.dropna(subset=check_list, how='all')
         else:
             print(f"WARNING: il df non contiene colonne di {category}")
@@ -344,7 +386,28 @@ class MergerTools:
         if not overlap_idx1 and not overlap_idx2:
             print("✓ Verifica matches superata: nessun overlap tra exact e buffer")
 
-
+    def find_rid_matches(self, df1, df2, rid_col='RID'):
+        """
+        Trova corrispondenze tra righe di due dataset basandosi solo su RID.
+        
+        Returns:
+            matches: {RID: [[indici_df1], [indici_df2]]}
+        """
+        matches = {}
+        
+        df1_grouped = df1.groupby(rid_col)
+        df2_grouped = df2.groupby(rid_col)
+        
+        common_rids = set(df1[rid_col]) & set(df2[rid_col])
+        
+        for rid in common_rids:
+            matches[rid] = [
+                df1_grouped.get_group(rid).index.tolist(),
+                df2_grouped.get_group(rid).index.tolist()
+            ]
+        
+        return matches
+        
     def list_index_visit_matches(self, matches):
         """
         Lista gli indici delle righe che matchano tra due dataframe.
@@ -367,10 +430,10 @@ class MergerTools:
         Crea una matrice di match per (RID, EXAMDATE) tra i dataframe in dfs.
         """
         # Assicurati che le colonne RID e EXAMDATE siano presenti e che EXAMDATE sia in formato datetime
-        for _, df in dfs.items():
+        for df_name, df in dfs.items():
             for col in columns_list:
                 if col not in df.columns:
-                    print(f"AVVISO: '{df_names[df_code[i]]}' non contiene colonna {col}")
+                    print(f"AVVISO: {df_name} -> '{df_names[df_name]}' non contiene colonna {col}")
 
         # Matrice di match per (RID, EXAMDATE)
         keys_list = list(dfs.keys())
@@ -378,6 +441,9 @@ class MergerTools:
         columns_set = set(columns_list)
         for i, kI in enumerate(keys_list):
             for j, kJ in enumerate(keys_list):
+                if 'EXAMDATE' in columns_list and ('EXAMDATE' not in dfs[kI].columns or 'EXAMDATE' not in dfs[kJ].columns):
+                    match_matrix.iloc[i, j] = None  # Indica colonne mancanti
+                    continue
                 # Ci assicuriamo di confrontare solo se entrambe le colonne esistono nei dati
                 if columns_set.issubset(dfs[kI].columns) and columns_set.issubset(dfs[kJ].columns):
                     if ['RID', 'EXAMDATE'] == columns_list:
@@ -875,8 +941,6 @@ class MergerTools:
 
 
 
-
-
     def get_merged_df(self, df1, df2, category):
         config = self.CATEGORY_CONFIG.get(category, {})
         key_cols = config.get('key_cols', ['RID', 'EXAMDATE'])
@@ -1051,15 +1115,13 @@ class MergerTools:
         if category == 'volume':
             return self.volume_unification_criteria(df,idx_0, idx_1)
         elif category == 'scale':
-            return self.scale_unification_criteria(df,idx_0, idx_1, check_cols=self.CATEGORY_KEYS[category], category=category)
+            return self.update_stamp_unification_criteria(df,idx_0, idx_1, check_cols=self.CATEGORY_KEYS[category], category=category)
         elif category == 'csf':
-            return self.csf_unification_criteria(df,idx_0, idx_1, key_cols=self.CATEGORY_KEYS[category])
+            return self.update_stamp_unification_criteria(df,idx_0, idx_1, check_cols=self.CATEGORY_KEYS[category], category=category)
         elif category == 'plasma':
             return self.plasma_unification_criteria(df,idx_0, idx_1, key_cols=self.CATEGORY_KEYS[category])
         elif category == 'pet':
             return self.pet_unification_criteria(df,idx_0, idx_1, key_cols=self.CATEGORY_KEYS[category])
-        elif category == 'cofactor':
-            return self.cofactor_unification_criteria(df,idx_0, idx_1, key_cols=self.CATEGORY_KEYS[category])
         else:
             return idx_1  # default: droppa la seconda
 
@@ -1146,6 +1208,68 @@ class MergerTools:
         return idx_to_drop
 
 
+    def pet_unification_criteria(self, df, idx_1, idx_2, key_cols=None):
+        """
+        Criteri di unificazione per righe PET quando ci sono duplicati.
+        Preferisce la riga con più valori non-nulli nelle colonne PET.
+        """
+        row_1 = df.loc[idx_1]
+        row_2 = df.loc[idx_2]
+
+        # Conta valori non-nulli nelle colonne PET
+        pet_cols = [c for c in df.columns if 'SUVR' in c or 'CENTILOID' in c or 'METAROI' in c]
+
+        count_1 = sum(1 for c in pet_cols if c in row_1.index and pd.notna(row_1[c]))
+        count_2 = sum(1 for c in pet_cols if c in row_2.index and pd.notna(row_2[c]))
+
+        if count_2 > count_1:
+            return idx_1  # droppa idx_1, tieni idx_2
+        else:
+            return idx_2  # droppa idx_2, tieni idx_1 (default)
+
+
+    def plasma_unification_criteria(self, df, idx_1, idx_2, key_cols=None):
+        """
+        Criteri di unificazione per righe plasma quando ci sono duplicati.
+
+        Logica di selezione basata su completezza:
+        1. Conta i valori non-NaN nelle colonne biomarker plasma
+        2. Scegli la riga con più valori (più completa)
+        3. Se pari completezza → scegli row_1 (default)
+
+        Args:
+            df: DataFrame con le righe da confrontare
+            idx_1: indice prima riga
+            idx_2: indice seconda riga
+            key_cols: lista colonne chiave (per compatibilità, non usato)
+
+        Returns:
+            idx_to_drop: indice della riga da scartare
+        """
+        idx_to_drop = idx_2  # Default: tieni row_1
+        row_1 = df.loc[idx_1]
+        row_2 = df.loc[idx_2]
+
+        # Colonne biomarker plasma
+        plasma_biomarkers = [
+            "AB40_PL", "AB42_PL", "AB4240_PL",
+            "PT181_PL", "PT217_PL", "nPT217_PL", "PT217_nPT217_PL",
+            "TTAU_PL", "NFL_PL", "GFAP", "ALPHASYN"
+        ]
+
+        # Conta valori non-NaN per ogni riga (solo colonne presenti)
+        cols_presenti = [c for c in plasma_biomarkers if c in df.columns]
+
+        count_1 = row_1[cols_presenti].notna().sum()
+        count_2 = row_2[cols_presenti].notna().sum()
+
+        if count_2 > count_1:
+            idx_to_drop = idx_1  # row_2 più completa → scarta row_1
+        # Se count_1 >= count_2 → tieni row_1 (default)
+
+        return idx_to_drop
+
+
     def _get_previous_row(self, df, idx_1, rid, examdate):
         """
         Trova la riga precedente con stesso RID e EXAMDATE inferiore.
@@ -1217,7 +1341,7 @@ class MergerTools:
         return check_1, check_2
 
 
-    def scale_unification_criteria(self, df, idx_1, idx_2, check_cols, category):
+    def update_stamp_unification_criteria(self, df, idx_1, idx_2, check_cols, category):
         """
         Determina quale riga droppare tra due righe duplicate.
         
@@ -1266,7 +1390,7 @@ class MergerTools:
             both_missing = stamp_1_missing and stamp_2_missing
             both_equal = (not stamp_1_missing) and (not stamp_2_missing) and (stamp_1 == stamp_2)
             
-            if both_missing or both_equal:
+            if (both_missing or both_equal) and category == 'scale':
                 # === CRITERIO 2: CONFRONTO TREND ===
                 rid = row_1['RID']
                 examdate = row_1['EXAMDATE']
@@ -1278,6 +1402,14 @@ class MergerTools:
                     
                     if sum(check_1) < sum(check_2):
                         idx_to_drop = idx_1
+            elif category == 'csf':
+                # Conta i NaN nelle colonne check_cols per entrambe le righe
+                nan_count_1 = row_1[check_cols].isna().sum()
+                nan_count_2 = row_2[check_cols].isna().sum()
+
+                # Droppa la riga con più NaN
+                if nan_count_1 > nan_count_2:
+                    idx_to_drop = idx_1
                 
             elif stamp_1_missing:
                 idx_to_drop = idx_1
@@ -1287,6 +1419,679 @@ class MergerTools:
                 idx_to_drop = idx_1
 
         return idx_to_drop
+
+
+    def audit_conflicts(self, df1, df2, keys=['RID', 'EXAMDATE'], vars_to_check=None):
+        """
+        Report dettagliato PRIMA di fare merge
+        """
+        merged = df1.merge(df2, on=keys, suffixes=('_1', '_2'), how='inner')
+        
+        report = []
+        for var in vars_to_check:
+            v1, v2 = f'{var}_1', f'{var}_2'
+            if v1 in merged.columns and v2 in merged.columns:
+                conflicts = merged[(merged[v1] != merged[v2]) & 
+                                merged[v1].notna() & 
+                                merged[v2].notna()]
+                
+                if len(conflicts) > 0:
+                    report.append({
+                        'var': var,
+                        'n_conflicts': len(conflicts),
+                        'examples': conflicts[['RID', 'EXAMDATE', v1, v2]].head(5).to_dict('records')
+                    })
+        
+        return report
+
+
+    def get_merged_df_cofactor(self, df1: pd.DataFrame, df2: pd.DataFrame, log_path: str = 'cofactor_merge_log.json') -> pd.DataFrame:
+        """
+        Merge specifico per cofactor. df1 ha sempre precedenza.
+        
+        Args:
+            df1: DataFrame primario (precedenza)
+            df2: DataFrame secondario
+            log_path: Path per il log JSON
+            
+        Returns:
+            DataFrame merged con conflitti risolti
+        """
+        print(f'### Merging cofactor')
+        print(f'    df1: {len(df1)} rows, \n    df2: {len(df2)} rows')
+        
+       # 1. Merge e sort iniziale
+        # Auto-detect: se EXAMDATE manca in uno dei df, merge solo su RID
+        if 'EXAMDATE' in df1.columns and 'EXAMDATE' in df2.columns:
+            merge_keys = ['RID', 'EXAMDATE']
+        else:
+            merge_keys = ['RID']
+            print('Merge only on RID')
+
+        df = pd.merge(df1, df2, on=merge_keys, how='outer', suffixes=('_1', '_2'))
+
+        if 'EXAMDATE' in df.columns:
+            df = df.sort_values(['RID', 'EXAMDATE']).reset_index(drop=True)
+        else:
+            df = df.sort_values(['RID']).reset_index(drop=True)
+        print(f'    Merged: {len(df)} rows')
+        
+        log = {'conflicts': [], 'warnings': []}
+        
+        # 2. Identifica colonne duplicate
+        vars_duplicated = {col[:-2] for col in df.columns if col.endswith('_1')}
+        
+        # 3. Risolvi gruppi dummy IMMUTABILI (logica a livello RID)
+        for group_name, group_cols in self.COFACTOR_CONFIG['dummy_groups_immutable'].items():
+            group_in_merge = [c for c in group_cols if c in vars_duplicated]
+            if group_in_merge:
+                df, group_conflicts = self._resolve_dummy_group_immutable(df, group_name, group_cols)
+                if group_conflicts:
+                    log['conflicts'].extend(group_conflicts)
+                vars_duplicated -= set(group_cols)
+        
+        # 4. Risolvi gruppi dummy MUTABILI (logica a livello riga)
+        for group_name, group_cols in self.COFACTOR_CONFIG['dummy_groups_mutable'].items():
+            group_in_merge = [c for c in group_cols if c in vars_duplicated]
+            if group_in_merge:
+                df, group_conflicts = self._resolve_dummy_group_mutable(df, group_name, group_cols)
+                if group_conflicts:
+                    log['conflicts'].extend(group_conflicts)
+                vars_duplicated -= set(group_cols)
+        
+        # 5. Risolvi MARRY (logica speciale: sorgente a livello RID + forward-fill)
+        marry_cols = self.COFACTOR_CONFIG['dummy_marry']
+        marry_in_merge = [c for c in marry_cols if c in vars_duplicated]
+        if marry_in_merge:
+            df, marry_conflicts, marry_warnings = self._resolve_marry(df, marry_cols)
+            if marry_conflicts:
+                log['conflicts'].extend(marry_conflicts)
+            if marry_warnings:
+                log['warnings'].extend(marry_warnings)
+            vars_duplicated -= set(marry_cols)
+        
+        # 6. Risolvi le altre colonne duplicate
+        for var in vars_duplicated:
+            col_1, col_2 = f'{var}_1', f'{var}_2'
+            
+            if col_2 not in df.columns:
+                df[var] = df[col_1]
+                continue
+            
+            if var in self._resolvers:
+                df, var_conflicts = self._resolvers[var](df, var, col_1, col_2)
+            elif var in self.COFACTOR_CONFIG['immutable']:
+                df, var_conflicts = self._resolve_immutable(df, var, col_1, col_2)
+            else:
+                df, var_conflicts = self._resolve_default(df, var, col_1, col_2)
+            
+            if var_conflicts:
+                log['conflicts'].extend(var_conflicts)
+        
+        # 7. Propaga immutabili single_df
+        df = self._propagate_all_immutables(df)
+
+        # 8. Forward-fill colonne specifiche (EDUCAT)
+        df = self._forward_fill_columns(df)
+
+        # 9. Valida dummy
+        df, dummy_warnings = self._validate_dummies(df)
+        log['warnings'].extend(dummy_warnings)
+        
+        # 10. Cleanup
+        df = df.drop(columns=[c for c in df.columns if c.endswith(('_1', '_2'))], errors='ignore')
+        print(f'    Final: {len(df)} rows')
+
+        # 11. Salva log
+        self._save_log(log, log_path)
+        
+        return df
+    
+    # ==========================================================================
+    # RESOLVER GRUPPI DUMMY
+    # ==========================================================================
+    
+    def _resolve_dummy_group_immutable(self, df: pd.DataFrame, group_name: str, group_cols: List[str]) -> Tuple[pd.DataFrame, List[Dict]]:
+        """
+        Risolve un gruppo dummy IMMUTABILE a livello RID.
+        
+        Logica:
+        1. df1 ha almeno un True E coerente su tutte le visite → usa df1
+        2. df1 non coerente, ma df2 coerente → usa df2
+        3. Entrambi inconsistenti → moda df1
+        
+        Il valore scelto viene propagato a TUTTE le righe del RID.
+        """
+        conflicts = []
+        
+        cols_1 = [f'{c}_1' for c in group_cols if f'{c}_1' in df.columns]
+        cols_2 = [f'{c}_2' for c in group_cols if f'{c}_2' in df.columns]
+        
+        if not cols_1 and not cols_2:
+            for col in group_cols:
+                df[col] = 0
+            return df, conflicts
+        
+        # Inizializza colonne output
+        for col in group_cols:
+            df[col] = 0
+        
+        # Processa per RID
+        for rid in df['RID'].unique():
+            mask_rid = df['RID'] == rid
+            df_rid = df.loc[mask_rid]
+            
+            pattern_1 = self._get_dummy_pattern(df_rid, cols_1, group_cols)
+            pattern_2 = self._get_dummy_pattern(df_rid, cols_2, group_cols)
+            
+            consistent_1, value_1 = self._check_consistency(pattern_1)
+            consistent_2, value_2 = self._check_consistency(pattern_2)
+            
+            final_value = None
+            decision = None
+            
+            if consistent_1 and value_1 is not None:
+                final_value = value_1
+                decision = 'used_df1'
+                
+                if consistent_2 and value_2 is not None and value_2 != value_1:
+                    conflicts.append({
+                        'variable': group_name,
+                        'type': 'cross_validation_mismatch',
+                        'RID': int(rid),
+                        'df1_value': value_1,
+                        'df2_value': value_2,
+                        'decision': decision
+                    })
+                    
+            elif consistent_2 and value_2 is not None:
+                final_value = value_2
+                decision = 'used_df2_fallback'
+                
+                if not consistent_1 and any(v is not None for v in pattern_1):
+                    conflicts.append({
+                        'variable': group_name,
+                        'type': 'df1_inconsistent',
+                        'RID': int(rid),
+                        'df1_values': list(set(v for v in pattern_1 if v is not None)),
+                        'decision': decision
+                    })
+                    
+            elif any(v is not None for v in pattern_1):
+                final_value = self._get_mode(pattern_1)
+                decision = 'used_df1_mode'
+                
+                conflicts.append({
+                    'variable': group_name,
+                    'type': 'both_inconsistent_or_df2_empty',
+                    'RID': int(rid),
+                    'df1_values': list(set(v for v in pattern_1 if v is not None)),
+                    'decision': decision
+                })
+                
+            elif any(v is not None for v in pattern_2):
+                final_value = value_2 if consistent_2 else self._get_mode(pattern_2)
+                decision = 'used_df2_only_source'
+            
+            if final_value is not None:
+                df.loc[mask_rid, final_value] = 1
+        
+        return df, conflicts
+    
+    def _resolve_dummy_group_mutable(self, df: pd.DataFrame, group_name: str, group_cols: List[str]) -> Tuple[pd.DataFrame, List[Dict]]:
+        """
+        Risolve un gruppo dummy MUTABILE a livello riga.
+        
+        Logica (per ogni riga):
+        - df1 ha almeno un True → usa tutto da df1
+        - df1 non ha True ma df2 sì → usa tutto da df2
+        - Nessuno ha True → tutto 0
+        """
+        conflicts = []
+        
+        cols_1 = [f'{c}_1' for c in group_cols if f'{c}_1' in df.columns]
+        cols_2 = [f'{c}_2' for c in group_cols if f'{c}_2' in df.columns]
+        
+        if not cols_1 and not cols_2:
+            for col in group_cols:
+                df[col] = 0
+            return df, conflicts
+        
+        if cols_1:
+            df1_has_value = df[cols_1].fillna(0).any(axis=1)
+        else:
+            df1_has_value = pd.Series(False, index=df.index)
+            
+        if cols_2:
+            df2_has_value = df[cols_2].fillna(0).any(axis=1)
+        else:
+            df2_has_value = pd.Series(False, index=df.index)
+        
+        use_df1 = df1_has_value
+        use_df2 = ~df1_has_value & df2_has_value
+        
+        # Log conflitti
+        both_have = df1_has_value & df2_has_value
+        if both_have.any():
+            differs = pd.Series(False, index=df.index)
+            for col in group_cols:
+                col_1, col_2 = f'{col}_1', f'{col}_2'
+                if col_1 in df.columns and col_2 in df.columns:
+                    col_diff = (df[col_1].fillna(0) != df[col_2].fillna(0)) & both_have
+                    differs |= col_diff
+            
+            if differs.any():
+                conflicts.append({
+                    'variable': group_name,
+                    'type': 'row_mismatch_used_df1',
+                    'n_conflicts': int(differs.sum()),
+                    'sample_RIDs': df.loc[differs, 'RID'].head(5).tolist()
+                })
+        
+        for col in group_cols:
+            col_1, col_2 = f'{col}_1', f'{col}_2'
+            df[col] = 0
+            
+            if col_1 in df.columns:
+                df.loc[use_df1, col] = df.loc[use_df1, col_1].fillna(0)
+            
+            if col_2 in df.columns:
+                df.loc[use_df2, col] = df.loc[use_df2, col_2].fillna(0)
+        
+        return df, conflicts
+    
+    def _resolve_marry(self, df: pd.DataFrame, marry_cols: List[str]) -> Tuple[pd.DataFrame, List[Dict], List[Dict]]:
+        """
+        Risolve MARRY con logica speciale:
+        - Sorgente scelta a livello RID (df1 ha precedenza)
+        - Forward-fill all'interno del RID
+        
+        Logica per RID:
+        - df1 ha almeno un valore MARRY → usa SOLO df1 + forward-fill
+        - df1 non ha valori MARRY → usa df2 + forward-fill
+        """
+        conflicts = []
+        warnings = []
+        
+        cols_1 = [f'{c}_1' for c in marry_cols if f'{c}_1' in df.columns]
+        cols_2 = [f'{c}_2' for c in marry_cols if f'{c}_2' in df.columns]
+        
+        if not cols_1 and not cols_2:
+            for col in marry_cols:
+                df[col] = 0
+            return df, conflicts, warnings
+        
+        # Inizializza colonne output
+        for col in marry_cols:
+            df[col] = 0
+        
+        # Assicura ordinamento per forward-fill
+        df = df.sort_values(['RID', 'EXAMDATE']).reset_index(drop=True)
+        
+        # Determina per ogni RID quale sorgente usare
+        rids_use_df1 = set()
+        rids_use_df2 = set()
+        rids_no_data = set()
+        
+        for rid in df['RID'].unique():
+            mask_rid = df['RID'] == rid
+            
+            # df1 ha almeno un True per questo RID?
+            if cols_1:
+                df1_has_any = df.loc[mask_rid, cols_1].fillna(0).any().any()
+            else:
+                df1_has_any = False
+            
+            # df2 ha almeno un True per questo RID?
+            if cols_2:
+                df2_has_any = df.loc[mask_rid, cols_2].fillna(0).any().any()
+            else:
+                df2_has_any = False
+            
+            if df1_has_any:
+                rids_use_df1.add(rid)
+            elif df2_has_any:
+                rids_use_df2.add(rid)
+            else:
+                rids_no_data.add(rid)
+        
+        # Log conflitti (RID dove entrambi hanno dati ma si usa df1)
+        rids_both_have = rids_use_df1 & {rid for rid in df['RID'].unique() 
+                                          if cols_2 and df.loc[df['RID'] == rid, cols_2].fillna(0).any().any()}
+        if rids_both_have:
+            conflicts.append({
+                'variable': 'MARRY',
+                'type': 'source_precedence_df1',
+                'n_rids': len(rids_both_have),
+                'sample_RIDs': list(rids_both_have)[:5],
+                'note': 'df2 values ignored for these RIDs'
+            })
+        
+        # Copia valori dalla sorgente corretta
+        for rid in rids_use_df1:
+            mask_rid = df['RID'] == rid
+            for col in marry_cols:
+                col_1 = f'{col}_1'
+                if col_1 in df.columns:
+                    df.loc[mask_rid, col] = df.loc[mask_rid, col_1].fillna(0)
+        
+        for rid in rids_use_df2:
+            mask_rid = df['RID'] == rid
+            for col in marry_cols:
+                col_2 = f'{col}_2'
+                if col_2 in df.columns:
+                    df.loc[mask_rid, col] = df.loc[mask_rid, col_2].fillna(0)
+        
+        # Forward-fill per RID
+        for col in marry_cols:
+            # Converti 0 a NaN per permettere ffill corretto, poi ripristina
+            df[col] = df[col].replace(0, np.nan)
+            df[col] = df.groupby('RID')[col].ffill()
+            df[col] = df[col].fillna(0)
+        
+        # Warning per RID senza dati MARRY
+        if rids_no_data:
+            warnings.append({
+                'type': 'missing_marry_no_source',
+                'n_rids': len(rids_no_data),
+                'sample_RIDs': list(rids_no_data)[:5]
+            })
+        
+        # Warning per righe senza MARRY dopo ffill (prime visite senza dato)
+        marry_any = df[marry_cols].any(axis=1)
+        missing_rows = ~marry_any
+        if missing_rows.any():
+            rids_with_missing = df.loc[missing_rows, 'RID'].unique()
+            # Escludi RID senza dati (già loggati sopra)
+            rids_with_partial = [r for r in rids_with_missing if r not in rids_no_data]
+            if rids_with_partial:
+                warnings.append({
+                    'type': 'missing_marry_early_visits',
+                    'n_rows': int(missing_rows.sum()),
+                    'n_rids': len(rids_with_partial),
+                    'sample_RIDs': rids_with_partial[:5],
+                    'note': 'Visits before first MARRY value in source df'
+                })
+        
+        return df, conflicts, warnings
+    
+    # ==========================================================================
+    # HELPER PER DUMMY IMMUTABILI
+    # ==========================================================================
+    
+    def _get_dummy_pattern(self, df_rid: pd.DataFrame, source_cols: List[str], group_cols: List[str]) -> List[Any]:
+        """
+        Estrae il pattern dummy per un RID: quale colonna è True per ogni riga.
+        """
+        pattern = []
+        
+        for idx in df_rid.index:
+            value = None
+            for src_col, orig_col in zip(source_cols, group_cols):
+                if src_col in df_rid.columns:
+                    cell = df_rid.loc[idx, src_col]
+                    if pd.notna(cell) and (cell == 1 or cell == True):
+                        value = orig_col
+                        break
+            pattern.append(value)
+        
+        return pattern
+    
+    def _check_consistency(self, pattern: List[Any]) -> Tuple[bool, Any]:
+        """Verifica se un pattern è coerente (tutti i valori non-null sono uguali)."""
+        non_null = [v for v in pattern if v is not None]
+        
+        if not non_null:
+            return True, None
+        
+        unique_values = set(non_null)
+        
+        if len(unique_values) == 1:
+            return True, non_null[0]
+        else:
+            return False, None
+    
+    def _get_mode(self, pattern: List[Any]) -> Any:
+        """Ritorna il valore più frequente (moda) del pattern."""
+        non_null = [v for v in pattern if v is not None]
+        
+        if not non_null:
+            return None
+        
+        from collections import Counter
+        counts = Counter(non_null)
+        return counts.most_common(1)[0][0]
+    
+    # ==========================================================================
+    # RESOLVER CUSTOM
+    # ==========================================================================
+    
+    def _resolve_cohort(self, df: pd.DataFrame, var: str, col_1: str, col_2: str) -> Tuple[pd.DataFrame, List[Dict]]:
+        """
+        COHORT: quando entrambi presenti, usa il più alto in gerarchia.
+        """
+        conflicts = []
+        df[var] = df[col_1].combine_first(df[col_2])
+        
+        mask_both = df[col_1].notna() & df[col_2].notna()
+        mask_differ = mask_both & (df[col_1] != df[col_2])
+        
+        if mask_differ.any():
+            hierarchy_map = {v: i for i, v in enumerate(self.COHORT_GERARCHIA)}
+            
+            v1_rank = df.loc[mask_differ, col_1].map(lambda x: hierarchy_map.get(x, -1))
+            v2_rank = df.loc[mask_differ, col_2].map(lambda x: hierarchy_map.get(x, -1))
+            
+            use_v2 = (v2_rank > v1_rank)
+            
+            mask_use_v2 = mask_differ.copy()
+            mask_use_v2.loc[mask_differ] = use_v2
+            df.loc[mask_use_v2, var] = df.loc[mask_use_v2, col_2]
+        
+        return df, conflicts
+    
+    def _resolve_age(self, df: pd.DataFrame, var: str, col_1: str, col_2: str) -> Tuple[pd.DataFrame, List[Dict]]:
+        """AGE: se differenza <= 0.5 anni → media, altrimenti df1."""
+        conflicts = []
+        df[var] = df[col_1].combine_first(df[col_2])
+        
+        mask_both = df[col_1].notna() & df[col_2].notna()
+        
+        if mask_both.any():
+            v1 = df.loc[mask_both, col_1]
+            v2 = df.loc[mask_both, col_2]
+            diff = (v1 - v2).abs()
+            
+            avg_mask = mask_both.copy()
+            avg_mask.loc[mask_both] = diff <= 0.5
+            df.loc[avg_mask, var] = ((df.loc[avg_mask, col_1] + df.loc[avg_mask, col_2]) / 2).round(1)
+            
+            conflict_mask = mask_both & ~avg_mask
+            if conflict_mask.any():
+                conflicts.append({
+                    'variable': var,
+                    'type': 'large_diff_used_df1',
+                    'threshold': 0.5,
+                    'n_conflicts': int(conflict_mask.sum()),
+                    'sample_RIDs': df.loc[conflict_mask, 'RID'].head(5).tolist()
+                })
+        
+        return df, conflicts
+    
+    # ==========================================================================
+    # RESOLVER STANDARD
+    # ==========================================================================
+    
+    def _resolve_immutable(self, df: pd.DataFrame, var: str, col_1: str, col_2: str) -> Tuple[pd.DataFrame, List[Dict]]:
+        """Immutabile: valore unico per RID."""
+        conflicts = []
+        
+        def resolve_group(g: pd.DataFrame) -> pd.Series:
+            v1 = g[col_1].dropna()
+            v2 = g[col_2].dropna()
+            
+            u1, u2 = v1.unique(), v2.unique()
+            cons1, cons2 = len(u1) <= 1, len(u2) <= 1
+            
+            if cons1 and len(u1) == 1:
+                value = u1[0]
+            elif cons2 and len(u2) == 1:
+                value = u2[0]
+            elif len(v1) > 0:
+                value = v1.mode().iloc[0]
+            elif len(v2) > 0:
+                value = v2.mode().iloc[0] if not cons2 else u2[0]
+            else:
+                value = np.nan
+            
+            return pd.Series(value, index=g.index)
+        
+        df[var] = df.groupby('RID', group_keys=False).apply(resolve_group)
+        
+        rid_stats = df.groupby('RID').agg({
+            col_1: lambda x: x.dropna().nunique(),
+            col_2: lambda x: x.dropna().nunique()
+        }).rename(columns={col_1: 'n_unique_1', col_2: 'n_unique_2'})
+        
+        inconsistent_rids = rid_stats[(rid_stats['n_unique_1'] > 1) | (rid_stats['n_unique_2'] > 1)]
+        if len(inconsistent_rids) > 0:
+            conflicts.append({
+                'variable': var,
+                'type': 'within_rid_inconsistency',
+                'n_rids_affected': len(inconsistent_rids),
+                'sample_RIDs': inconsistent_rids.index[:5].tolist()
+            })
+        
+        return df, conflicts
+    
+    def _resolve_default(self, df: pd.DataFrame, var: str, col_1: str, col_2: str) -> Tuple[pd.DataFrame, List[Dict]]:
+        """Default: coalesce (df1 prioritario) con logging conflitti."""
+        conflicts = []
+        df[var] = df[col_1].combine_first(df[col_2])
+        
+        mask = df[col_1].notna() & df[col_2].notna() & (df[col_1] != df[col_2])
+        if mask.any():
+            conflicts.append({
+                'variable': var,
+                'type': 'value_mismatch_used_df1',
+                'n_conflicts': int(mask.sum()),
+                'sample_RIDs': df.loc[mask, 'RID'].head(5).tolist()
+            })
+        
+        return df, conflicts
+    
+    # ==========================================================================
+    # POST-PROCESSING
+    # ==========================================================================
+    
+    def _forward_fill_columns(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Forward-fill per colonne specifiche (es. EDUCAT)."""
+        cols = [c for c in self.COFACTOR_CONFIG.get('forward_fill_cols', []) if c in df.columns]
+        
+        if cols:
+            df = df.sort_values(['RID', 'EXAMDATE'])
+            for col in cols:
+                df[col] = df.groupby('RID')[col].ffill()
+        
+        return df
+
+
+    def _propagate_all_immutables(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Propaga TUTTE le variabili immutabili a tutte le righe del RID.
+        Include: scalari immutabili, immutabili single_df, e dummy immutabili.
+        
+        Idempotente: se già propagate, non cambia nulla.
+        """
+        # Scalari immutabili
+        scalar_immutables = (
+            self.COFACTOR_CONFIG['immutable'] + 
+            self.COFACTOR_CONFIG['immutable_single_df']
+        )
+        
+        for col in scalar_immutables:
+            if col in df.columns:
+                df[col] = df.groupby('RID')[col].transform(
+                    lambda x: x.dropna().iloc[0] if x.notna().any() else np.nan
+                )
+        
+        # Dummy immutabili
+        for group_cols in self.COFACTOR_CONFIG['dummy_groups_immutable'].values():
+            for col in group_cols:
+                if col in df.columns:
+                    df[col] = df.groupby('RID')[col].transform(
+                        lambda x: x.dropna().iloc[0] if x.notna().any() else np.nan
+                    )
+        
+        return df
+    
+    def _validate_dummies(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, List[Dict]]:
+        """Valida che ogni gruppo dummy abbia max 1 True per riga."""
+        warnings = []
+        
+        for group_name, cols in self._all_dummy_groups.items():
+            existing = [c for c in cols if c in df.columns]
+            if len(existing) < 2:
+                continue
+            
+            true_count = df[existing].sum(axis=1)
+            violations = true_count > 1
+            
+            if violations.any():
+                warnings.append({
+                    'type': 'dummy_violation',
+                    'group': group_name,
+                    'n_violations': int(violations.sum()),
+                    'fixed': self.fix_dummy_violations,
+                    'sample_RIDs': df.loc[violations, 'RID'].unique()[:5].tolist()
+                })
+                
+                if self.fix_dummy_violations:
+                    for idx in df.index[violations]:
+                        first_true = None
+                        for col in existing:
+                            if df.loc[idx, col] == 1 or df.loc[idx, col] == True:
+                                if first_true is None:
+                                    first_true = col
+                                else:
+                                    df.loc[idx, col] = 0
+        
+        return df, warnings
+    
+    # ==========================================================================
+    # UTILITIES
+    # ==========================================================================
+    
+    def _save_log(self, log: Dict[str, Any], log_path: str) -> None:
+        """Salva log con summary."""
+        summary = {
+            'n_conflicts': len(log.get('conflicts', [])),
+            'n_warnings': len(log.get('warnings', [])),
+            'total_issues': sum(
+                item.get('n_conflicts', 0) or item.get('n_violations', 0) or item.get('n_rows', 0) or item.get('n_rids', 0) or 0
+                for item in log.get('conflicts', []) + log.get('warnings', [])
+            )
+        }
+        
+        output = {'summary': summary, 'details': log}
+        
+        with open(log_path, 'w') as f:
+            json.dump(output, f, indent=2, default=str)
+        
+        print(f'    Log: {summary["n_conflicts"]} conflict types, {summary["n_warnings"]} warning types')
+    
+    @staticmethod
+    def _to_serializable(value: Any) -> Any:
+        """Converte valori numpy/pandas in tipi Python nativi per JSON."""
+        if pd.isna(value):
+            return None
+        if isinstance(value, (np.integer, np.floating)):
+            return value.item()
+        if isinstance(value, np.ndarray):
+            return value.tolist()
+        return value
+
+
 
 ################################################# OLD FUNCTIONS #################################################
     def get_merged_col_reference(self, col1, col2, diff_idx, col_name, subject_id):
