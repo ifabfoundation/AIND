@@ -1473,6 +1473,9 @@ class DataCleaner:
         
         # copia la lista di variabili da rendere booleane
         col_list_new = col_list.copy()
+
+        # Dizionario per salvare le maschere NaN di ogni colonna
+        nan_masks = {}  
         
         if col_list_new:
             for col in col_list_new:
@@ -1484,6 +1487,8 @@ class DataCleaner:
                     print(f"La colonna '{col}' ha valori non validi: {invalid_values}. I valori validi sono: {ranges[col]}")
                     continue  # Salta questa colonna se ha valori non validi
                 else:
+                    # Salva la maschera dei NaN PRIMA delle trasformazioni
+                    nan_masks[col] = df[col].isna().copy()
                     # Per ogni colonna in col_list, se col presente nel df
                     # trasforma i valori in interi se sono float o stringhe numeriche
                     df[col] = df[col].apply(
@@ -1498,6 +1503,13 @@ class DataCleaner:
             df = pd.get_dummies(df, columns=col_list_new, prefix=col_list_new, prefix_sep=prefix_step)
             # Trova le nuove colonne dummies create
             new_columns = [col for col in df.columns if col not in original_columns]
+
+            # Reimposta i NaN nelle colonne dummy corrispondenti
+            for col, nan_mask in nan_masks.items():
+                # Trova tutte le colonne dummy che iniziano con il prefisso della colonna originale
+                dummy_cols_for_this = [c for c in new_columns if c.startswith(col + prefix_step)]
+                for dummy_col in dummy_cols_for_this:
+                    df.loc[nan_mask, dummy_col] = np.nan
         else:
             new_columns = []
         return df, new_columns

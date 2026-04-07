@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(copy \"C:\\Users\\RaimondoReggio\\OneDrive - Net Service S.p.A\\Desktop\\GitHub\\AIND\\WP-2\\Data_cleaning\\post-generation\\reverse_from_local.py\" \"C:\\Users\\RaimondoReggio\\Desktop\\reverse-transformations\\reverse_from_local.py\")"
-    ],
-    "deny": [],
-    "ask": []
-  }
-}
