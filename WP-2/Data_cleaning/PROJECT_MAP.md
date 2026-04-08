@@ -165,3 +165,37 @@ cleaning1.ipynb → [file cleaned_1] → cleaning4.ipynb → [file cleaned_4]
 - add_noise_nb.py → non è chiaro se è ancora usato o è una bozza superata da add_noise.py, verificare se eliminabile
 - .dl_client.ini → non era nella lista originale del PROJECT_MAP, contiene credenziali del datalake — verificare che sia nel .gitignore e NON venga mai committato su GitHub
 - reverse_commands.txt → non era descritto nel PROJECT_MAP originale, aggiungere come file di riferimento rapido comandi
+- scan_imports.ipynb → notebook temporaneo creato per audit importi, eliminare prima del merge finale su main
+
+
+## Dipendenze esterne
+
+### Manipolazione dati
+- pandas      → manipolazione e analisi dataframe
+- numpy       → calcolo numerico
+- dateutil    → calcolo date relative (relativedelta)
+
+### Visualizzazione (usata nei notebook di analisi)
+- matplotlib    → grafici base e patch (Patch)
+- seaborn       → grafici statistici
+
+### Statistica avanzata e ML
+- statsmodels   → statistiche inter-rater (aggregate_raters), modelli sm
+- pingouin      → statistiche avanzate (pg) — NUOVA, non era nei .py
+- scipy       → statistiche avanzate (ks_2samp, stats, pearsonr, norm, t ai moduli usati)
+- scikit-learn → KNN per Residual-PAR, preprocessing
+               (NearestNeighbors, QuantileTransformer, StandardScaler)
+
+### Dati sintetici (solo post-generation)
+- sdv         → generazione dati sintetici (PARSynthesizer)
+                verificare se strettamente necessario o opzionale
+
+### Dipendenze specifiche post-generation
+- dl_client   → client proprietario per accesso al datalake
+                NON su PyPI — da installare separatamente
+                richiede configurazione tramite .dl_client.ini
+
+### Librerie standard Python (non da installare)
+- os, sys, json, re, datetime, argparse,
+  pathlib, typing, warnings, stat, string,
+  itertools
