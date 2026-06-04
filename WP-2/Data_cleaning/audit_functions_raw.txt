@@ -1,0 +1,250 @@
+=== ./automated_merge.py ===
+137:def identify_dataset_type(df_name: str) -> str | None:
+153:def get_filter_column(df_name: str) -> str | None:
+173:def load_json_settings(file_path: Path) -> dict:
+179:def get_method_for_column(col_name: str, combination: dict) -> str | None:
+190:def filter_volume_settings(settings: dict, df_columns: list) -> tuple:
+204:def filter_normalization_settings(settings: dict, df_columns: list,
+236:def filter_predittori(df_columns: list) -> list:
+250:def filter_cofattori(df_columns: list, exclude: list = None) -> list:
+265:def filter_cofattori_metadata(settings: dict, df_columns: list) -> dict:
+270:def build_enriched_metadata(df: pd.DataFrame, combination: dict,
+332:def get_all_filter_values(dfs: dict, df_names: list) -> dict:
+365:def generate_all_combinations(filter_values: dict) -> list:
+396:def count_non_nan_in_volume_cols(row: pd.Series) -> int:
+402:def clean_rows_with_nan_examdate(df: pd.DataFrame, min_valid_cols: int = 3,
+458:def count_nan_in_volume_cols(row: pd.Series) -> int:
+464:def compare_rows_for_selection(row1: pd.Series, row2: pd.Series) -> int:
+513:def select_best_from_group(df_group: pd.DataFrame) -> int:
+531:def remove_duplicates_volumes(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
+592:def deduplicate_final(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
+637:def check_match_cardinality(matches: dict, verbose: bool = False) -> tuple:
+669:def reduce_matches_to_one_to_one(df: pd.DataFrame, matches: dict,
+694:def filter_buffer_matches_to_merge(df_base: pd.DataFrame, df_add: pd.DataFrame,
+730:def align_dates_for_buffer(df_base: pd.DataFrame, df_add: pd.DataFrame,
+749:def merge_datasets(df_base: pd.DataFrame, df_add: pd.DataFrame,
+796:def merge_single_pair(df_base: pd.DataFrame, df_add: pd.DataFrame,
+909:def apply_filter_for_combination(df: pd.DataFrame, ds_name: str,
+935:def run_incremental_merge(dfs: dict, combination: dict,
+987:def compute_merge_statistics(df: pd.DataFrame, file_code: str,
+1044:def save_statistics_csv(all_stats: list, output_file: Path = STATS_OUTPUT_FILE) -> Path:
+1070:def combination_to_filename(combination: dict) -> str:
+1083:def combination_to_file_code(combination: dict) -> str:
+1096:def save_merged_result(df: pd.DataFrame, combination: dict,
+1127:def run_all_combinations(dfs: dict, client: DatalakeClient,
+1247:def load_datasets_from_datalake(client: DatalakeClient,
+1289:def main():
+
+=== ./data_model/DataCleaner.py ===
+12:def load_cutoffs(path: str) -> dict:
+21:def deep_update(base: dict, override: dict) -> dict:
+29:def get_cutoff_from_dict(cutoffs: dict, parameter: str, method: str, default=np.nan):
+34:def update_variables_support_file(df, support_file, file_code, variable_col='variable_code'):
+141:    def __init__(self, support_file_path=None, support_file=pd.DataFrame()):
+150:    def update_self_support_file(self, support_file):
+154:    def get_file_code_metadata(self, file_name, prefix='raw'):
+163:    def filter_variables(self, df, file_name, new_var=[], remove_var=[], prefix='raw'):
+187:    def segmentation_complete_filter(self, df, filter_col='STATUS'):
+199:    def convert_qcpass_values(self, df, col_name='QCPASS'):
+210:    def volume_quality_filter(self,df):
+306:    def find_exam_code(self, df, date_column = 'EXAMDATE', viscode_reference = 'VISCODE', patient_id_column = 'RID', essential_variables: list = []):
+373:    def _handle_duplicate_dates(self, df_patient, date_column, viscode_reference, essential_variables, adopted_strategy):
+423:    def _select_by_viscode_priority(self, candidates, viscode_reference, adopted_strategy):
+438:    def _calculate_visit_month(self, df_patient, date_column, viscode_reference):
+480:    def _select_from_complete_rows(self, complete_rows, essential_variables, viscode_reference, adopted_strategy):
+505:    def _select_by_null_count_and_viscode(self, group, essential_variables, viscode_reference, adopted_strategy):
+529:    def convert_visitcode_to_int(self, value: string) -> int or string:
+554:    def handle_f_sc_values(self, df: pd.DataFrame, dataset: pd.DataFrame, column: str, patient_id_column: str='PTID') -> pd.DataFrame:
+627:    def drop_if_all_none(self, df: pd.DataFrame, columns: list) -> pd.DataFrame:
+642:    def handle_null_viscode2(self, df: pd.DataFrame, columns_to_check: list, date_column: str, visit_code_column: str='VISCODE2', patient_id_column: str='PTID') -> pd.DataFrame:
+714:    def replace_unknown_values(self, df: pd.DataFrame, new_nans: list = None) -> pd.DataFrame:
+774:    def to_date_format(self, df, col_list=[]):
+782:    def add_calculated_age(self, exam_date, birth_date=None, birth_year=None, age_bl=None, bl_date=None, visit_code=None):
+828:    def age_when_missing_bl_date(self, df, ID, ID_col, AGE_col, visit_date_col, visit_code_col):
+864:    def binarization_gender(self, df, col_name):
+891:    def categorize_marry(self, df, col_name):
+922:    def categorize_education(self, df, col_name):
+929:    def categorize_ethnicity(self, df, col_name):
+956:    def categorize_race(self, df, col_name):
+991:    def uniform_APOE_format(self, df, col_name, split='/'):
+1027:    def APOE_4_count(self, df, col_name):
+1051:    def APOE_to_dummies(self, df, col_name='APOE', prefix_step='/'):
+1064:    def convert_to_dummies_ATNC_profile(self, df, col_name):
+1118:    def convert_to_two_bit(self, df, col_name):
+1173:    def categorize_diagnosis(self, df, col_name):
+1196:    def new_variable_names(self, new_support_file_path, df, file_code):
+1251:    def remove_param_few_subjects(self, df: pd.DataFrame, file_name: str, flag_col: str='del', prefix: str = 'raw'):
+1289:    def remove_sub_1visit(self, df: pd.DataFrame, subject_id_col: str = 'RID') -> pd.DataFrame:
+1317:    def update_metadati_support(self, updated_support_file): 
+1343:    def extract_metadata_from_support(self, df, new_level, file_name=None, prefix=None, updated_support_file=None):
+1426:    def file_versions_name(self, file_name, suffix):
+1460:    def classes_to_dummies(self, df, col_list, prefix_step='/'):
+1517:    def get_normalization_settings(self, df, additional_scales=None, file_name = 'normalization_settings.json'):
+1590:    def get_volumes_total(self, df: pd.DataFrame, file_code: str) -> pd.DataFrame:
+1619:    def to_ICV_percentage(self, df: pd.DataFrame, ICV_column: str, volume_column: str) -> pd.DataFrame:         # messa direttamente dentro alla funzione transform_volumes_as_ICV_percent# Ho cambiato il nome per evitare confusione con la funzione transform_volumes_as_ICV_percent
+1624:    def transform_volumes_as_ICV_percent(self, df: pd.DataFrame, volume_list: list, file_code: str) -> pd.DataFrame:
+1638:    def get_mean_row_per_visit(self, df: pd.DataFrame) -> pd.DataFrame:
+1735:    def get_abeta_tau_ratios(self, df: pd.DataFrame, AB42='AB42_CSF', AB40='AB40_CSF', TTAU='TTAU_CSF', PT181='PT181_CSF', PT217='PT217_PL') -> pd.DataFrame:
+1759:    def handel_same_variable_different_methods(slef, df: pd.DataFrame, var1: list, var2: list, method1: str, method2: str, mapping: dict) -> pd.DataFrame:
+1855:    def ensure_method_column(self, df: pd.DataFrame, default_method: str = 'simoa') -> pd.DataFrame:
+1917:    def ensure_tau_metaroi(self, df: pd.DataFrame) -> pd.DataFrame:
+1950:    def get_ATN_profile(self, df: pd.DataFrame, cutoffs: dict):
+
+=== ./data_model/manage_excel_support_file.py ===
+9:def save_df(df_to_save, output_path):
+21:def create_new_support_file(support_file, support_file_path, new_name=None, rename_column=True):
+61:def update_new_support_file(support_file, new_support_file_name, processed_file=[]):
+114:    def __init__(self, support_file, df, file_name, prefix='raw'):
+129:    def filter_variables(self):
+155:    def find_population_variable(self):
+238:    def check_missing_values(self):  
+269:    def check_type_range_variables(self):
+304:    def get_varible_info(self, key):
+341:    def get_present_populations(self, file_code=None):
+372:    def get_subjects_and_multiplevisits(self, key):
+
+=== ./data_model/MergerTools.py ===
+82:    def __init__(self, fix_dummy_violations: bool = False):
+114:    def _filter_dict(self, full_dict, category):
+119:    def get_json_file(self, file_name):
+138:    def _convert_nan_to_none(self, obj):
+155:    def calculate_visit_month(self,df, rid_col='RID', date_col='EXAMDATE', visit_col='VISIT_MONTH'):
+192:    def filter_df_category(self, df, category):
+209:    def find_visit_matches(self,df1, df2, rid_col='RID', date_col='EXAMDATE', buffer_days=pd.Timedelta(days=0)):
+259:    def find_visit_matches(self, df1, df2, rid_col='RID', date_col='EXAMDATE', buffer_days=pd.Timedelta(days=80)):
+360:    def verify_visit_matches(self, exact_matches, buffer_matches):
+389:    def find_rid_matches(self, df1, df2, rid_col='RID'):
+411:    def list_index_visit_matches(self, matches):
+428:    def matrix_match(self,dfs, df_names, df_code, columns_list=['RID'], time_buffer=pd.Timedelta(days=0)):
+468:    def individual_match_and_missing_rows(self, df_0, dfs, df_names, columns_list=['RID'], time_buffer=pd.Timedelta(days=0)):
+503:    def date_matches_with_buffer(self, df1, df2, time_buffer=pd.Timedelta(days=0), print_info=False):
+568:    def date_matches_with_buffer_and_extra_var(self, df1, df2, extra_vars, time_buffer=pd.Timedelta(days=0), print_info=False):
+708:    def get_indexes_from_matches(self,df1, df2, matches, columns_list=['RID', 'EXAMDATE']):
+741:    def compare_matches_with_without_buffer(self, df1, df2, time_buffer, print_info=False):
+766:    def get_date_match_index(self, df1, df2, time_buffer=pd.Timedelta(days=0), print_info=False):
+774:    def get_row_different_for_col(self, df1, df2,index1,index2,columns_list):
+802:    def create_temp_merge(self, df1, df2, all_index1, all_index2, rid=None, col_list=['VISCODE', 'EXAMDATE']):
+944:    def get_merged_df(self, df1, df2, category):
+960:    def remove_duplicates_from_merged_df(self, df, category):
+997:    def _risolvi_cohort(self, valori):
+1018:    def _risolvi_viscode(self, valori):
+1068:    def _consolida_duplicati(self, df, key_cols, regole_conflitto=None, colonne_escluse=None):
+1109:    def _get_row_to_drop(self, df, row_indices, category):
+1128:    def volume_unification_criteria(self, df, idx_1, idx_2):
+1211:    def pet_unification_criteria(self, df, idx_1, idx_2, key_cols=None):
+1231:    def plasma_unification_criteria(self, df, idx_1, idx_2, key_cols=None):
+1273:    def _get_previous_row(self, df, idx_1, rid, examdate):
+1298:    def _check_trend(self, val, val_prev, trend):
+1311:    def _build_check_lists(self, row_1, row_2, row_prev, check_cols, category):
+1344:    def update_stamp_unification_criteria(self, df, idx_1, idx_2, check_cols, category):
+1424:    def audit_conflicts(self, df1, df2, keys=['RID', 'EXAMDATE'], vars_to_check=None):
+1448:    def get_merged_df_cofactor(self, df1: pd.DataFrame, df2: pd.DataFrame, log_path: str = 'cofactor_merge_log.json') -> pd.DataFrame:
+1554:    def _resolve_dummy_group_immutable(self, df: pd.DataFrame, group_name: str, group_cols: List[str]) -> Tuple[pd.DataFrame, List[Dict]]:
+1641:    def _resolve_dummy_group_mutable(self, df: pd.DataFrame, group_name: str, group_cols: List[str]) -> Tuple[pd.DataFrame, List[Dict]]:
+1703:    def _resolve_marry(self, df: pd.DataFrame, marry_cols: List[str]) -> Tuple[pd.DataFrame, List[Dict], List[Dict]]:
+1822:    def _get_dummy_pattern(self, df_rid: pd.DataFrame, source_cols: List[str], group_cols: List[str]) -> List[Any]:
+1840:    def _check_consistency(self, pattern: List[Any]) -> Tuple[bool, Any]:
+1854:    def _get_mode(self, pattern: List[Any]) -> Any:
+1869:    def _resolve_cohort(self, df: pd.DataFrame, var: str, col_1: str, col_2: str) -> Tuple[pd.DataFrame, List[Dict]]:
+1893:    def _resolve_age(self, df: pd.DataFrame, var: str, col_1: str, col_2: str) -> Tuple[pd.DataFrame, List[Dict]]:
+1925:    def _resolve_immutable(self, df: pd.DataFrame, var: str, col_1: str, col_2: str) -> Tuple[pd.DataFrame, List[Dict]]:
+1967:    def _resolve_default(self, df: pd.DataFrame, var: str, col_1: str, col_2: str) -> Tuple[pd.DataFrame, List[Dict]]:
+1987:    def _forward_fill_columns(self, df: pd.DataFrame) -> pd.DataFrame:
+1999:    def _propagate_all_immutables(self, df: pd.DataFrame) -> pd.DataFrame:
+2028:    def _validate_dummies(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, List[Dict]]:
+2065:    def _save_log(self, log: Dict[str, Any], log_path: str) -> None:
+2084:    def _to_serializable(value: Any) -> Any:
+2097:    def get_merged_col_reference(self, col1, col2, diff_idx, col_name, subject_id):
+2146:    def check_trend_and_range(self, col1, col2, mean_col, trend, min_val, max_val):
+2162:    def get_merged_float_range_and_trend(self, col1, col2, mean_col, merged_col, in_trend, trend, min_val, max_val, idx, col_name):
+2290:    def get_merged_columns_float(self, col1, col2, diff_idx, col_name, param_type, param_ref, method=None, status1=None, status2=None, rid=None):
+2446:    def merge_paired_rows_rid_specific(self, df1, df2, index1, index2, ref_col, subject_id):
+
+=== ./post-generation/__init__.py ===
+
+=== ./post-generation/add_noise.py ===
+22:def build_sequential_metadata(
+40:def ensure_monotone_per_id(df: pd.DataFrame, id_col: str, time_col: str) -> pd.DataFrame:
+46:    def _fix_group(g):
+57:def align_real_and_leaspy(
+109:def compute_residuals(
+135:def train_par_on_residuals(
+168:def correct_leaspy_with_synthetic_residuals(
+213:def quantile_map_to_real(
+250:def ks_by_feature(
+267:def dcr_distance_to_closest_record(
+290:def residual_par_pipeline(
+
+=== ./post-generation/add_noise_nb.py ===
+40:def ensure_monotone_per_id(df: pd.DataFrame, id_col: str, time_col: str) -> pd.DataFrame:
+44:    def _fix(g: pd.DataFrame) -> pd.DataFrame:
+58:def snapshot_baseline(
+68:def knn_match_by_baseline_feats(
+104:def resample_to_times_numeric(
+126:def build_residual_dataset_knn(
+191:def train_par_on_residuals_no_context(
+218:def nearest_merge_by_id(
+255:def correct_leaspy_with_par_residuals(
+299:def ks_by_feature(real_df: pd.DataFrame, synth_df: pd.DataFrame, feature_cols: List[str]) -> Dict[str, float]:
+310:def dcr_distance_to_closest_record(
+
+=== ./post-generation/denormalize.py ===
+13:def _round_increasing(value):
+26:def _round_inverse(value):
+42:def denormalize_fixed_scale(df, columns, min_max_scales):
+99:def denormalize_dataset_minmax(df, columns, min_max_values):
+136:def denormalize_dataset_volumes(df, columns, normalization_values):
+180:def load_normalization_settings(filepath):
+
+=== ./post-generation/dummy_to_categorical.py ===
+13:def dummies_to_categorical(df, dummy_prefix, separator='_', drop_dummies=True,
+69:    def get_category(row):
+95:def multiple_dummies_to_categorical(df, dummy_configs, separator='_', drop_dummies=True):
+149:def auto_detect_dummies(df, separator='_'):
+193:def label_decode(df, column, label_mapping, inplace=False):
+231:def binary_to_categorical(df, column, mapping, inplace=False):
+
+=== ./post-generation/inject_missing_values.py ===
+25:def inject_missing_longitudinal(df_synth, df_real, target_columns=None, id_col='ID', time_col='TIME'):
+145:def inject_missing_pipeline(file_code_real,
+274:def main():
+
+=== ./post-generation/noise_injection.py ===
+48:    def __init__(self, epsilon: float = 1.0, delta: float = 1e-5):
+62:    def compute_sensitivity(self,
+78:    def laplace_mechanism(self,
+96:    def gaussian_mechanism(self,
+115:    def adaptive_noise(self,
+156:    def __init__(self, epsilon: float = 1.0, delta: float = 1e-5):
+161:    def inject_correlated_noise(self,
+222:def add_post_generation_noise(
+
+=== ./post-generation/noise_injection_from_datalake.py ===
+33:def load_from_datalake(file_code, query_params=None):
+87:def get_file_metadata(object_name):
+111:def upload_to_datalake(df, file_name, prefix, metadata):
+153:def inject_noise_datalake_data(
+356:def main():
+
+=== ./post-generation/residual_par_correction.py ===
+46:def load_from_datalake(file_code, query_params=None):
+100:def get_file_metadata(object_name):
+124:def upload_to_datalake(df, file_name, prefix, metadata):
+170:def auto_detect_features(df, id_col='ID', time_col='TIME', exclude_cols=None):
+213:def residual_par_pipeline_from_datalake(
+544:def main():
+
+=== ./post-generation/reverse_from_datalake.py ===
+24:def load_from_datalake(file_code, query_params=None):
+78:def get_file_metadata(object_name):
+102:def upload_to_datalake(df, file_name, prefix, metadata):
+144:def reverse_datalake_data(file_code,
+303:def main():
+
+=== ./post-generation/reverse_from_local.py ===
+22:def load_from_csv(file_path):
+51:def reverse_local_data(input_path,
+135:def main():
+
+=== ./post-generation/reverse_transformations.py ===
+39:def reverse_all_transformations(df,
