@@ -1,0 +1,1493 @@
+
+<title>Linee Guida Diagnostiche CN · MCI · AD</title>
+<style>
+:root {
+  --ground: #EEF2F7;
+  --surface: #FFFFFF;
+  --surface-2: #F7FAFD;
+  --text: #1B2B3C;
+  --text-muted: #5A7A96;
+  --border: #C5D5E8;
+
+  --cn: #3B7DBF;
+  --cn-light: #D4E8FA;
+  --cn-dark: #1F5A98;
+  --mci: #C97D25;
+  --mci-light: #FAECD6;
+  --mci-dark: #9A5A10;
+  --ad: #B03A3A;
+  --ad-light: #F7DADA;
+  --ad-dark: #7A1E1E;
+
+  --font-display: "Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+  --font-body: "Segoe UI",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  --font-mono: "Courier New",Courier,monospace;
+
+  --nav-w: 220px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--ground);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+/* ── LAYOUT ── */
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidenav {
+  width: var(--nav-w);
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--text);
+  color: #C8D9EA;
+  padding: 0 0 2rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidenav-brand {
+  padding: 1.4rem 1.2rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+}
+.sidenav-brand span {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: #fff;
+  line-height: 1.3;
+  display: block;
+}
+.sidenav-brand small {
+  font-size: .72rem;
+  color: #7A9AB8;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.continuum-mini {
+  display: flex;
+  height: 6px;
+  margin: 0.8rem 1.2rem;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.continuum-mini div { flex: 1; }
+.cm-cn  { background: var(--cn); }
+.cm-mci { background: var(--mci); }
+.cm-ad  { background: var(--ad); }
+
+.sidenav nav { padding: .5rem 0; flex: 1; }
+.sidenav nav a {
+  display: block;
+  padding: .45rem 1.2rem;
+  color: #8AAFC8;
+  text-decoration: none;
+  font-size: .82rem;
+  letter-spacing: .01em;
+  border-left: 2px solid transparent;
+  transition: color .15s, border-color .15s;
+}
+.sidenav nav a:hover,
+.sidenav nav a.active {
+  color: #fff;
+  border-left-color: var(--cn);
+}
+.sidenav nav .nav-group {
+  padding: .9rem 1.2rem .2rem;
+  font-size: .68rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #4A6A84;
+}
+
+.content { flex: 1; min-width: 0; }
+
+/* ── HERO ── */
+.hero {
+  background: var(--text);
+  padding: 3.5rem 3rem 3rem;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 40px,
+    rgba(255,255,255,.015) 40px,
+    rgba(255,255,255,.015) 41px
+  );
+  pointer-events: none;
+}
+
+.continuum-bar {
+  display: flex;
+  gap: 0;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  width: 320px;
+  margin-bottom: 2rem;
+}
+.continuum-bar div { flex: 1; }
+.cb-cn  { background: var(--cn); }
+.cb-mci { background: var(--mci); }
+.cb-ad  { background: var(--ad); }
+
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: normal;
+  color: #fff;
+  line-height: 1.2;
+  max-width: 620px;
+  margin-bottom: .7rem;
+}
+.hero-sub {
+  font-size: .88rem;
+  color: #6A94B8;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  margin-bottom: 2rem;
+}
+.hero-meta {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+.hero-badge {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 4px;
+  padding: .3rem .75rem;
+  font-size: .78rem;
+  color: #8AAFC8;
+}
+.hero-badge strong { color: #C8E0F4; }
+
+/* ── MAIN CONTENT ── */
+.main-inner {
+  max-width: 900px;
+  padding: 2.5rem 3rem 4rem;
+}
+
+/* Sections */
+.section { margin-bottom: 3.5rem; }
+.section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: .6rem;
+  margin-bottom: 1.6rem;
+}
+.section-label {
+  font-size: .68rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  font-weight: normal;
+  color: var(--text);
+}
+
+/* Institution pill */
+.inst-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .25rem .8rem .25rem .5rem;
+  border-radius: 20px;
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  margin-bottom: 1.2rem;
+}
+.inst-pill-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+}
+.inst-fda  { background: #EAF0F8; color: #1A4A7A; }
+.inst-fda .inst-pill-dot { background: #2A6CB0; }
+.inst-ema  { background: #EAF2EA; color: #1A4A1A; }
+.inst-ema .inst-pill-dot { background: #2A8A2A; }
+.inst-who  { background: #F5EAF0; color: #5A1A4A; }
+.inst-who .inst-pill-dot { background: #9A3A7A; }
+.inst-ita  { background: #FFF3EA; color: #5A2A0A; }
+.inst-ita .inst-pill-dot { background: #C06018; }
+.inst-naa  { background: #EAF0FA; color: #0A2A5A; }
+.inst-naa .inst-pill-dot { background: var(--cn); }
+
+/* Alert / note box */
+.alert {
+  border-left: 3px solid;
+  padding: .9rem 1.1rem;
+  border-radius: 0 4px 4px 0;
+  margin: 1.2rem 0;
+  font-size: .9rem;
+}
+.alert-warning { border-color: var(--mci); background: var(--mci-light); }
+.alert-info    { border-color: var(--cn); background: var(--cn-light); }
+.alert-critical{ border-color: var(--ad); background: var(--ad-light); }
+.alert strong  { display: block; margin-bottom: .25rem; font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; }
+
+/* ── DECISION TREE — the aesthetic risk ── */
+.dtree {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.4rem 1.6rem;
+  margin: 1.2rem 0;
+  font-size: .88rem;
+}
+.dtree-title {
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+  font-family: var(--font-body);
+}
+.dtree ol {
+  list-style: none;
+  padding: 0;
+}
+.dtree > ol > li {
+  position: relative;
+  padding-left: 1.8rem;
+  margin-bottom: .9rem;
+}
+.dtree > ol > li::before {
+  content: attr(data-step);
+  position: absolute;
+  left: 0;
+  top: .05em;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  background: var(--text);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+}
+.dtree > ol > li.step-cn::before { background: var(--cn); }
+.dtree > ol > li.step-mci::before { background: var(--mci); }
+.dtree > ol > li.step-ad::before { background: var(--ad); }
+
+.dtree .sub {
+  margin-top: .4rem;
+  padding-left: 1rem;
+  border-left: 2px solid var(--border);
+  margin-left: .1rem;
+  list-style: none;
+}
+.dtree .sub li { padding: .2rem 0; color: var(--text); }
+.dtree .sub li::before { content: '↳ '; color: var(--text-muted); }
+
+.or-divider {
+  text-align: center;
+  font-size: .72rem;
+  color: var(--text-muted);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin: .3rem 0;
+}
+
+/* ── THRESHOLD TABLES ── */
+.thresh-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .85rem;
+  margin: 1.2rem 0;
+}
+.thresh-table th {
+  background: var(--text);
+  color: #C8D9EA;
+  padding: .55rem .8rem;
+  text-align: left;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.thresh-table th.h-cn  { background: var(--cn-dark); }
+.thresh-table th.h-mci { background: var(--mci-dark); }
+.thresh-table th.h-ad  { background: var(--ad-dark); }
+
+.thresh-table td {
+  padding: .5rem .8rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.thresh-table tr:nth-child(even) td { background: var(--surface-2); }
+.thresh-table tr:hover td { background: var(--cn-light); }
+
+.thresh-table td.val {
+  font-family: var(--font-mono);
+  font-size: .82rem;
+  white-space: nowrap;
+}
+.val-cn  { color: var(--cn-dark); }
+.val-mci { color: var(--mci-dark); }
+.val-ad  { color: var(--ad-dark); }
+
+.tag {
+  display: inline-block;
+  padding: .1rem .45rem;
+  border-radius: 3px;
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.tag-cn  { background: var(--cn-light); color: var(--cn-dark); }
+.tag-mci { background: var(--mci-light); color: var(--mci-dark); }
+.tag-ad  { background: var(--ad-light); color: var(--ad-dark); }
+.tag-warn{ background: #FFF3CD; color: #856404; }
+
+/* ── PROSE ── */
+p { margin-bottom: .9rem; }
+h3 {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: normal;
+  margin: 1.6rem 0 .5rem;
+  color: var(--text);
+}
+h4 {
+  font-size: .82rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 1.2rem 0 .4rem;
+}
+ul.prose, ol.prose {
+  padding-left: 1.3rem;
+  margin-bottom: .9rem;
+}
+ul.prose li, ol.prose li { margin-bottom: .3rem; }
+
+/* Two-col for certain content */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem 1.1rem;
+}
+.card-label {
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--text-muted);
+  margin-bottom: .4rem;
+}
+
+/* Biblio */
+.ref-list {
+  list-style: none;
+  counter-reset: refs;
+  padding: 0;
+}
+.ref-list li {
+  counter-increment: refs;
+  padding: .55rem 0 .55rem 2.2rem;
+  border-bottom: 1px solid var(--border);
+  font-size: .84rem;
+  position: relative;
+  line-height: 1.5;
+}
+.ref-list li::before {
+  content: '[' counter(refs) ']';
+  position: absolute;
+  left: 0;
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  color: var(--cn);
+  top: .6rem;
+}
+.ref-list a { color: var(--cn-dark); }
+
+/* Divider */
+.divider {
+  height: 1px;
+  background: linear-gradient(to right, var(--cn), var(--mci), var(--ad));
+  border: none;
+  margin: 2.5rem 0;
+  opacity: .3;
+}
+
+/* Responsive */
+@media (max-width: 860px) {
+  .layout { flex-direction: column; }
+  .sidenav { width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; padding: .5rem; }
+  .sidenav nav { display: flex; flex-wrap: wrap; padding: 0; }
+  .sidenav nav a { padding: .3rem .7rem; border-left: none; border-bottom: 2px solid transparent; font-size: .76rem; }
+  .sidenav-brand { display: none; }
+  .continuum-mini { display: none; }
+  .main-inner { padding: 1.5rem 1.2rem 3rem; }
+  .hero { padding: 2rem 1.5rem; }
+  .hero h1 { font-size: 1.7rem; }
+  .two-col { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+</style>
+
+<div class="layout">
+
+  <!-- Sidebar Navigation -->
+  <aside class="sidenav" aria-label="Navigazione sezioni">
+    <div class="sidenav-brand">
+      <span>Linee Guida<br>CN · MCI · AD</span>
+      <small>Edizione 2024–2025</small>
+    </div>
+    <div class="continuum-mini">
+      <div class="cm-cn"></div>
+      <div class="cm-mci"></div>
+      <div class="cm-ad"></div>
+    </div>
+    <nav>
+      <span class="nav-group">Introduzione</span>
+      <a href="#metodologia">Nota metodologica</a>
+      <a href="#standard">Standard NIA-AA 2024</a>
+      <span class="nav-group">Istituzioni</span>
+      <a href="#fda">FDA</a>
+      <a href="#ema">EMA</a>
+      <a href="#who">WHO</a>
+      <a href="#italia">ISS/SNLG Italia</a>
+      <span class="nav-group">Riferimento</span>
+      <a href="#test-soglie">Test e soglie</a>
+      <a href="#rule-based">Logica rule-based</a>
+      <a href="#bibliografia">Bibliografia</a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="content">
+
+    <!-- Hero -->
+    <header class="hero">
+      <div class="continuum-bar">
+        <div class="cb-cn"></div>
+        <div class="cb-mci"></div>
+        <div class="cb-ad"></div>
+      </div>
+      <h1>Linee Guida Diagnostiche<br>per CN, MCI e Alzheimer</h1>
+      <p class="hero-sub">FDA · EMA · WHO · ISS/SNLG Italia · SINDEM — Analisi comparativa per sistemi rule-based</p>
+      <div class="hero-meta">
+        <div class="hero-badge"><strong>Aggiornamento:</strong> 2024–2025</div>
+        <div class="hero-badge"><strong>Standard principale:</strong> NIA-AA 2024</div>
+        <div class="hero-badge"><strong>Linee guida IT:</strong> ISS/SNLG v3.0 (2025)</div>
+      </div>
+    </header>
+
+    <div class="main-inner">
+
+      <!-- NOTA METODOLOGICA -->
+      <section class="section" id="metodologia">
+        <div class="section-header">
+          <span class="section-label">Premessa</span>
+          <h2 class="section-title">Nota metodologica essenziale</h2>
+        </div>
+
+        <div class="alert alert-warning">
+          <strong>Distinzione critica per il sistema rule-based</strong>
+          FDA, EMA e WHO <em>non emettono linee guida clinico-diagnostiche</em> per CN/MCI/AD nel senso in cui lo fanno le società neurologiche. Le loro pubblicazioni riguardano: (FDA/EMA) lo sviluppo regolatorio dei farmaci; (WHO) la sanità pubblica globale. I criteri diagnostici di riferimento internazionale provengono dalla <strong>NIA-AA</strong> (National Institute on Aging – Alzheimer's Association) e dal gruppo <strong>IWG</strong> (International Working Group). Entrambi FDA e EMA li adottano nei propri documenti regolativi.
+        </div>
+
+        <p>Di conseguenza, la struttura di questo report segue questa gerarchia:</p>
+        <ul class="prose">
+          <li><strong>Sezione 1 — Standard NIA-AA 2024:</strong> i criteri diagnostici clinici di riferimento mondiale, adottati da tutte le istituzioni come base.</li>
+          <li><strong>Sezioni FDA / EMA:</strong> come queste agenzie regolatorie usano i criteri diagnostici per l'approvazione dei farmaci; quali endpoint e biomarker sono accettati; quali implicazioni per la classificazione.</li>
+          <li><strong>Sezione WHO:</strong> classificazione ICD-11 (6D80, 6D71); approccio di sanità pubblica; assenza di linee guida diagnostiche specifiche analoghe a NIA-AA.</li>
+          <li><strong>Sezione ISS/SNLG Italia:</strong> linee guida cliniche nazionali (2024–2025), sviluppate da SIN, SINDEM, SIGG e altre società; adottano i criteri NIA-AA 2011 con adattamenti per il contesto italiano.</li>
+        </ul>
+      </section>
+
+      <hr class="divider">
+
+      <!-- STANDARD NIA-AA -->
+      <section class="section" id="standard">
+        <div class="section-header">
+          <span class="section-label">Standard internazionale</span>
+          <h2 class="section-title">Criteri NIA-AA — Dal 2011 al 2024</h2>
+        </div>
+
+        <div class="inst-pill inst-naa">
+          <div class="inst-pill-dot"></div>
+          NIA-AA / Alzheimer's Association
+        </div>
+
+        <h3>Descrizione generale</h3>
+        <p>La National Institute on Aging – Alzheimer's Association ha pubblicato criteri diagnostici in tre tornate fondamentali: 2011 (criteri clinici), 2018 (framework AT(N) per la ricerca) e 2024 (revisione biologica con inclusione dei biomarker plasmatici). Questi criteri sono il riferimento de facto mondiale e vengono recepiti integralmente da FDA, EMA e ISS/SNLG italiani.</p>
+
+        <h3>Evoluzione del paradigma diagnostico</h3>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-label">2011 — Criteri clinici</div>
+            <p style="font-size:.85rem">McKhann et al. (demenza AD), Albert et al. (MCI). Diagnosi basata su sindrome clinica; biomarker supportivi ma non obbligatori. Tre livelli di certezza: probabile, possibile, certa (autopsia).</p>
+          </div>
+          <div class="card">
+            <div class="card-label">2018 — Framework AT(N)</div>
+            <p style="font-size:.85rem">Jack et al. AD definita biologicamente per la ricerca tramite profilo biomarker A/T/N. Non per uso clinico di routine. Introduce il concetto di continuum preclinico → demenza.</p>
+          </div>
+        </div>
+
+        <div class="alert alert-info">
+          <strong>2024 — Revisione biologica (uso clinico + ricerca)</strong>
+          Jack CR Jr, Corriveau-Lecavalier N, Bhatt P, et al. «New criteria for Alzheimer's disease and mild cognitive impairment». <em>Alzheimer's &amp; Dementia</em> 2024. L'AD è ora definita biologicamente — la sindrome clinica da sola non è sufficiente. I biomarker plasmatici (p-tau217, rapporto Aβ42/40) sono incorporati al pari di CSF e PET.
+        </div>
+
+        <h3>Staging NIA-AA 2024 — Il modello a 3 dimensioni</h3>
+        <p>La revisione 2024 usa una matrice bidimensionale: <strong>stadio cognitivo</strong> (0–3) × <strong>profilo biomarker</strong> (AT(N)).</p>
+
+        <div class="dtree">
+          <div class="dtree-title">Staging clinico NIA-AA 2024 — Logica rule-based</div>
+          <ol>
+            <li data-step="CN" class="step-cn">
+              <strong>Cognitively Normal (CN) — Stadio 0</strong>
+              <ul class="sub">
+                <li>Nessuna lamentela cognitiva soggettiva o oggettiva</li>
+                <li>Funzionamento cognitivo nella norma per età/scolarità</li>
+                <li>Indipendenza funzionale completa nelle ADL</li>
+                <li>Con biomarker A+: CN preclinico (Stage 1 biologico)</li>
+              </ul>
+            </li>
+            <li data-step="MCI" class="step-mci">
+              <strong>Mild Cognitive Impairment (MCI) — Stadio 3</strong>
+              <ul class="sub">
+                <li>Preoccupazione cognitiva da paziente, informante o clinico</li>
+                <li>Declino oggettivo in ≥1 dominio cognitivo (&gt;1–1.5 DS dai valori normativi)</li>
+                <li>Preservazione dell'indipendenza nelle attività quotidiane (con sforzo aumentato)</li>
+                <li>Non soddisfa criteri di demenza</li>
+                <li>Stadio 2 (SCI): declino misurabile su test compositi sensibili, non ancora MCI</li>
+              </ul>
+            </li>
+            <li data-step="AD" class="step-ad">
+              <strong>Demenza da AD — Stadi 4–6</strong>
+              <ul class="sub">
+                <li>Sintomi cognitivi o comportamentali che interferiscono significativamente con il funzionamento</li>
+                <li>Declino rispetto al livello precedente</li>
+                <li>Non spiegato da delirium o disturbi psichiatrici primari</li>
+                <li>Compromissione in ≥2 domini: memoria, funzioni esecutive, linguaggio, visuospaziale, personalità/comportamento</li>
+                <li>Stadio 4: lieve (MMSE ~20–26); Stadio 5: moderato (MMSE ~10–19); Stadio 6: grave (MMSE &lt;10)</li>
+              </ul>
+            </li>
+          </ol>
+        </div>
+
+        <h3>Framework AT(N) — Classificazione biomarker</h3>
+        <div class="thresh-table" style="overflow-x:auto;">
+          <table class="thresh-table">
+            <thead>
+              <tr>
+                <th>Biomarker</th>
+                <th>Categoria AT(N)</th>
+                <th>CSF</th>
+                <th>PET</th>
+                <th>Plasma (2024)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Amiloide</strong></td>
+                <td><span class="tag tag-cn">A</span></td>
+                <td class="val">Aβ1-42 ↓ o rapporto Aβ42/40 ↓</td>
+                <td class="val">Amyloid PET positivo (SUVR &gt;1.11 florbetapir)</td>
+                <td class="val">Aβ42/40 ↓ o p-tau217 ↑</td>
+              </tr>
+              <tr>
+                <td><strong>Tau</strong></td>
+                <td><span class="tag tag-mci">T</span></td>
+                <td class="val">p-tau181 ↑ o p-tau217 ↑</td>
+                <td class="val">Tau PET positivo (flortaucipir &gt;1.13–1.51 SUVR medial temporal)</td>
+                <td class="val">p-tau217 ↑ (miglior marker singolo 2024)</td>
+              </tr>
+              <tr>
+                <td><strong>Neurodegen.</strong></td>
+                <td><span class="tag tag-ad">N</span></td>
+                <td class="val">T-tau totale ↑</td>
+                <td class="val">FDG-PET: ipometabolismo temporo-parietale</td>
+                <td class="val">GFAP ↑, NfL ↑ (supportivi)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="alert alert-info">
+          <strong>Interpretazione AT(N) per il sistema rule-based</strong>
+          A+T+N− = AD early/preclinica biologica. A+T+N+ = AD con danno assonale. A−T−N− = biomarker normali (non AD). A−T−N+ = neurodegenerazione non AD. Il profilo A+T+ è sufficiente per diagnosi biologica di AD in qualsiasi stadio cognitivo (2024).
+        </div>
+      </section>
+
+      <hr class="divider">
+
+      <!-- FDA -->
+      <section class="section" id="fda">
+        <div class="section-header">
+          <span class="section-label">Agenzia Regolatoria USA</span>
+          <h2 class="section-title">FDA — Food and Drug Administration</h2>
+        </div>
+
+        <div class="inst-pill inst-fda">
+          <div class="inst-pill-dot"></div>
+          FDA / CDER — Guidance for Industry
+        </div>
+
+        <div class="alert alert-warning">
+          <strong>Nessuna linea guida diagnostica clinica</strong>
+          La FDA non emette linee guida per la diagnosi di CN, MCI o AD nel contesto clinico. La FDA adotta integralmente i criteri NIA-AA nei propri documenti regolativi per lo sviluppo farmacologico. Quanto segue descrive la FDA Guidance for Industry, rilevante per il sistema rule-based perché definisce gli endpoint e i biomarker accettati a livello regolatorio.
+        </div>
+
+        <h3>Documenti di riferimento</h3>
+        <ul class="prose">
+          <li><strong>FDA Guidance: «Alzheimer's Disease — Developing Drugs for Treatment»</strong> (CDER, 2018; aggiornamento draft 2024) — definisce staging per trial clinici.</li>
+          <li><strong>FDA Guidance: «Early Alzheimer's Disease — Developing Drugs for Treatment»</strong> (2018) — specifica per stadi preclinico e prodromico.</li>
+          <li>Approvazione di tre traccianti PET per amiloide: florbetapir (Amyvid®), flutemetamol (Vizamyl®), florbetaben (NeuraCeq®) — non come strumenti diagnostici autonomi ma come supporto.</li>
+        </ul>
+
+        <h3>Staging FDA per trial clinici (adottato da NIA-AA)</h3>
+        <div class="dtree">
+          <div class="dtree-title">Staging FDA — Logica di classificazione per lo sviluppo farmacologico</div>
+          <ol>
+            <li data-step="A" class="step-cn">
+              <strong>Stage A — Preclinico, biomarker−</strong>
+              <ul class="sub">
+                <li>Cognitivamente normale, nessuna evidenza biomarker di AD</li>
+                <li>Endpoint: non applicabile (prevenzione primaria)</li>
+              </ul>
+            </li>
+            <li data-step="B" class="step-cn">
+              <strong>Stage B — Preclinico, biomarker+</strong>
+              <ul class="sub">
+                <li>Cognitivamente normale + evidenza biomarker amiloide (A+)</li>
+                <li>Endpoint primari accettati: ADCS-PACC, ADAS-Cog 13, CDR-SB</li>
+              </ul>
+            </li>
+            <li data-step="C" class="step-mci">
+              <strong>Stage C — MCI da AD (prodromico)</strong>
+              <ul class="sub">
+                <li>Criteri clinici MCI (Albert 2011) + biomarker A+ obbligatorio</li>
+                <li>Endpoint primari: CDR-SB, ADAS-Cog 13, MMSE (per selezione)</li>
+              </ul>
+            </li>
+            <li data-step="D" class="step-ad">
+              <strong>Stage D — AD lieve</strong>
+              <ul class="sub">
+                <li>MMSE 20–26 (lieve) o criteri clinici demenza lieve</li>
+                <li>Endpoint: CDR-SB, ADAS-Cog 11/13, CIBIC+</li>
+              </ul>
+            </li>
+            <li data-step="E" class="step-ad">
+              <strong>Stage E — AD moderata</strong>
+              <ul class="sub">
+                <li>MMSE 10–19 (moderata)</li>
+                <li>Endpoint: ADAS-Cog 11, CIBIC+, ADCS-ADL</li>
+              </ul>
+            </li>
+            <li data-step="F" class="step-ad">
+              <strong>Stage F — AD grave</strong>
+              <ul class="sub">
+                <li>MMSE &lt;10 (grave)</li>
+                <li>Endpoint: SIB (Severe Impairment Battery), ADCS-ADL-sev</li>
+              </ul>
+            </li>
+          </ol>
+        </div>
+
+        <h3>Endpoint neuropsicologici e soglie accettate dalla FDA</h3>
+        <div style="overflow-x:auto;">
+        <table class="thresh-table">
+          <thead>
+            <tr>
+              <th>Strumento</th>
+              <th class="h-cn">Stage B (preclinico)</th>
+              <th class="h-mci">Stage C (MCI)</th>
+              <th class="h-ad">Stage D (lieve)</th>
+              <th>Note FDA</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>MMSE</strong></td>
+              <td class="val val-cn">≥27</td>
+              <td class="val val-mci">24–26</td>
+              <td class="val val-ad">20–23</td>
+              <td>Per selezione, non endpoint primario</td>
+            </tr>
+            <tr>
+              <td><strong>CDR-SB</strong></td>
+              <td class="val val-cn">0–0.5</td>
+              <td class="val val-mci">0.5–2.5</td>
+              <td class="val val-ad">2.5–4.5</td>
+              <td>Endpoint primario preferito per early AD</td>
+            </tr>
+            <tr>
+              <td><strong>ADAS-Cog 13</strong></td>
+              <td class="val val-cn">&lt;8</td>
+              <td class="val val-mci">8–17</td>
+              <td class="val val-ad">17–35</td>
+              <td>Endpoint primario per stadio C–D</td>
+            </tr>
+            <tr>
+              <td><strong>ADCS-PACC</strong></td>
+              <td class="val val-cn">Score composito</td>
+              <td class="val val-mci">Declino &gt;1 DS</td>
+              <td class="val val-ad">—</td>
+              <td>Per stadi preclinico/prodromico</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+
+        <h3>Biomarker accettati dalla FDA per conferma diagnostica nei trial</h3>
+        <ul class="prose">
+          <li><strong>Amyloid PET positivo</strong> (florbetapir SUVR &gt;1.11, o lettura visuale qualitativa) — obbligatorio per enrollment nei trial di farmaci anti-amiloide (lecanemab/Leqembi®, donanemab/Kisunla®).</li>
+          <li><strong>CSF Aβ42/40 ratio basso</strong> — accettato come alternativa all'amyloid PET.</li>
+          <li><strong>Plasma p-tau217</strong> — in via di accettazione come biomarker di screening pre-PET (guidance 2024 draft).</li>
+        </ul>
+
+        <div class="alert alert-info">
+          <strong>Implicazione per il sistema rule-based</strong>
+          Il framework FDA introduce una regola binaria critica: Stage C richiede biomarker A+ OBBLIGATORIO per l'enrollment nei trial. In assenza di conferma biomarker, un paziente con MCI clinico è classificato come «MCI non-AD» ai fini FDA. Questo è il primo luogo in cui la logica rule-based deve biforccarsi su biomarker disponibile/non disponibile.
+        </div>
+      </section>
+
+      <hr class="divider">
+
+      <!-- EMA -->
+      <section class="section" id="ema">
+        <div class="section-header">
+          <span class="section-label">Agenzia Regolatoria EU</span>
+          <h2 class="section-title">EMA — European Medicines Agency</h2>
+        </div>
+
+        <div class="inst-pill inst-ema">
+          <div class="inst-pill-dot"></div>
+          EMA / CHMP — Scientific Guideline
+        </div>
+
+        <div class="alert alert-warning">
+          <strong>Nessuna linea guida diagnostica clinica</strong>
+          Analogamente alla FDA, l'EMA non emette criteri diagnostici per l'uso clinico. I documenti EMA pertinenti riguardano la qualificazione dei biomarker per l'uso nei trial e le specifiche per lo sviluppo di farmaci. Tuttavia, l'EMA ha prodotto un importante <em>Qualification Opinion</em> sui biomarker che ha implicazioni dirette per la classificazione diagnostica.
+        </div>
+
+        <h3>Documenti di riferimento EMA</h3>
+        <ul class="prose">
+          <li><strong>CPMP/EWP/553/95 Rev. 2</strong> — «Guideline on clinical investigation of medicinal products in the treatment of Alzheimer's disease» (2018, ancora vigente). Accetta sia criteri NIA-AA 2011 che IWG-2 per i trial.</li>
+          <li><strong>EMA/CHMP/SAWP/893778/2014</strong> — «Qualification Opinion: use of cerebrospinal fluid (CSF) amyloid-beta 1-42 and t-tau and/or positron emission tomography (PET) amyloid imaging as enrichment biomarkers in clinical trials». Qualifica CSF (Aβ1-42, T-tau, P-tau) e amyloid PET come biomarker di arricchimento per trial in MCI/AD prodromico. Non per diagnosi individuale.</li>
+        </ul>
+
+        <h3>Criteri IWG-2 accettati da EMA (vs. NIA-AA)</h3>
+        <p>L'EMA accetta entrambi i framework. La differenza strutturale chiave per un sistema rule-based è:</p>
+
+        <div class="two-col">
+          <div class="card">
+            <div class="card-label">IWG-2 (Dubois et al. 2014) — logica AND obbligatoria</div>
+            <p style="font-size:.84rem"><strong>Criterio A (clinico):</strong> Compromissione mnestica episodica precoce e significativa (≥6 mesi), amnestic syndrome of hippocampal type su test di rievocazione guidata con controllo dell'encoding (es. RL/RI-16, Free and Cued Selective Reminding Test — FCSRT).</p>
+            <p style="font-size:.84rem"><strong>Criterio B (biomarker, uno dei tre):</strong> (1) Aβ1-42↓ + T-tau↑ o P-tau↑ in CSF; OPPURE (2) Amyloid PET positivo; OPPURE (3) Mutazione autosomica dominante (PSEN1, PSEN2, APP).</p>
+            <p style="font-size:.84rem;color:var(--ad-dark)"><strong>Entrambi A E B obbligatori.</strong></p>
+          </div>
+          <div class="card">
+            <div class="card-label">NIA-AA 2011 (Albert/McKhann) — biomarker supportivi</div>
+            <p style="font-size:.84rem"><strong>Core clinici obbligatori:</strong> Declino cognitivo oggettivo in ≥1 dominio, preservazione funzionale (MCI) o compromissione funzionale (demenza).</p>
+            <p style="font-size:.84rem"><strong>Biomarker:</strong> Supportivi e stratificanti, non obbligatori nella versione 2011. Permettono di classificare la diagnosi come «probabile AD con evidenza biomarker intermedia/alta» vs. «probabile AD» senza biomarker.</p>
+            <p style="font-size:.84rem;color:var(--cn-dark)"><strong>Core clinici sufficienti per diagnosi clinica.</strong></p>
+          </div>
+        </div>
+
+        <h3>Soglie biomarker e posizione EMA</h3>
+        <div class="alert alert-critical">
+          <strong>Posizione EMA sui cutoff — punto critico per rule-based</strong>
+          L'EMA afferma esplicitamente che <em>non esiste un cutoff universale per Aβ1-42 o T-tau</em> valido tra laboratori diversi. Ogni sito deve validare le proprie soglie usando metodi di riferimento standardizzati. I valori riportati di seguito sono orientativi (da letteratura e kit commerciali validati); il sistema rule-based deve prevedere un layer di normalizzazione per-laboratorio.
+        </div>
+
+        <div style="overflow-x:auto;">
+        <table class="thresh-table">
+          <thead>
+            <tr>
+              <th>Biomarker</th>
+              <th>Direzione AD</th>
+              <th>Valore orientativo</th>
+              <th>Kit / metodo</th>
+              <th>Uso EMA</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>CSF Aβ1-42</strong></td>
+              <td class="val val-ad">↓ (ridotto)</td>
+              <td class="val">&lt; 1000 pg/mL (Innotest) / &lt; 900 pg/mL (Elecsys)</td>
+              <td>Fujirebio Lumipulse, Roche Elecsys</td>
+              <td><span class="tag tag-warn">Arricchimento trial</span></td>
+            </tr>
+            <tr>
+              <td><strong>CSF rapporto Aβ42/40</strong></td>
+              <td class="val val-ad">↓ (ridotto)</td>
+              <td class="val">&lt; 0.062 (Fujirebio) / &lt; 0.089 (Euroimmun)</td>
+              <td>Fujirebio Lumipulse</td>
+              <td><span class="tag tag-warn">Più specifico di Aβ42 solo</span></td>
+            </tr>
+            <tr>
+              <td><strong>CSF T-tau</strong></td>
+              <td class="val val-ad">↑ (elevato)</td>
+              <td class="val">&gt; 300–400 pg/mL (dipende da età)</td>
+              <td>Fujirebio INNOTEST</td>
+              <td><span class="tag tag-warn">Arricchimento trial</span></td>
+            </tr>
+            <tr>
+              <td><strong>CSF P-tau181</strong></td>
+              <td class="val val-ad">↑ (elevato)</td>
+              <td class="val">&gt; 60–80 pg/mL</td>
+              <td>Fujirebio INNOTEST</td>
+              <td><span class="tag tag-warn">Arricchimento trial</span></td>
+            </tr>
+            <tr>
+              <td><strong>Amyloid PET (florbetapir)</strong></td>
+              <td class="val val-ad">↑ SUVR</td>
+              <td class="val val-ad">&gt; 1.11 SUVR (cervelletto come riferimento)</td>
+              <td>Eli Lilly Amyvid®</td>
+              <td><span class="tag tag-warn">Qualificato EMA 2014</span></td>
+            </tr>
+            <tr>
+              <td><strong>Tau PET (flortaucipir)</strong></td>
+              <td class="val val-ad">↑ SUVR</td>
+              <td class="val val-ad">1.13–1.51 SUVR medial temporal (metodo-dipendente)</td>
+              <td>Eli Lilly Tauvid®</td>
+              <td><span class="tag tag-cn">Non qualificato formalmente EMA</span></td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+
+        <h3>Endpoint accettati da EMA per studi in AD</h3>
+        <p>Per stadi preclinico e prodromico (MCI da AD), l'EMA riconosce che non esiste ancora un gold standard validato per l'endpoint primario. Strumenti comunemente accettati nei trial europei:</p>
+        <ul class="prose">
+          <li>CDR-SB (Clinical Dementia Rating – Sum of Boxes)</li>
+          <li>ADAS-Cog 13</li>
+          <li>MMSE (per stratificazione, non come endpoint primario isolato)</li>
+          <li>ADCS-PACC (Preclinical Alzheimer Cognitive Composite)</li>
+          <li>ADCS-ADL (per demenza conclamata)</li>
+        </ul>
+      </section>
+
+      <hr class="divider">
+
+      <!-- WHO -->
+      <section class="section" id="who">
+        <div class="section-header">
+          <span class="section-label">Organizzazione Mondiale della Sanità</span>
+          <h2 class="section-title">WHO — World Health Organization</h2>
+        </div>
+
+        <div class="inst-pill inst-who">
+          <div class="inst-pill-dot"></div>
+          WHO — ICD-11 · Global Action Plan · mhGAP
+        </div>
+
+        <div class="alert alert-warning">
+          <strong>Assenza di linee guida diagnostiche specifiche analoghe a NIA-AA</strong>
+          Il WHO non ha pubblicato linee guida equivalenti alle NIA-AA criteri per la diagnosi di CN, MCI o AD nel contesto specialistico neurologico. Il WHO opera su tre livelli distinti: classificazione (ICD-11), sanità pubblica globale (Global Action Plan), e cure primarie in contesti a basse risorse (mhGAP). Nessuno di questi documenti fornisce i criteri diagnostici operativi usati nelle cliniche specialistiche.
+        </div>
+
+        <h3>ICD-11 — Classificazione internazionale delle malattie (2022)</h3>
+        <p>L'ICD-11 è l'unico strumento WHO con implicazioni dirette per la classificazione diagnostica. Fornisce codici e criteri descrittivi (non neurobiologici) per demenza e MCI.</p>
+
+        <div style="overflow-x:auto;">
+        <table class="thresh-table">
+          <thead>
+            <tr>
+              <th>Codice ICD-11</th>
+              <th>Definizione</th>
+              <th>Equivalente clinico</th>
+              <th>Criteri chiave</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="val"><strong>6D80</strong></td>
+              <td>Demenza da malattia di Alzheimer</td>
+              <td><span class="tag tag-ad">AD demenza</span></td>
+              <td>Deficit acquisito in ≥2 domini cognitivi; interferisce con il funzionamento; esordio insidioso, progressione lenta</td>
+            </tr>
+            <tr>
+              <td class="val"><strong>6D80.0</strong></td>
+              <td>AD a esordio precoce (&lt;65 anni)</td>
+              <td><span class="tag tag-ad">EOAD</span></td>
+              <td>Come 6D80 + esordio &lt;65 aa</td>
+            </tr>
+            <tr>
+              <td class="val"><strong>6D80.1</strong></td>
+              <td>AD a esordio tardivo (≥65 anni)</td>
+              <td><span class="tag tag-ad">LOAD</span></td>
+              <td>Come 6D80 + esordio ≥65 aa</td>
+            </tr>
+            <tr>
+              <td class="val"><strong>6D71.0</strong></td>
+              <td>Mild Neurocognitive Disorder (MND)</td>
+              <td><span class="tag tag-mci">MCI</span></td>
+              <td>Declino soggettivo O oggettivo; non interferisce significativamente con le ADL; non demenza</td>
+            </tr>
+            <tr>
+              <td class="val"><strong>—</strong></td>
+              <td>Cognitively Normal</td>
+              <td><span class="tag tag-cn">CN</span></td>
+              <td>Assenza di qualsiasi codice 6D71–6D80. ICD-11 non definisce CN positivamente.</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+
+        <h3>Criteri ICD-11 per demenza (6D80) — Logica diagnostica</h3>
+        <div class="dtree">
+          <div class="dtree-title">Criteri ICD-11 — Demenza (approccio sindromico, non biomarker-based)</div>
+          <ol>
+            <li data-step="1">
+              <strong>Declino cognitivo acquisito</strong>
+              <ul class="sub">
+                <li>Riduzione rispetto al livello funzionale precedente</li>
+                <li>Non spiegato da normale invecchiamento</li>
+              </ul>
+            </li>
+            <li data-step="2">
+              <strong>Coinvolgimento di ≥2 domini cognitivi</strong>
+              <ul class="sub">
+                <li>Memoria, apprendimento, funzioni esecutive, attenzione, linguaggio, funzioni percettivo-motorie, cognizione sociale</li>
+              </ul>
+            </li>
+            <li data-step="3">
+              <strong>Interferenza con il funzionamento quotidiano</strong>
+              <ul class="sub">
+                <li>Il deficit impatta significativamente su attività lavorative, sociali o quotidiane</li>
+              </ul>
+            </li>
+            <li data-step="4">
+              <strong>Esclusione di cause alternative</strong>
+              <ul class="sub">
+                <li>Non spiegato da delirium, disturbo mentale, altra condizione medica</li>
+              </ul>
+            </li>
+          </ol>
+        </div>
+
+        <h3>Altri documenti WHO rilevanti</h3>
+        <ul class="prose">
+          <li><strong>WHO Global Action Plan on Dementia 2017–2025</strong> — piano di sanità pubblica, non linee guida diagnostiche.</li>
+          <li><strong>WHO «Guidelines for the care and support of people with dementia»</strong> (2024) — raccomandazioni per cura e supporto, non diagnosi.</li>
+          <li><strong>WHO mhGAP Intervention Guide</strong> — algoritmo diagnostico semplificato per contesti di cure primarie a basse risorse. Utilizza MMSE e osservazione clinica. Non equivalente alle linee guida specialistiche.</li>
+        </ul>
+
+        <div class="alert alert-info">
+          <strong>Implicazione per il sistema rule-based</strong>
+          ICD-11 è utile per codifica amministrativa e interoperabilità dei dati (EHR, data warehouse). Non fornisce criteri operativi per soglie neuropsicologiche o biomarker. Un sistema rule-based che usa ICD-11 come output deve mappare NIA-AA/ISS-SNLG → ICD-11: A+T+ + sindrome clinica demenza = 6D80.x; MCI clinico (con o senza biomarker) = 6D71.0.
+        </div>
+      </section>
+
+      <hr class="divider">
+
+      <!-- ITALIA -->
+      <section class="section" id="italia">
+        <div class="section-header">
+          <span class="section-label">Linee Guida Nazionali</span>
+          <h2 class="section-title">Italia — ISS/SNLG, SIN, SINDEM</h2>
+        </div>
+
+        <div class="inst-pill inst-ita">
+          <div class="inst-pill-dot"></div>
+          ISS · SNLG · SIN · SINDEM · SIGG · SIP · SIMG
+        </div>
+
+        <h3>Descrizione generale</h3>
+        <p>L'Italia ha linee guida nazionali ufficiali per la diagnosi e il trattamento di Demenza e MCI, pubblicate attraverso il Sistema Nazionale Linee Guida (SNLG) dell'Istituto Superiore di Sanità (ISS). La versione più recente è la v3.0 (ottobre 2025), aggiornamento della v1.0 (gennaio 2024). Sono sviluppate da un panel multidisciplinare che include SIN (Società Italiana di Neurologia), SINDEM (Società Italiana di Neurologia delle Demenze), SIGG, SIP e SIMG, con metodologia GRADE.</p>
+
+        <div class="alert alert-info">
+          <strong>Documento principale</strong>
+          ISS — SNLG: «Linee Guida per la diagnosi e il trattamento di Demenza e Mild Cognitive Impairment» — v1.0 gennaio 2024, aggiornato a v3.0 ottobre 2025. Disponibile su: <em>www.salute.gov.it</em> e attraverso i Centri per i Disturbi Cognitivi e le Demenze (CDCD) regionali.
+        </div>
+
+        <h3>Logica diagnostica raccomandata — MCI</h3>
+        <p>Le linee guida italiane adottano i criteri clinici <strong>Albert 2011 (NIA-AA)</strong> per la diagnosi di MCI. I biomarker sono esplicitamente <em>non raccomandati</em> per la diagnosi di MCI al di fuori di contesti di ricerca.</p>
+
+        <div class="dtree">
+          <div class="dtree-title">Algoritmo diagnostico ISS/SNLG 2024 — MCI (setting specialistico)</div>
+          <ol>
+            <li data-step="1" class="step-mci">
+              <strong>Preoccupazione cognitiva — criterio soggettivo</strong>
+              <ul class="sub">
+                <li>Riferita dal paziente, dall'informante o rilevata dal clinico</li>
+                <li>Non richiesta presenza di tutti e tre per procedere</li>
+              </ul>
+            </li>
+            <li data-step="2" class="step-mci">
+              <strong>Valutazione neuropsicologica standardizzata</strong>
+              <ul class="sub">
+                <li>Obiettivare il declino con test normati per età, scolarità e sesso nella popolazione italiana</li>
+                <li>Soglia: prestazione &lt;1.5 DS dalla media normativa in ≥1 dominio (equivale a cut-off ≤ media − 1.5 DS su test italiani normati)</li>
+                <li>MMSE: screening iniziale (cut-off italiano: ≥24 corretto = normale)</li>
+                <li>MoCA: alternativa più sensibile per MCI lieve (v. soglie sotto)</li>
+              </ul>
+            </li>
+            <li data-step="3" class="step-mci">
+              <strong>Esclusione di demenza</strong>
+              <ul class="sub">
+                <li>Verifica preservazione dell'indipendenza funzionale nelle ADL (basic e strumentali)</li>
+                <li>Una riduzione funzionale ≥2 attività strumentali sposta la diagnosi verso demenza</li>
+              </ul>
+            </li>
+            <li data-step="4" class="step-mci">
+              <strong>Esclusione di cause reversibili</strong>
+              <ul class="sub">
+                <li>Emocromo, VES, glicemia, funzionalità tiroidea, B12, folati, creatinina, elettroliti</li>
+                <li>RM encefalo (con diffusione) — strutturale, non per biomarker</li>
+              </ul>
+            </li>
+          </ol>
+        </div>
+
+        <h3>Soglie dei test cognitivi nelle linee guida italiane</h3>
+        <div style="overflow-x:auto;">
+        <table class="thresh-table">
+          <thead>
+            <tr>
+              <th>Test</th>
+              <th class="h-cn">CN (Normale)</th>
+              <th class="h-mci">MCI</th>
+              <th class="h-ad">Demenza</th>
+              <th>Qualità evidenza</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>MMSE</strong><br><small>(Folstein 1975, norme Magni 1996)</small></td>
+              <td class="val val-cn">≥ 24 (corretto età/scolarità)</td>
+              <td class="val val-mci">21–23 (zona grigia; non diagnostico da solo)</td>
+              <td class="val val-ad">≤ 20 (lieve); ≤ 10 (grave)</td>
+              <td><span class="tag tag-warn">Bassa — screening</span></td>
+            </tr>
+            <tr>
+              <td><strong>MoCA</strong><br><small>(Nasreddine 2005, norme Conti 2015 IT)</small></td>
+              <td class="val val-cn">≥ 26 (norme originali) / ≥ 22–23 (linee guida IT)</td>
+              <td class="val val-mci">19–23 (sens 0.80–0.96, spec 0.73–0.92)</td>
+              <td class="val val-ad">&lt; 18</td>
+              <td><span class="tag tag-warn">Bassa (2 studi IT, n=1064)</span></td>
+            </tr>
+            <tr>
+              <td><strong>CDR</strong><br><small>(Hughes 1982)</small></td>
+              <td class="val val-cn">= 0</td>
+              <td class="val val-mci">= 0.5</td>
+              <td class="val val-ad">≥ 1 (lieve); 2 (mod.); 3 (grave)</td>
+              <td><span class="tag tag-cn">Alta — standard globale</span></td>
+            </tr>
+            <tr>
+              <td><strong>CDR-SB</strong></td>
+              <td class="val val-cn">0–0.5</td>
+              <td class="val val-mci">0.5–4.0</td>
+              <td class="val val-ad">4.5–18</td>
+              <td><span class="tag tag-cn">Alta — endpoint trial</span></td>
+            </tr>
+            <tr>
+              <td><strong>ADAS-Cog 13</strong></td>
+              <td class="val val-cn">&lt; 8</td>
+              <td class="val val-mci">8–17</td>
+              <td class="val val-ad">≥ 17</td>
+              <td><span class="tag tag-warn">Moderata</span></td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+
+        <div class="alert alert-warning">
+          <strong>Nota critica ISS/SNLG sui cut-off MoCA</strong>
+          Le linee guida italiane non raccomandano un singolo cutoff per MoCA perché le evidenze disponibili sono di qualità bassa e i valori normativi variano per età, scolarità e area geografica. Il clinico deve usare le norme italiane validate (Conti et al. 2015, Santangelo et al. 2015) e integrare il punteggio nella valutazione clinica complessiva. Per il sistema rule-based si raccomanda di usare cutoff condizionali per età e scolarità.
+        </div>
+
+        <h3>Logica diagnostica raccomandata — Demenza da AD</h3>
+        <div class="dtree">
+          <div class="dtree-title">Algoritmo ISS/SNLG 2024 — Demenza da AD (setting specialistico CDCD)</div>
+          <ol>
+            <li data-step="1" class="step-ad">
+              <strong>Diagnosi di sindrome dementigena</strong>
+              <ul class="sub">
+                <li>Criteri McKhann 2011 (NIA-AA): declino in ≥2 domini cognitivi + impatto funzionale</li>
+                <li>Esordio insidioso, progressione lenta, non spiegabile da altra causa</li>
+              </ul>
+            </li>
+            <li data-step="2" class="step-ad">
+              <strong>Caratterizzazione del pattern cognitivo</strong>
+              <ul class="sub">
+                <li>AD tipica: compromissione predominante della memoria episodica (amnestic AD)</li>
+                <li>AD atipica: variante logopenia, variante frontale, variante posterio-corticale</li>
+                <li>RM encefalo: atrofia ippocampale e temporo-parietale (scala Scheltens per ippocampo)</li>
+              </ul>
+            </li>
+            <li data-step="3" class="step-ad">
+              <strong>In caso di diagnosi incerta — approfondimento biomarker</strong>
+              <div class="or-divider">Prima scelta</div>
+              <ul class="sub">
+                <li>18F-FDG PET (ipometabolismo temporo-parietale) OPPURE SPECT da perfusione</li>
+              </ul>
+              <div class="or-divider">Seconda scelta / alternativa</div>
+              <ul class="sub">
+                <li>Analisi del liquor: T-tau, P-tau181, rapporto Aβ1-42/Aβ1-40 (o Aβ1-42 da solo)</li>
+              </ul>
+              <div class="or-divider">Solo ricerca (raccomandazione 2R)</div>
+              <ul class="sub">
+                <li>Amyloid PET: non raccomandato per uso clinico routinario in Italia</li>
+              </ul>
+            </li>
+            <li data-step="4" class="step-ad">
+              <strong>Gold standard</strong>
+              <ul class="sub">
+                <li>Esame neuropatologico post-mortem (placche neuritiche + grovigli neurofibrillari secondo criteri ABC: A=Thal, B=Braak, C=CERAD)</li>
+                <li>In vita: diagnosi clinica rimane «probabile AD» anche con biomarker positivi</li>
+              </ul>
+            </li>
+          </ol>
+        </div>
+
+        <h3>SINDEM 2024 — Raccomandazioni intersocietarie per MCI</h3>
+        <p>In parallelo alle linee guida ISS, SINDEM ha pubblicato nel 2024 raccomandazioni intersocietarie che aggiornano l'approccio diagnostico eziologico nel MCI, incorporando la visione biomarker-first per il contesto specialistico:</p>
+
+        <ul class="prose">
+          <li><strong>Step 1 — Biomarker plasmatici</strong> (se disponibili): p-tau217/Aβ42 rapporto plasmatico come primo strumento di triage. Valori elevati indicano alta probabilità di patologia AD; bassa probabilità esclude con buona specificità.</li>
+          <li><strong>Step 2 — Conferma CSF o PET</strong> nei casi con p-tau217 borderline o intermedi.</li>
+          <li><strong>Interpretazione</strong>: MCI con A+T+ = MCI da AD (prodromal AD). MCI con A+T− = MCI preclinico. MCI con A−T− = MCI non-AD (cercare altra eziologia).</li>
+        </ul>
+      </section>
+
+      <hr class="divider">
+
+      <!-- TEST E SOGLIE RIEPILOGATIVE -->
+      <section class="section" id="test-soglie">
+        <div class="section-header">
+          <span class="section-label">Tabella riepilogativa</span>
+          <h2 class="section-title">Test, endpoint e soglie diagnostiche</h2>
+        </div>
+
+        <p>Riepilogo dei test più usati clinicamente con le soglie per la classificazione CN/MCI/AD, basato su dati ADNI e letteratura normativa italiana. I valori sono orientativi — sempre da contestualizzare con norme per età, scolarità e metodo.</p>
+
+        <h4>Test neuropsicologici — Soglie ROC (dati ADNI, Frontiers in Dementia 2026)</h4>
+        <div style="overflow-x:auto;">
+        <table class="thresh-table">
+          <thead>
+            <tr>
+              <th>Test</th>
+              <th class="h-cn">CN vs MCI — Soglia</th>
+              <th>Sens / Spec</th>
+              <th class="h-mci">MCI vs AD — Soglia</th>
+              <th>Sens / Spec</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>MMSE</strong></td>
+              <td class="val val-cn">≥ 28 = CN</td>
+              <td>63% / 70%</td>
+              <td class="val val-mci">≥ 24 = MCI; &lt; 24 = AD</td>
+              <td>82% / 87%</td>
+              <td>Stabile su 4 metodi statistici</td>
+            </tr>
+            <tr>
+              <td><strong>MoCA</strong></td>
+              <td class="val val-cn">≥ 25 = CN (Youden)<br>≥ 24 = CN (Euclidean)</td>
+              <td>82% / 63%<br>71% / 73%</td>
+              <td class="val val-mci">≥ 22 = MCI; &lt; 22 = AD</td>
+              <td>~85% / ~80%</td>
+              <td>Threshold method-dependent per CN/MCI</td>
+            </tr>
+            <tr>
+              <td><strong>CDR</strong></td>
+              <td class="val val-cn">0 = CN; 0.5 = MCI</td>
+              <td>86% / 91%</td>
+              <td class="val val-mci">0.5 = MCI; ≥1 = AD</td>
+              <td>76% / 95%</td>
+              <td>Stabile su tutti i metodi — il più affidabile</td>
+            </tr>
+            <tr>
+              <td><strong>ADAS-Cog 13</strong></td>
+              <td class="val val-cn">&lt; 8 = CN</td>
+              <td>—</td>
+              <td class="val val-mci">&lt; 13 = MCI; ≥ 13 = AD</td>
+              <td>92% / 91%</td>
+              <td>Youden Index 0.829 — miglior discriminatore AD</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+
+        <h4>Biomarker — Soglie orientative (non universalmente standardizzate)</h4>
+        <div style="overflow-x:auto;">
+        <table class="thresh-table">
+          <thead>
+            <tr>
+              <th>Biomarker</th>
+              <th>Metodo</th>
+              <th class="h-cn">Negativo (normale)</th>
+              <th class="h-ad">Positivo (AD)</th>
+              <th>Nota</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>CSF Aβ1-42</strong></td>
+              <td>Lumipulse / Elecsys</td>
+              <td class="val val-cn">&gt; 1000 pg/mL</td>
+              <td class="val val-ad">&lt; 650–900 pg/mL</td>
+              <td>Kit-dipendente — validare per laboratorio</td>
+            </tr>
+            <tr>
+              <td><strong>CSF Aβ42/40 ratio</strong></td>
+              <td>Fujirebio Lumipulse</td>
+              <td class="val val-cn">&gt; 0.089</td>
+              <td class="val val-ad">&lt; 0.062</td>
+              <td>Preferibile a Aβ42 da solo (meno variabilità)</td>
+            </tr>
+            <tr>
+              <td><strong>CSF p-tau181</strong></td>
+              <td>INNOTEST / Elecsys</td>
+              <td class="val val-cn">&lt; 52–60 pg/mL</td>
+              <td class="val val-ad">&gt; 60–80 pg/mL</td>
+              <td>Specifica per AD rispetto ad altre demenze</td>
+            </tr>
+            <tr>
+              <td><strong>CSF T-tau</strong></td>
+              <td>INNOTEST</td>
+              <td class="val val-cn">&lt; 300 pg/mL</td>
+              <td class="val val-ad">&gt; 400–500 pg/mL (dipende da età)</td>
+              <td>Marker di danno assonale generico</td>
+            </tr>
+            <tr>
+              <td><strong>Amyloid PET (florbetapir)</strong></td>
+              <td>Amyvid® / Centiloid</td>
+              <td class="val val-cn">SUVR &lt; 1.11 (o &lt; 24 Centiloid)</td>
+              <td class="val val-ad">SUVR &gt; 1.11 (o &gt; 24 Centiloid)</td>
+              <td>Conferma nucleo stabilizzata; Centiloid per cross-tracer</td>
+            </tr>
+            <tr>
+              <td><strong>Tau PET (flortaucipir)</strong></td>
+              <td>Tauvid® / Braak staging</td>
+              <td class="val val-cn">Medial temporal &lt; 1.13 SUVR</td>
+              <td class="val val-ad">1.13 (sens.) — 1.51 (spec.) SUVR</td>
+              <td>Threshold dipende da metodo (vedi PMC12079574)</td>
+            </tr>
+            <tr>
+              <td><strong>Plasma p-tau217</strong></td>
+              <td>Lilly MSD / ALZpath Simoa</td>
+              <td class="val val-cn">Basso (cutoff per-assay)</td>
+              <td class="val val-ad">Elevato (cutoff per-assay)</td>
+              <td>Miglior singolo biomarker plasmatico 2024</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+      </section>
+
+      <hr class="divider">
+
+      <!-- RULE-BASED -->
+      <section class="section" id="rule-based">
+        <div class="section-header">
+          <span class="section-label">Ingegnerizzazione</span>
+          <h2 class="section-title">Implicazioni per il sistema rule-based</h2>
+        </div>
+
+        <div class="alert alert-info">
+          <strong>Principio fondamentale</strong>
+          Nessuna delle linee guida analizzate usa un singolo test come criterio sufficiente. Il sistema rule-based deve implementare logiche di fusione multi-criterio, con branch condizionali sulla disponibilità dei biomarker e normalizzazione per covarianti demografiche (età, scolarità, sesso).
+        </div>
+
+        <h3>Architettura rule-based raccomandata</h3>
+        <div class="dtree">
+          <div class="dtree-title">Struttura logica per classificazione CN / MCI / AD</div>
+          <ol>
+            <li data-step="1">
+              <strong>Layer 0 — Esclusioni primarie</strong>
+              <ul class="sub">
+                <li>Se delirium, depressione maggiore attiva, o causa medica acuta → sospendere classificazione</li>
+                <li>Se età &lt; 18 anni → out of scope</li>
+              </ul>
+            </li>
+            <li data-step="2" class="step-mci">
+              <strong>Layer 1 — Classificazione clinica (sempre obbligatoria)</strong>
+              <ul class="sub">
+                <li>MMSE corretto ≥ 24 → possibile CN; &lt; 24 → possibile demenza</li>
+                <li>CDR = 0 → CN; CDR = 0.5 → MCI; CDR ≥ 1 → Demenza</li>
+                <li>Funzionamento ADL: preservato → non demenza; compromesso → demenza</li>
+                <li>Output: {CN_clinical, MCI_clinical, Dementia_clinical}</li>
+              </ul>
+            </li>
+            <li data-step="3" class="step-mci">
+              <strong>Layer 2 — Normalizzazione neuropsicologica</strong>
+              <ul class="sub">
+                <li>Applicare norme italiane per età/scolarità/sesso (MMSE Magni 1996, MoCA Conti 2015)</li>
+                <li>Soglia decadimento: punteggio corretto &lt; media − 1.5 DS</li>
+                <li>Dominio colpito: classificare quale dominio (memoria, esecutivo, linguaggio, etc.)</li>
+              </ul>
+            </li>
+            <li data-step="4">
+              <strong>Layer 3 — Biomarker (condizionale: se disponibili)</strong>
+              <ul class="sub">
+                <li>Se A+ E T+ → diagnosi biologica AD (NIA-AA 2024; SINDEM 2024)</li>
+                <li>Se A+ E T− → accumulo amiloide senza tau; alta probabilità transizione a AD</li>
+                <li>Se A− E T− → AD biologica esclusa; cercare altra eziologia</li>
+                <li>Se A− E T+ → pattern atipico; non diagnostico per AD (considera CTE, PSP)</li>
+              </ul>
+            </li>
+            <li data-step="5" class="step-ad">
+              <strong>Layer 4 — Classificazione finale (fusione Layer 1-3)</strong>
+              <ul class="sub">
+                <li>CN_clinical + A−T− → CN confermato</li>
+                <li>CN_clinical + A+T− → CN preclinico (Stage 1 NIA-AA)</li>
+                <li>MCI_clinical + A+T+ → MCI da AD (Stage 3 NIA-AA)</li>
+                <li>MCI_clinical + A−T− → MCI non-AD</li>
+                <li>Dementia_clinical + A+T+ → AD demenza (Stage 4–6)</li>
+                <li>Dementia_clinical + A−T− → Demenza non-AD (DLB? VaD? FTD?)</li>
+              </ul>
+            </li>
+          </ol>
+        </div>
+
+        <h3>Variabili chiave da includere nel dataset</h3>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-label">Dati clinici obbligatori</div>
+            <ul class="prose" style="font-size:.84rem">
+              <li>Età, scolarità, sesso</li>
+              <li>MMSE (punteggio grezzo + corretto)</li>
+              <li>CDR globale + CDR-SB</li>
+              <li>MoCA (punteggio grezzo + corretto)</li>
+              <li>ADL/IADL (Basic + Instrumental)</li>
+              <li>Informant interview (CDR informant section)</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-label">Biomarker (condizionali)</div>
+            <ul class="prose" style="font-size:.84rem">
+              <li>CSF: Aβ1-42, Aβ42/40, p-tau181, T-tau</li>
+              <li>Amyloid PET: SUVR o Centiloid</li>
+              <li>Tau PET: SUVR per regione</li>
+              <li>Plasma: p-tau217, Aβ42/40</li>
+              <li>RM: volume ippocampale, scala Scheltens</li>
+              <li>FDG-PET: SUVr temporale/parietale</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <hr class="divider">
+
+      <!-- BIBLIOGRAFIA -->
+      <section class="section" id="bibliografia">
+        <div class="section-header">
+          <span class="section-label">Fonti</span>
+          <h2 class="section-title">Riferimenti bibliografici</h2>
+        </div>
+
+        <h4>Standard internazionali NIA-AA</h4>
+        <ol class="ref-list">
+          <li>McKhann GM, Knopman DS, Chertkow H, et al. The diagnosis of dementia due to Alzheimer's disease: recommendations from the National Institute on Aging-Alzheimer's Association workgroups. <em>Alzheimer's &amp; Dementia</em>. 2011;7(3):263–269. doi:10.1016/j.jalz.2011.03.005</li>
+          <li>Albert MS, DeKosky ST, Dickson D, et al. The diagnosis of mild cognitive impairment due to Alzheimer's disease: recommendations from the National Institute on Aging-Alzheimer's Association workgroups. <em>Alzheimer's &amp; Dementia</em>. 2011;7(3):270–279. doi:10.1016/j.jalz.2011.03.008</li>
+          <li>Jack CR Jr, Bennett DA, Blennow K, et al. NIA-AA Research Framework: Toward a biological definition of Alzheimer's disease. <em>Alzheimer's &amp; Dementia</em>. 2018;14(4):535–562. doi:10.1016/j.jalz.2018.02.018</li>
+          <li>Jack CR Jr, Andrews JS, Beach TG, et al. Revised criteria for diagnosis and staging of Alzheimer's disease: Alzheimer's Association Workgroup. <em>Alzheimer's &amp; Dementia</em>. 2024;20(8):5143–5169. doi:10.1002/alz.13859</li>
+        </ol>
+
+        <h4>Criteri IWG</h4>
+        <ol class="ref-list" start="5">
+          <li>Dubois B, Feldman HH, Jacova C, et al. Advancing research diagnostic criteria for Alzheimer's disease: the IWG-2 criteria. <em>Lancet Neurol</em>. 2014;13(6):614–629. doi:10.1016/S1474-4422(14)70090-0</li>
+          <li>Dubois B, Villain N, Frisoni GB, et al. Clinical diagnosis of Alzheimer's disease: recommendations of the International Working Group. <em>Lancet Neurol</em>. 2021;20(6):484–496. doi:10.1016/S1474-4422(21)00066-1</li>
+        </ol>
+
+        <h4>FDA — Guidance Documents</h4>
+        <ol class="ref-list" start="7">
+          <li>U.S. Food and Drug Administration (FDA), CDER. <em>Alzheimer's Disease: Developing Drugs for Treatment — Guidance for Industry</em>. February 2018 (updated draft 2024). Available at: <a href="https://www.fda.gov/media/110903/download">www.fda.gov/media/110903/download</a></li>
+          <li>U.S. Food and Drug Administration (FDA), CDER. <em>Early Alzheimer's Disease: Developing Drugs for Treatment — Guidance for Industry</em>. February 2018. Federal Register 2024;89(49):17988. <a href="https://www.federalregister.gov/documents/2024/03/12/2024-05178">Available online</a></li>
+        </ol>
+
+        <h4>EMA — Guideline e Qualification Opinion</h4>
+        <ol class="ref-list" start="9">
+          <li>European Medicines Agency (EMA), CHMP. <em>Guideline on clinical investigation of medicinal products in the treatment of Alzheimer's disease</em>. CPMP/EWP/553/95 Rev. 2. London: EMA; 2018. <a href="https://www.ema.europa.eu/en/documents/scientific-guideline/guideline-clinical-investigation-medicines-treatment-alzheimers-disease-revision-2_en.pdf">Available online</a></li>
+          <li>European Medicines Agency (EMA), CHMP/SAWP. <em>Qualification Opinion: use of cerebrospinal fluid (CSF) amyloid-beta 1-42 and t-tau and/or positron emission tomography (PET) amyloid imaging as enrichment biomarkers</em>. EMA/CHMP/SAWP/893778/2014. London: EMA; 2014. <a href="https://www.ema.europa.eu/en/documents/regulatory-procedural-guideline/qualification-opinion-alzheimers-disease-novel-methodologies-biomarkers-use-cerebrospinal-fluid-amyloid-beta-1-42-and-t-tau-and-or-positron-emission-tomography-amyloid-imaging-positive-negative_en.pdf">Available online</a></li>
+        </ol>
+
+        <h4>WHO — Classificazione e documenti</h4>
+        <ol class="ref-list" start="11">
+          <li>World Health Organization. <em>International Classification of Diseases, 11th Revision (ICD-11)</em>. Geneva: WHO; 2022. Available at: <a href="https://icd.who.int">icd.who.int</a></li>
+          <li>World Health Organization. <em>Guidelines for the care and support of people with dementia</em>. Geneva: WHO; 2024. ISBN 978-92-4-009906-7. Available at: <a href="https://www.who.int/publications/i/item/9789240099067">who.int</a></li>
+          <li>World Health Organization. <em>Global action plan on the public health response to dementia 2017–2025</em>. Geneva: WHO; 2017.</li>
+        </ol>
+
+        <h4>Linee Guida Italiane</h4>
+        <ol class="ref-list" start="14">
+          <li>Istituto Superiore di Sanità — SNLG. <em>Linee Guida per la diagnosi e il trattamento di Demenza e Mild Cognitive Impairment</em>. Versione 1.0 (gennaio 2024), aggiornata a v3.0 (ottobre 2025). SIN, SINDEM, SIGG, SIP, SIMG. Disponibile su: <a href="https://www.salute.gov.it/new/it/tema/demenze/linee-guida-sulla-diagnosi-e-trattamento-di-demenza-e-mild-cognitive-impairment/">salute.gov.it</a></li>
+          <li>SINDEM, SIN, SIGG, SIP. <em>Raccomandazioni intersocietarie per la diagnosi eziologica nel decadimento cognitivo lieve</em>. 2024. Disponibile su: <a href="https://www.centroalzheimer.org/le-nuove-raccomandazioni-intersocietarie-per-la-diagnosi-eziologica-nel-decadimento-cognitivo-lieve/">centroalzheimer.org</a></li>
+        </ol>
+
+        <h4>Test neuropsicologici — Norme italiane e soglie</h4>
+        <ol class="ref-list" start="16">
+          <li>Magni E, Binetti G, Bianchetti A, et al. Mini-Mental State Examination: a normative study in Italian elderly population. <em>Eur J Neurol</em>. 1996;3:198–202.</li>
+          <li>Conti S, Bonazzi S, Laiacona M, Masini M, Coralli MV. Montreal Cognitive Assessment (MoCA)-Italian version: regression based norms and equivalent scores. <em>Neurol Sci</em>. 2015;36(2):209–214. doi:10.1007/s10072-014-1921-3</li>
+          <li>Nasreddine ZS, Phillips NA, Bédirian V, et al. The Montreal Cognitive Assessment, MoCA: a brief screening tool for mild cognitive impairment. <em>J Am Geriatr Soc</em>. 2005;53(4):695–699. doi:10.1111/j.1532-5415.2005.53221.x</li>
+          <li>Hughes CP, Berg L, Danziger WL, et al. A new clinical scale for the staging of dementia. <em>Br J Psychiatry</em>. 1982;140:566–572.</li>
+        </ol>
+
+        <h4>Soglie biomarker e confronto test</h4>
+        <ol class="ref-list" start="20">
+          <li>Corriveau-Lecavalier N, Dicks E, Saber AA, et al. Optimal cutoffs for tau-PET and amyloid-PET in Alzheimer's disease continuum. <em>Alzheimer's &amp; Dementia: Translational Research &amp; Clinical Interventions</em>. 2025. PMC12079574. doi:10.1002/trc2.70013</li>
+          <li>García-Ptacek S, Modabbernia A, Gaber A, et al. Optimal cutoffs for MMSE, MoCA, CDR, and ADAS-Cog for classification of CN, MCI, and AD. <em>Frontiers in Dementia</em>. 2026. PMC12961348.</li>
+          <li>Hu B, Chang Y, Zhao L. Comparison of MMSE, MoCA, and ADAS-Cog for AD diagnosis using ADNI data. <em>Frontiers in Aging Neuroscience</em>. 2023. PMC10568914. doi:10.3389/fnagi.2023.1258263</li>
+          <li>Klunk WE, Koeppe RA, Price JC, et al. The Centiloid Project: standardizing quantitative amyloid plaque estimation by PET. <em>Alzheimer's &amp; Dementia</em>. 2015;11(1):1–15. doi:10.1016/j.jalz.2014.07.003</li>
+        </ol>
+      </section>
+
+    </div><!-- /main-inner -->
+  </div><!-- /content -->
+</div><!-- /layout -->
+
+<script>
+// Sticky nav active state
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.sidenav nav a');
+function onScroll() {
+  let current = '';
+  sections.forEach(s => {
+    if (window.scrollY + 120 >= s.offsetTop) current = s.id;
+  });
+  navLinks.forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+}
+window.addEventListener('scroll', onScroll, { passive: true });
+onScroll();
+</script>
