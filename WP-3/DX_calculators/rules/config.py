@@ -17,7 +17,7 @@ Relationship to thresholds.py
 ------------------------------
 thresholds.py drives the legacy weighted-vote classifier (dx_rule_based.py) and
 is intentionally unchanged. config.py drives the new protocol-aware modules
-(dx_adni_protocol, dx_clinical_nia, dx_atn, dx_combined). Do not merge them.
+(nia_protocol_resolver, dx1_nia_clinical, dx2_nia_atn, dx3_nia_combined). Do not merge them.
 """
 
 from __future__ import annotations
@@ -153,6 +153,27 @@ CDRSB_SEVERITY: dict[str, tuple[float, float]] = {
     "moderate":     (4.5,  9.5),
     "severe":       (9.5, 18.0),
 }
+
+# CDR Global proxy from CDR Sum of Boxes — O'Bryant et al. 2008, Arch Neurology
+# (doi:10.1001/archneur.65.8.1091, n=1577); externally validated on NACC by
+# O'Bryant et al. 2010, Arch Neurology (n=12462). Kappa=0.90, 93-94% correctly
+# classified. Does NOT replace the NIA-AA algorithmic CDR Global (Morris 1993,
+# memory-anchored) — use only as an explicit, flagged fallback when CDGLOBAL is
+# missing and CDRSB is available (see STATUS_DIAGNOSI_PIPELINE_SINTETICA.md,
+# section 8bis, for why CDGLOBAL is often missing in the merged dataset — it is
+# a WP-2 pipeline bug, not a true ADNI collection gap). Validated mainly on
+# AD-spectrum populations; less reliable on atypical, non-memory-dominant
+# dementia profiles. This is a distinct table from CDRSB_SEVERITY above (that
+# one drives NIA-AA 2024 severity staging in dx3_nia_combined.py; this one
+# derives a numeric CDR Global stand-in for dx1_nia_clinical.py).
+# Bounds: (lower_inclusive, upper_inclusive, cdr_global_value).
+CDRSB_TO_CDRGLOBAL: list[tuple[float, float, float]] = [
+    (0.0,  0.0,  0.0),
+    (0.5,  4.0,  0.5),
+    (4.5,  9.0,  1.0),
+    (9.5, 15.5,  2.0),
+    (16.0, 18.0, 3.0),
+]
 
 # Exclusion criteria — applied only when apply_exclusions=True
 # GDS (Geriatric Depression Scale): GDTOTAL >= 6 → probable depression → exclude
@@ -368,13 +389,32 @@ TAU_PET_CUTOFFS: dict[str, dict] = {
 
 NEUROIMAGING_CUTOFFS: dict[str, dict] = {
 
+    # pct_icv cutoffs are FreeSurfer-version-specific: normalising by ICV
+    # reduces but does not eliminate cross-version segmentation differences
+    # (see FREESURFER_VERSION_NOTES). Only "5.1" is independently validated
+    # (Jack 2010 Brain; Risacher 2010 Arch Neurology). No FS-version-specific
+    # cutoffs exist in the literature for any other version, and no reliable
+    # cross-version correction factor exists either — Gronenschild et al. 2012
+    # (PLoS One 7(6):e38234) shows the bias between FreeSurfer versions is
+    # structure-dependent (8.8+/-6.6%, range 1.3-64%), not a fixed offset.
+    # Every non-"5.1" version below is therefore populated as an explicit,
+    # flagged PROXY of "5.1" (see the loop after this dict) rather than left
+    # as None — this is the least-bad option until version-specific cutoffs
+    # are derived empirically (e.g. percentiles on that version's own CN
+    # subsample), which remains a separate, un-scheduled TODO.
     "pct_icv": {
-        "Hippocampus": {"atrophy_below":   0.34, "unit": "%ICV"},
-        "Entorhinal":  {"atrophy_below":   0.18, "unit": "%ICV"},
-        "Fusiform":    {"atrophy_below":   0.90, "unit": "%ICV"},
-        "MidTemp":     {"atrophy_below":   0.80, "unit": "%ICV"},
-        "Ventricles":  {"expansion_above": 2.00, "unit": "%ICV"},
-        "reference":   "Jack 2010 Brain; Risacher 2010 Arch Neurology; normalization_settings.json",
+        "4.3": None,    # populated as a "5.1" proxy below
+        "4.4": None,    # populated as a "5.1" proxy below
+        "5.1": {  # validated — standard ADNI1/2/GO pipeline
+            "Hippocampus": {"atrophy_below":   0.34, "unit": "%ICV"},
+            "Entorhinal":  {"atrophy_below":   0.18, "unit": "%ICV"},
+            "Fusiform":    {"atrophy_below":   0.90, "unit": "%ICV"},
+            "MidTemp":     {"atrophy_below":   0.80, "unit": "%ICV"},
+            "Ventricles":  {"expansion_above": 2.00, "unit": "%ICV"},
+            "reference":   "Jack 2010 Brain; Risacher 2010 Arch Neurology; normalization_settings.json",
+        },
+        "6.0": None,    # populated as a "5.1" proxy below
+        "7.4.1": None,  # populated as a "5.1" proxy below
     },
 
     "mm3": {
@@ -387,6 +427,36 @@ NEUROIMAGING_CUTOFFS: dict[str, dict] = {
     },
 }
 
+# Populate every non-"5.1" pct_icv version as an explicit proxy of "5.1"
+# (same numeric cutoffs, flagged via "is_proxy") — see the comment above
+# NEUROIMAGING_CUTOFFS["pct_icv"] for why no correction factor is applied.
+# Single source of truth: change "5.1" above and every proxy updates with it.
+_PCT_ICV_PROXY_REFERENCE = (
+    "PROXY from '5.1' (Jack 2010 Brain; Risacher 2010 Arch Neurology) — "
+    "no independent validation exists for this FreeSurfer version, and no "
+    "reliable cross-version correction factor exists either (Gronenschild "
+    "et al. 2012, PLoS One 7(6):e38234: cross-version bias is structure-"
+    "dependent, not a fixed offset). Treat as approximate until re-derived "
+    "empirically from this version's own CN subsample."
+)
+for _fs_version, _cutoffs in NEUROIMAGING_CUTOFFS["pct_icv"].items():
+    if _cutoffs is None:
+        NEUROIMAGING_CUTOFFS["pct_icv"][_fs_version] = {
+            **{k: v for k, v in NEUROIMAGING_CUTOFFS["pct_icv"]["5.1"].items() if k != "reference"},
+            "reference": _PCT_ICV_PROXY_REFERENCE,
+            "is_proxy": True,
+        }
+del _fs_version, _cutoffs, _PCT_ICV_PROXY_REFERENCE
+
+# Raw FSVERSION values (from file metadata / dataset) are normalised to the
+# canonical keys used in NEUROIMAGING_CUTOFFS["pct_icv"] above.
+FREESURFER_VERSION_ALIASES: dict[str, str] = {
+    "4.3": "4.3", "4.4": "4.4", "5.1": "5.1",
+    "6": "6.0", "6.0": "6.0",
+    "7.4.1": "7.4.1",
+}
+FREESURFER_VERSION_DEFAULT: str = "5.1"   # used for synthetic data (no FS version)
+
 # FreeSurfer version notes
 # Different pipeline versions produce systematically different absolute volumes.
 # Subgrouping by version (as done here) reduces confounding. Notes below flag
@@ -394,20 +464,55 @@ NEUROIMAGING_CUTOFFS: dict[str, dict] = {
 FREESURFER_VERSION_NOTES: dict[str, str] = {
     "4.3": (
         "Early ADNI1 pipeline. Known segmentation differences from v5+. "
-        "pct_icv format reduces (but does not eliminate) version effects."
+        "pct_icv format reduces (but does not eliminate) version effects. "
+        "No FS4.3-specific pct_icv cutoffs exist in the literature and no reliable "
+        "FS4.3->FS5.1 conversion factor exists (Gronenschild 2012 PLoS One: bias is "
+        "structure-dependent, not systematic). Using v5.1 cutoffs unadjusted as a "
+        "documented proxy — see NEUROIMAGING_CUTOFFS['pct_icv']['4.3']['is_proxy']."
+    ),
+    "4.4": (
+        "Early ADNI1/GO pipeline, minor revision of 4.3. Same situation as 4.3: "
+        "no version-specific pct_icv cutoffs in the literature, no reliable "
+        "conversion factor from v5.1. Using v5.1 cutoffs unadjusted as a documented "
+        "proxy — see NEUROIMAGING_CUTOFFS['pct_icv']['4.4']['is_proxy']."
     ),
     "5.1": (
         "Standard ADNI1/2/GO pipeline. pct_icv cutoffs validated on this version. "
         "Recommended baseline for cross-version comparisons."
     ),
-    "7.2": (
+    "6.0": (
+        "Later pipeline revision (post-ADNI2). Segmentation differences from v5.1 "
+        "expected but not yet quantified. No version-specific pct_icv cutoffs in the "
+        "literature, no reliable conversion factor from v5.1. Using v5.1 cutoffs "
+        "unadjusted as a documented proxy — see "
+        "NEUROIMAGING_CUTOFFS['pct_icv']['6.0']['is_proxy']."
+    ),
+    "7.4.1": (
         "ADNI4 pipeline. Improved hippocampal segmentation yields ~5–8% higher HC "
-        "volumes vs v5. Consider adjusting HC atrophy_below upward if comparing across versions."
+        "volumes vs v5.1 — the direction of this bias is documented, but no numeric "
+        "correction factor is sourced, and Gronenschild 2012 suggests a single scalar "
+        "correction would be unreliable anyway. Using v5.1 cutoffs unadjusted as a "
+        "documented proxy — see NEUROIMAGING_CUTOFFS['pct_icv']['7.4.1']['is_proxy']."
     ),
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# NIA-AA 2024 staging model (for dx_combined.py)
+# Method resolution from file metadata
+# ─────────────────────────────────────────────────────────────────────────────
+# Merged/reversed dataset files carry the CSF/PET/volume method used for that
+# file in metadata.custom (see WP-2/Data_cleaning/automated_merge.py). Maps our
+# internal method-parameter name -> the metadata.custom key that carries it.
+# Value casing in metadata: CSF lowercase (e.g. "elecsys"), PET uppercase
+# (e.g. "FBP"), volumes numeric-as-string (e.g. "7.4.1"). Case normalisation to
+# match CSF_CUTOFFS's uppercase keys happens at lookup time, not here.
+METHOD_METADATA_KEYS: dict[str, str] = {
+    "csf_assay":          "CSF_filter",
+    "amyloid_pet_tracer":  "PET_filter",
+    "volume_fs_version":   "VOLUMES_filter",
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# NIA-AA 2024 staging model (for dx3_nia_combined.py)
 # ─────────────────────────────────────────────────────────────────────────────
 # Jack et al. 2024, Alzheimer's & Dementia — 6-stage biological-clinical model.
 # Stages 1–2: preclinical (amyloid+ but CN); 3: prodromal; 4–6: dementia by severity.
@@ -458,7 +563,10 @@ DX_LABELS = {
 # ─────────────────────────────────────────────────────────────────────────────
 # Flag registry — all flags that can appear in *_flag output columns
 # ─────────────────────────────────────────────────────────────────────────────
-# Each module emits zero or more of these. Multiple flags are joined with "|".
+# Each module emits zero or more of these. Multiple flags are joined with
+# FLAG_JOIN_SEP.
+
+FLAG_JOIN_SEP: str = "|"
 
 FLAGS = {
     # Memory test path
@@ -469,6 +577,7 @@ FLAGS = {
     "MISSING_MMSE_GATE_SKIPPED":      "MMSE absent — MMSE range gate skipped",
     "MISSING_LDELTOTAL":              "LDELTOTAL absent (informational, Plan B active)",
     "MISSING_CDMEMORY":               "CDMEMORY absent — gate replaced by CDGLOBAL",
+    "CDGLOBAL_DERIVED_FROM_CDRSB":    "CDGLOBAL absent — derived from CDRSB via the O'Bryant 2008 (Arch Neurol) crosswalk; an approximation, not equivalent to an observed value",
     # Education band
     "ASSUMED_EDUC_BAND":              f"PTEDUCAT/EDUCAT absent — assumed band '{EDUCATION_BAND_DEFAULT}'",
     # Tie-break rules triggered
@@ -485,4 +594,11 @@ FLAGS = {
     "CONFLICTING_AMYLOID_PET_CSF":    "Amyloid PET and CSF Aβ42 discordant — PET used as primary",
     # Data quality
     "INSUFFICIENT_DATA":              "Insufficient data to classify — dx=Unknown",
+    # FreeSurfer version / method resolution (dx2_nia_atn.py)
+    "FS_VERSION_CUTOFFS_UNCONFIRMED": "FreeSurfer version's pct_icv cutoffs are unvalidated/None — N marker skipped for volume",
+    "FS_VERSION_CUTOFF_PROXY_FROM_5.1": "N marker for this FreeSurfer version uses '5.1' pct_icv cutoffs as an unvalidated proxy — no version-specific cutoff exists",
+    "METHOD_FROM_METADATA":           "CSF/PET/volume method resolved from file metadata.custom, not from an explicit function parameter",
+    "METHOD_PARAM_METADATA_MISMATCH": "Explicit method parameter differs from file metadata.custom value — parameter took precedence",
+    # NIA-AA 2024 combined staging (dx3_nia_combined.py)
+    "SEVERITY_QUESTIONABLE_FOLDED_TO_MILD": "CDRSB severity band 'questionable' has no stage 4-6 counterpart — folded to 'mild' for staging",
 }

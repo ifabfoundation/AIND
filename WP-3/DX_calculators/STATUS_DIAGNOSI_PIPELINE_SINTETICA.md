@@ -330,6 +330,45 @@ Dataset sintetico post-denormalizzazione (scala clinica, valori interi)
 
 ---
 
+## 8bis. BUG SCOPERTO: VARIABILI SCARTATE SILENZIOSAMENTE DAL MERGE (WP-2)
+
+**Contesto:** eseguendo la pipeline di calcolo diagnosi in `WP-3/DX_calculators/rules/` sul dataset reale, `CDRGLOB` (CDR Global) è risultato quasi sempre nullo mentre `CDRSB` (CDR Sum of Boxes) è quasi sempre popolato — nonostante siano raccolti nella stessa visita clinica ADNI. Un'indagine mirata ha isolato la causa: **non è un vero gap di raccolta ADNI, è un bug di mapping nella pipeline di pulizia/merge `WP-2/Data_cleaning/`**, che scarta silenziosamente alcune colonne prima del merge.
+
+### Meccanismo (3 passi)
+
+1. **Mapping** — `WP-2/Data_cleaning/ADNI_variables_cleaned4.csv` (la versione effettivamente live: scaricata dal datalake con `custom.level: 'cleaned_04'`, vedi `WP-2/Data_cleaning/merge_category_wise.ipynb`) associa a ogni colonna grezza ADNI un `orig_variable_code` → `variable_code` armonizzato.
+2. **Rename** — `WP-2/Data_cleaning/data_model/DataCleaner.py`, funzione `new_variable_names` (righe ~1196-1249), applica questo mapping rinominando le colonne del dataframe grezzo. Se `orig_variable_code == variable_code`, il rename è un no-op — la colonna resta col nome originale.
+3. **Filtro per categoria** — `WP-2/Data_cleaning/data_model/MergerTools.py`: `CATEGORY_KEYS` (righe ~40-50) elenca, per ciascuna categoria (`scale`, `volumes`, `csf`, `cofactor`, ...), i nomi **armonizzati attesi**. `filter_df_category` (righe 150-164) tiene solo le colonne il cui nome è in `BASE_KEYS + CATEGORY_KEYS[categoria]`. Se il passo 2 non ha effettivamente rinominato una colonna al nome atteso, questa viene scartata qui — **silenziosamente**, senza errori né warning.
+
+### Caso 1 — `CDGLOBAL` / `CDRGLOB` (categoria `scale`)
+
+Nella tabella sorgente ADNI `CDR.csv` (tutte le coorti ADNI1-4, ~14.350 righe), `CDGLOBAL` è quasi completo: **14.345 validi, 5 mancanti** — alla pari di `CDRSB` (14.347 validi). Nel file di mapping, la riga per questa colonna ha `orig_variable_code = variable_code = "CDGLOBAL"` (nessun rename verso `CDRGLOB`, il nome atteso da `CATEGORY_KEYS["scale"]`). Risultato: `CDGLOBAL` viene scartata al passo 3, e nel dataset finale `CDRGLOB` sopravvive solo dalla sottopopolazione `ADNI_DIAN_COMPARISON` (mappata correttamente lì, ma limitata a coorti ADNI3/ADNI4, ~3.600 righe). `ADNIMERGE`, l'altra tabella sorgente della categoria `scale`, non porta comunque nessun campo CDR Global nativamente (solo `CDRSB`) — quindi non compensa la perdita.
+
+**Fix suggerito:** correggere `variable_code` da `CDGLOBAL` a `CDRGLOB` per la riga CDR in `ADNI_variables_cleaned4.csv` (propagando la correzione al file "master" da cui questo deriva, se esiste uno step di generazione a monte) e ri-eseguire il merge. Atteso: recupero della quasi totalità delle ~14.350 righe di `CDRGLOB`, oggi limitate a ~3.600.
+
+### Caso 2 — `TTAU_AB42_CSF` (categoria `csf`)
+
+Una verifica sistematica dello stesso pattern (righe di mapping marcate `keep` il cui `variable_code` finale non compare in nessun `CATEGORY_KEYS[categoria]`) su `ADNI_variables_cleaned3.csv` e `cleaned4.csv` ha trovato un solo altro caso concreto: `TTAU_AB42_CSF` (rapporto TTAU/AB42 su CSF), marcato `keep` in 4 tabelle sorgente:
+
+| Tabella sorgente | Validi | Mancanti |
+|---|---|---|
+| UPENNBIOMK_ADNIDIAN_ES_2017 | 422 | 0 |
+| UPENNBIOMK_ROCHE_ELECSYS | 3.154 | 18 |
+| MESOSCALE | 250 | 0 |
+| UPENNBIOMK_MASTER | 2.145 | 27 |
+
+`TTAU_AB42_CSF` non compare in `CATEGORY_KEYS["csf"]` (`MergerTools.py`, riga ~48) — a differenza del suo analogo strutturale `PT181_AB42_CSF` (stesso schema di derivazione, presente correttamente in `CATEGORY_KEYS["csf"]`), il che suggerisce una svista di aggiornamento piuttosto che un'esclusione intenzionale.
+
+**Fix suggerito:** aggiungere `"TTAU_AB42_CSF"` a `CATEGORY_KEYS["csf"]` in `MergerTools.py`. Atteso: recupero di migliaia di valori CSF oggi scartati, in particolare dalla tabella `UPENNBIOMK_ROCHE_ELECSYS` (la piattaforma "current focus dataset", vedi `rules/config.py`).
+
+### Copertura della verifica e raccomandazione
+
+Controllate le categorie `scale` (1 mismatch: CDGLOBAL), `csf` (1 mismatch: TTAU_AB42_CSF), `volumes` e `cofactor` (0 mismatch) su `cleaned3.csv`/`cleaned4.csv` (`cleaned4.csv` è la versione live). Le categorie `plasma` e `pet` non sono ancora verificabili: nessuna tabella sorgente le popola in questa versione del mapping.
+
+**Raccomandazione:** ripetere questo controllo incrociato (`CATEGORY_KEYS` vs file di mapping — variabili `keep` il cui `variable_code` non compare tra i nomi attesi della propria categoria) ogni volta che il file di mapping o `CATEGORY_KEYS` cambiano, per evitare che regressioni dello stesso tipo passino inosservate: il sintomo (missingness anomala su una variabile clinicamente rilevante) è difficile da notare a valle senza un confronto esplicito come questo.
+
+---
+
 ## 9. DECISIONI ARCHITETTURALI PENDENTI
 
 ### 9.1 Upgrade Leaspy v1.5.0 → v2.1.0?

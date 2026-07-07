@@ -1,167 +1,78 @@
-# DX_calculators/rules — Metodo B: diagnosi basata su regole cliniche (NIA-AA 2018)
+# DX_calculators/rules
 
-## Scopo
+Verisone 06/07/2026 - Chara & Claude
 
-Assegna una diagnosi (`CN` / `MCI` / `Dementia`) a ogni visita di un paziente
-usando un sistema di regole derivato dai criteri NIA-AA 2018 (Jack et al.) e
-dalla cascata biomarker di Jack 2013.
+Sistema di classificazione diagnostica per pazienti ADNI e ADNI-like (sintetici). Assegna tre diagnosi indipendenti a partire dagli stessi dati di visita, secondo la decisione di design in [`docs/adni_diagnosis_classifier_brief.md`](docs/adni_diagnosis_classifier_brief.md): due assi separati (clinico e biologico) che non si sovrascrivono mai a vicenda, più uno stadio combinato che li unisce senza sostituirli.
 
-Questo modulo è il **Metodo B** nella strategia diagnostica di AIND WP-3:
+> Questo file va aggiornato ad ogni cambiamento strutturale (nuovo modulo, nuova colonna di output, nuovo flag, modifica alle soglie in `config.py`). Non serve aggiornarlo per bugfix interni che non cambiano l'interfaccia pubblica.
 
-- È il riferimento normativo ("gold standard" clinico) con cui validare il Metodo A (ML).
-- Soddisfa per costruzione il criterio FDA di *Consistency* (Zamzmi et al. 2025).
-- Non dipende da training data → nessun overfitting, applicabile a qualsiasi dataset ADNI-like.
+## Le tre diagnosi
 
----
+| # | Nome | Framework | Modulo | Output |
+|---|---|---|---|---|
+| 1 | Clinica pura | Algoritmo ADNI / NIA-AA 2011 | `dx1_nia_clinical.py` | `DX1_clinical` (CN/MCI/Dementia), `DX1_clinical_detailed` (+EMCI/LMCI per ADNIGO2) |
+| 2 | Biologica pura (ATN) | NIA-AA 2018 (Jack et al.) | `dx2_nia_atn.py` | `DX2_A`, `DX2_T`, `DX2_N` (booleani), `DX2_ATN_label` |
+| 3 | Combinata clinico-biologica | NIA-AA 2024, 6 stadi (Jack et al.) | `dx3_nia_combined.py` | `DX3_stage` (1-6 o `None`), `DX3_label` |
 
-## Perché non basta MMSE
-
-MMSE da solo ha limitazioni note:
-- **Effetto soffitto** nei soggetti CN con alta scolarità (falsi negativi MCI precoce).
-- **Effetto pavimento** nei pazienti con Demenza grave (non discrimina gradi di severità).
-- Non misura il **dominio funzionale** (ADL), che è requisito necessario per la diagnosi di Demenza secondo NIA-AA.
-
-Il Metodo B usa un **voto pesato multi-dominio** che integra staging funzionale,
-cognizione globale, memoria episodica e, quando disponibili, neuroimaging.
-
----
+La Diagnosi 2 non riceve mai la Diagnosi 1 come input (e viceversa): sono assi indipendenti. La Diagnosi 3 li combina *dopo* che sono stati calcolati entrambi, senza modificarli.
 
 ## File
 
-| File | Contenuto |
-|---|---|
-| `thresholds.py` | Soglie cliniche per ogni biomarker, pesi dei domini, regole di consistenza temporale |
-| `dx_rule_based.py` | Funzioni principali: `assign_dx_rule_based()` (singola visita) e `assign_dx_batch()` (DataFrame) |
-| `__init__.py` | Esporta `assign_dx_rule_based`, `assign_dx_batch`, `DxResult` |
-
----
-
-## Domini e pesi
-
-| Dominio | Biomarker | Peso | Riferimento |
-|---|---|---|---|
-| Staging funzionale | `CDRSB` | 3.0 | O'Bryant 2010 / NIA-AA 2018 |
-| Funzionale ADL | `FAQ` | 2.0 | Pfeffer 1982 |
-| Cognitivo globale | `MMSE` | 2.0 | Folstein 1975 |
-| Cognitivo sensibile | `ADAS13` | 1.5 | Mohs 1997 |
-| Memoria episodica | `RAVLT_immediate` | 1.0 | Schmidt 2015 |
-| Neuroimaging | `Hippocampus`, `Entorhinal`, `MidTemp` | 0.5 cad. | Jack 2010 |
-
-Tutti i campi sono **opzionali**: i domini mancanti vengono ignorati e segnalati
-in `DxResult.missing_domains`. Se nessun dominio è disponibile, `dx = 'Unknown'`.
-
-### Confidence
-
-| Livello | Condizione |
-|---|---|
-| `high` | `CDRSB` disponibile **e** > 75% del peso totale concorda |
-| `medium` | `CDRSB` disponibile **oppure** accordo tra 60% e 75% |
-| `low` | `CDRSB` mancante **e** accordo < 60%, o un solo dominio disponibile |
-
----
+```
+config.py                single source of truth per tutte le soglie (memoria, MMSE, CDR, FAQ,
+                          CSF, PET amiloide/tau, volumi, staging NIA-AA 2024, registro flag)
+nia_protocol_resolver.py helper di risoluzione riga-per-riga (fase, banda educazione, test
+                          memoria Plan A/B, gate MMSE/FAQ, severità CDRSB) — nessuna decisione
+dx1_nia_clinical.py      Diagnosi 1 — gerarchia decisionale CN/MCI/Dementia
+dx2_nia_atn.py           Diagnosi 2 — stato A/T/N dai biomarcatori
+dx3_nia_combined.py      Diagnosi 3 — staging NIA-AA 2024 da Diagnosi 1 + Diagnosi 2
+__init__.py              esporta l'API pubblica di tutti i moduli (nuovi + legacy)
+docs/                    documenti di ragionamento che hanno guidato il design (brief,
+                          ricerca su come ADNI assegna la diagnosi, linee guida cliniche)
+legacy/                  sistema precedente ("Metodo B", voto pesato) — vedi legacy/README.md
+```
 
 ## Uso
 
-### Singola visita
-
 ```python
-from DX_calculators.rules import assign_dx_rule_based
+from rules import assign_dx1_batch, assign_dx2_batch, assign_dx3_batch
 
-result = assign_dx_rule_based(
-    visit_data={
-        "MMSE": 22,
-        "CDRSB": 2.5,
-        "FAQ": 3,
-        "ADAS13": 18,
-        "RAVLT_immediate": 32,
-    },
-    prev_dx="CN",              # diagnosi visita precedente (None se baseline)
-    time_since_prev_years=1.5, # anni dall'ultima visita (None se sconosciuto)
-)
-
-print(result.dx)           # 'MCI'
-print(result.confidence)   # 'high'
-print(result.evidence)     # {'CDRSB': 'MCI', 'FAQ': 'MCI', 'MMSE': 'MCI', ...}
-print(result.temporal_consistent)  # True
+df = assign_dx1_batch(df)   # aggiunge DX1_*
+df = assign_dx2_batch(df, metadata=file_metadata)   # aggiunge DX2_*, metadata.custom opzionale
+df = assign_dx3_batch(df)   # richiede le colonne DX1_*/DX2_* già presenti — aggiunge DX3_*
 ```
 
-### Batch su DataFrame ADNI (da Datalake)
+L'ordine conta solo per `assign_dx3_batch`, che legge `DX1_clinical`, `DX2_A`, `DX2_T` dal DataFrame. `assign_dx1_batch` e `assign_dx2_batch` sono indipendenti e possono girare in qualsiasi ordine (o in parallelo su copie separate, poi unite su `id_col`/`time_col`).
 
-```python
-import pandas as pd
-from dl_client import DatalakeClient
-from DX_calculators.rules import assign_dx_batch
+Per una singola riga, le versioni non-batch sono `classify_syndromic()`, `classify_atn()`, `combine_stage()`.
 
-client = DatalakeClient()
-search = client.query_files({"custom.level": "cleaned_03", "custom.file_code": "ADNIMERGE"})
-zip_files = client.download_file(search["object_name"], extract_zip=True)
-df = zip_files[list(zip_files.keys())[0]]
+## Metodo (assay/tracer/versione FreeSurfer)
 
-# Il DataFrame deve contenere ID, TIME, e i biomarker in scala clinica
-df_with_dx = assign_dx_batch(df, id_col="ID", time_col="TIME")
+Ogni funzione batch/riga accetta un parametro esplicito (`csf_assay=`, `amyloid_pet_tracer=`, `tau_pet_tracer=`, `volume_scale=`, `freesurfer_version=`). Se omesso, viene letto da `metadata.custom` del file (`CSF_filter`/`PET_filter`/`VOLUMES_filter`, convenzione definita in `WP-2/Data_cleaning/automated_merge.py`); se anche quello manca, si usa `config.SYNTHETIC_DEFAULTS`. La provenienza di ogni scelta è riportata in `DX2_method_source`.
 
-# Colonne aggiunte:
-# DX_rules                     → 'CN' / 'MCI' / 'Dementia' / 'Unknown'
-# DX_rules_confidence          → 'high' / 'medium' / 'low'
-# DX_rules_temporal_consistent → bool
-# DX_rules_temporal_flag       → stringa descrittiva o NaN
-# DX_rules_missing_domains     → lista dei biomarker mancanti per quella visita
+Oggi i dataset mergiati portano un solo metodo per file (non per riga) — `DX2_method_uniform` è sempre `True`; se in futuro un dataset dovesse mischiare metodi nello stesso file, andrà aggiunta una risoluzione per riga (vedi TODO sotto).
+
+## Flag di qualità
+
+Ogni funzione batch aggiunge una colonna `*_flags` (es. `DX1_flags`, `DX2_flags`) con zero o più chiavi dal registro `config.FLAGS`, unite con `config.FLAG_JOIN_SEP` (`"|"`). Il registro documenta il significato di ogni flag — consultarlo prima di aggiungerne uno nuovo, per evitare duplicati.
+
+## Stato / TODO noti
+
+- **Soglie %ICV per FreeSurfer 4.3, 4.4, 6.0, 7.4.1** non sono validate indipendentemente — nessuna letteratura versione-specifica esiste, e nessun fattore di conversione affidabile da 5.1 esiste (Gronenschild et al. 2012, PLoS One: il bias cross-versione è struttura-dipendente, non sistematico). `dx2_nia_atn.py`/`config.py` le popolano come **proxy esplicito dei cutoff "5.1"** (`is_proxy: True`), con flag `FS_VERSION_CUTOFF_PROXY_FROM_5.1` emesso in `DX2_flags` invece di restituire `N=None` silenziosamente. La derivazione empirica di cutoff propri per versione (es. percentili sul campione CN di quella versione) resta un TODO separato, non pianificato.
+- **`CDGLOBAL` (CDR Global) spesso mancante nel dataset di merge, mentre `CDRSB` è quasi sempre presente** — non è un vero gap di raccolta ADNI, è un bug di mapping nella pipeline `WP-2/Data_cleaning/` (dettagli in `STATUS_DIAGNOSI_PIPELINE_SINTETICA.md`, sezione 8bis: `CDGLOBAL` viene scartato silenziosamente dal filtro per categoria perché non è mai stato rinominato in `CDRGLOB`). Il fix corretto è a monte, in WP-2; nel frattempo `dx1_nia_clinical.py` (`classify_syndromic`) usa un fallback esplicito: quando `CDGLOBAL` manca ma `CDRSB` è disponibile, deriva un CDR Global approssimato via il crosswalk `config.CDRSB_TO_CDRGLOBAL` (O'Bryant et al. 2008, Arch Neurology — κ=0.90, 93-94% classificati correttamente in due studi indipendenti), con flag `CDGLOBAL_DERIVED_FROM_CDRSB` in `DX1_flags` per restare distinguibile da un valore osservato.
+- **Protocollo ADNI (`ORIGPROT`) non propagato nei dataset di merge finale** — oggi cade sempre sul default `ADNI3` per qualunque dato reale (non solo sintetico). Discussione aperta e volutamente non affrontata qui: rendere Diagnosi 1 indipendente dal dataset analizzato (default a un set di cutoff standard, criteri ADNI-phase-specifici come opzione avanzata esplicita anziché comportamento di default) — impatta il comportamento di default dell'intero modulo clinico, va valutata a sé.
+- **Nessuna chiave metadata dedicata per il tracciante tau** (`PET_filter` copre solo l'amiloide) — va risolto via parametro esplicito o default finché non compare una convenzione nei dati.
+- **SMC (ADNIGO2)** non viene calcolato: manca una variabile di "subjective memory complaint" nel dataset attuale.
+- Il confronto sistematico Diagnosi 1 vs `legacy/dx_rule_based.py` ("Metodo A vs B", vedi `STATUS_DIAGNOSI_PIPELINE_SINTETICA.md`) non è ancora automatizzato — oggi esiste solo come controllo di sanità manuale nello script di verifica.
+
+## Verifica
+
+Non esiste ancora una suite di test formale (`pytest`) in questa cartella. La verifica va fatta con un piccolo script che importa `rules` e controlla i casi noti da `docs/adni_diagnosis_classifier_brief.md` (soglie di confine, righe CN/MCI/Dementia costruite a mano, stadi NIA-AA 2024 noti) — vedi la cronologia del progetto per un esempio completo dei casi da coprire. Ambiente consigliato: venv `aind101/` (creato per WSL/Linux — vedi nota sotto).
+
+**Nota ambiente:** l'interprete Python su questa macchina è funzionante solo via WSL (Ubuntu). Da PowerShell/Git Bash nativi, `python`/`python3` sono solo stub del Microsoft Store. Per eseguire codice:
+```bash
+wsl
+cd "/mnt/c/Users/<utente>/OneDrive - Net Service S.p.A/Documenti/Github/AIND"
+source aind101/bin/activate
+python -m pip install -r <requirements se servono>
 ```
-
-### Confronto con DX originale ADNI (validazione)
-
-```python
-# Accuratezza sul dato reale
-from sklearn.metrics import classification_report
-
-mask = df_with_dx["DX_rules"] != "Unknown"
-print(classification_report(
-    df_with_dx.loc[mask, "DX"],        # etichetta originale ADNI
-    df_with_dx.loc[mask, "DX_rules"],  # diagnosi calcolata dal Metodo B
-))
-```
-
----
-
-## Consistenza temporale
-
-Il Metodo B non modifica la diagnosi basata sui biomarker in presenza di
-transizioni anomale, ma aggiunge un flag di qualità per uso downstream:
-
-| Transizione | Flag |
-|---|---|
-| `Dementia → CN` | Implausibile — impossibile senza intervento |
-| `Dementia → MCI` | Implausibile — regressione funzionale biologicamente assente |
-| `MCI → CN` | Inatteso — possibile ma raro; segnalato per revisione |
-| `CN → Dementia` (< 2 anni, senza MCI intermedio) | Sospetto — salto di stadio troppo rapido |
-
-Il flag `temporal_consistent = False` è la metrica di qualità da usare nel
-confronto A vs B (se Metodo A assegna una DX coerente ma Metodo B la flagga
-come temporalmente implausibile, il record è candidato all'esclusione).
-
----
-
-## Riferimenti
-
-| Paper | DOI | Rilevanza |
-|---|---|---|
-| Jack et al. 2013, Lancet Neurology | `10.1016/S1474-4422(12)70291-0` | Cascata biomarker — vincolo normativo |
-| Jack et al. 2018, Alzheimer's & Dementia | NIA-AA 2018 | Framework A/T/(N) aggiornato |
-| O'Bryant et al. 2010, Arch. Neurology | — | CDR-SB cutpoints validati su ADNI |
-| Zamzmi et al. 2025, Comm. Engineering | `10.1038/s44172-025-00450-1` | FDA Consistency criterion |
-| Petersen et al. 2016, JAMA | — | Storia naturale MCI e regressione |
-
----
-
-## Limitazioni note
-
-- Le soglie di neuroimaging (`Hippocampus`, `Entorhinal`, `MidTemp`) dipendono
-  dall'unità di misura del datalake level usato. Verificare che i valori siano
-  in mm³ (volume) o mm (spessore corticale) prima di interpretare il voto di
-  quel dominio. Se l'unità è diversa, aggiornare le soglie in `thresholds.py`.
-- Il range MCI è clinicamente eterogeneo. I casi borderline CN/MCI con
-  confidence `low` sono candidati all'analisi SuStaIn (Young 2018) per uno
-  staging biologico più preciso.
-- La proporzione CN/MCI/Dementia risultante non è controllata: dipende dalla
-  distribuzione dei biomarker nel dataset. Per il dato sintetico, confrontarla
-  con il target (30/45/25%) dopo l'applicazione.
