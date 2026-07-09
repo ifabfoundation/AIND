@@ -1,9 +1,11 @@
 """
 Diagnosis 1 — pure clinical syndromic classifier (CN / MCI / Dementia).
 
-Reproduces the ADNI clinical trial algorithm / NIA-AA 2011 clinical criteria
-(McKhann / Albert / Sperling 2011), protocol-aware via config.ADNI_LM_CUTOFFS
-and config.ADNI_MMSE_GATES. This is Diagnosis 1 of the two-axis design in
+Implements the NIA-AA 2011 clinical criteria (McKhann / Albert / Sperling 2011)
+using config.MEMORY_IMPAIRMENT_CUTOFFS and config.MMSE_GATES — a single
+reference regardless of dataset or ADNI study phase (see the TODO notes on
+those two tables in config.py for why, and what a future refinement would
+look like). This is Diagnosis 1 of the two-axis design in
 docs/adni_diagnosis_classifier_brief.md: it never reads biomarkers and is
 never overridden by the biological axis (dx2_nia_atn.py / dx3_nia_combined.py).
 
@@ -16,8 +18,8 @@ from typing import Optional
 
 import pandas as pd
 
-from .config import ADNI_LM_CUTOFFS, ADNI_MMSE_GATES, DX_LABELS, FLAG_JOIN_SEP, SYNTHETIC_DEFAULTS
-from .nia_protocol_resolver import (
+from .config import DX_LABELS, FLAG_JOIN_SEP, MMSE_GATES, SYNTHETIC_DEFAULTS
+from .nia_clinical_resolver import (
     check_exclusions,
     derive_cdrglobal_from_cdrsb,
     faq_functional_impairment,
@@ -27,37 +29,17 @@ from .nia_protocol_resolver import (
     mmse_in_range,
     resolve_education_band,
     resolve_memory_test,
-    resolve_protocol,
 )
-
-
-def _emci_lmci_split(protocol: str, band: str, test_name: Optional[str], value: Optional[float]) -> Optional[str]:
-    """
-    ADNIGO2-only MCI granularity (EMCI vs LMCI), via LDELTOTAL bands in
-    ADNI_LM_CUTOFFS["ADNIGO2"]. Returns None when it cannot be determined
-    (e.g. RAVLT fallback active — RAVLT has no EMCI/LMCI split in config.py).
-    SMC is not computed: no subjective-memory-complaint variable is available
-    in the current column set (see DX_LABELS comment).
-    """
-    if protocol != "ADNIGO2" or test_name != "LDELTOTAL" or value is None:
-        return None
-    cutoffs = ADNI_LM_CUTOFFS["ADNIGO2"][band]
-    if cutoffs["emci_min"] <= value <= cutoffs["emci_max"]:
-        return "EMCI"
-    if value <= cutoffs["lmci_max"]:
-        return "LMCI"
-    return None
 
 
 def classify_syndromic(
     row,
-    protocol: Optional[str] = None,
     apply_exclusions: Optional[bool] = None,
 ) -> dict:
     """
-    Assigns a single-visit clinical diagnosis using the ADNI/NIA-AA 2011
+    Assigns a single-visit clinical diagnosis using the NIA-AA 2011
     decision hierarchy. Returns a dict with:
-        dx, dx_detailed, flags (list[str]), protocol_used, memory_test_used
+        dx, flags (list[str]), memory_test_used
     """
     if apply_exclusions is None:
         apply_exclusions = SYNTHETIC_DEFAULTS["apply_exclusions"]
@@ -69,13 +51,9 @@ def classify_syndromic(
     if excluded:
         return {
             "dx": DX_LABELS["EXCLUDED"],
-            "dx_detailed": DX_LABELS["EXCLUDED"],
             "flags": flags,
-            "protocol_used": None,
             "memory_test_used": None,
         }
-
-    protocol_used = protocol or resolve_protocol(row)
 
     educ = get_value(row, "PTEDUCAT")
     band, used_default_band = resolve_education_band(educ)
@@ -92,7 +70,7 @@ def classify_syndromic(
     else:
         if is_fallback:
             flags.append("MEMORY_FALLBACK_RAVLT")
-        mem_status = memory_status(test_name, mem_value, band, protocol_used)
+        mem_status = memory_status(test_name, mem_value, band)
 
     cdglobal = get_value(row, "CDGLOBAL")
     if is_missing(cdglobal):
@@ -106,9 +84,7 @@ def classify_syndromic(
             flags.append("MISSING_CDGLOBAL")
             return {
                 "dx": DX_LABELS["UNKNOWN"],
-                "dx_detailed": DX_LABELS["UNKNOWN"],
                 "flags": flags,
-                "protocol_used": protocol_used,
                 "memory_test_used": test_name,
             }
         cdglobal = derived_cdglobal
@@ -124,8 +100,8 @@ def classify_syndromic(
         cdmemory_ge_05 = float(cdmemory) >= 0.5
 
     mmse = get_value(row, "MMSE")
-    mmse_cn_mci = mmse_in_range(mmse, protocol_used, "cn_mci")
-    mmse_ad = mmse_in_range(mmse, protocol_used, "ad")
+    mmse_cn_mci = mmse_in_range(mmse, "cn_mci")
+    mmse_ad = mmse_in_range(mmse, "ad")
     if mmse_cn_mci is None:
         flags.append("MISSING_MMSE_GATE_SKIPPED")
 
@@ -137,7 +113,7 @@ def classify_syndromic(
     if cdglobal == 0:
         # MMSE well below the AD gate overrides CDR=0 — severe cognitive
         # impairment despite an apparently normal CDR is treated as Dementia.
-        ad_gate_lo = ADNI_MMSE_GATES.get(protocol_used, ADNI_MMSE_GATES[SYNTHETIC_DEFAULTS["protocol"]])["ad"][0]
+        ad_gate_lo = MMSE_GATES["ad"][0]
         if mmse is not None and not is_missing(mmse) and float(mmse) < ad_gate_lo:
             dx = DX_LABELS["DEMENTIA"]
             flags.append("TIE_MMSE_BELOW_AD_GATE_WITH_CDR0")
@@ -172,17 +148,9 @@ def classify_syndromic(
         dx = DX_LABELS["UNKNOWN"]
         flags.append("INSUFFICIENT_DATA")
 
-    dx_detailed = dx
-    if dx == DX_LABELS["MCI"]:
-        split = _emci_lmci_split(protocol_used, band, test_name, mem_value)
-        if split is not None:
-            dx_detailed = DX_LABELS[split]
-
     return {
         "dx": dx,
-        "dx_detailed": dx_detailed,
         "flags": flags,
-        "protocol_used": protocol_used,
         "memory_test_used": test_name,
     }
 
@@ -191,35 +159,26 @@ def assign_dx1_batch(
     df: pd.DataFrame,
     id_col: str = "ID",
     time_col: str = "TIME",
-    protocol_col: str = "ORIGPROT",
     apply_exclusions: Optional[bool] = None,
 ) -> pd.DataFrame:
     """
     Applies classify_syndromic row-by-row. Each visit is classified
     independently — Diagnosis 1 has no temporal-propagation concept (unlike
     the legacy dx_rule_based.py). Appends:
-        DX1_clinical, DX1_clinical_detailed, DX1_flags,
-        DX1_protocol_used, DX1_memory_test_used
+        DX1_clinical, DX1_flags, DX1_memory_test_used
     """
     dx_out: list[str] = []
-    dx_detailed_out: list[str] = []
     flags_out: list[Optional[str]] = []
-    protocol_out: list[Optional[str]] = []
     memory_test_out: list[Optional[str]] = []
 
     for _, row in df.iterrows():
-        protocol = resolve_protocol(row, protocol_col)
-        result = classify_syndromic(row, protocol=protocol, apply_exclusions=apply_exclusions)
+        result = classify_syndromic(row, apply_exclusions=apply_exclusions)
         dx_out.append(result["dx"])
-        dx_detailed_out.append(result["dx_detailed"])
         flags_out.append(FLAG_JOIN_SEP.join(result["flags"]) if result["flags"] else None)
-        protocol_out.append(result["protocol_used"])
         memory_test_out.append(result["memory_test_used"])
 
     df = df.copy()
     df["DX1_clinical"] = dx_out
-    df["DX1_clinical_detailed"] = dx_detailed_out
     df["DX1_flags"] = flags_out
-    df["DX1_protocol_used"] = protocol_out
     df["DX1_memory_test_used"] = memory_test_out
     return df

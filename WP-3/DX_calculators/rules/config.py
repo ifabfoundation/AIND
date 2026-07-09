@@ -16,8 +16,11 @@ Design principles
 Relationship to thresholds.py
 ------------------------------
 thresholds.py drives the legacy weighted-vote classifier (dx_rule_based.py) and
-is intentionally unchanged. config.py drives the new protocol-aware modules
-(nia_protocol_resolver, dx1_nia_clinical, dx2_nia_atn, dx3_nia_combined). Do not merge them.
+is intentionally unchanged. config.py drives the new NIA-AA-referenced modules
+(nia_clinical_resolver, dx1_nia_clinical, dx2_nia_atn, dx3_nia_combined). Do not merge them.
+Note: dx1_nia_clinical.py's clinical cutoffs (MEMORY_IMPAIRMENT_CUTOFFS, MMSE_GATES)
+are a single reference regardless of dataset/ADNI study phase — this module is not
+"protocol-aware" in the ADNI-phase sense (see the TODO notes on those two tables).
 """
 
 from __future__ import annotations
@@ -79,31 +82,31 @@ COLUMN_MAP: dict[str, str] = {
 # Plan B: RAVLT_immediate (5-trial sum, used when LDELTOTAL absent)
 MEMORY_TEST_PRIORITY: list[str] = ["LDELTOTAL", "RAVLT_immediate"]
 
-# Plan A — Logical Memory II Delayed Recall, education-adjusted
-# Source: Aisen et al. 2024, Alzheimer's & Dementia; ADNI Procedures Manuals
+# Logical Memory II Delayed Recall — memory impairment cutoffs, education-adjusted.
+# Single reference regardless of dataset/study phase (project decision: NIA-AA 2011
+# — Albert et al., Alzheimer's & Dementia, doi:10.1016/j.jalz.2011.03.008 — defines
+# memory impairment as a *statistical* criterion, "~1-1.5 SD below the mean for
+# age/education-matched peers on normative data", not a fixed cutoff tied to any
+# study phase; so phase-specific branching was never NIA-AA-required in the first
+# place). Values below are the former ADNI3/ADNI4 table (identical to each other),
+# kept because Aisen et al. 2024 (Alzheimer's & Dementia) describes them as already
+# operationalizing that NIA-AA statistical criterion for a current ADNI cohort.
+# Source: Aisen et al. 2024, Alzheimer's & Dementia; ADNI Procedures Manuals.
 # Keys: cn_min = minimum score for CN classification
 #        mci_max = maximum score consistent with MCI (≤ this = impaired memory)
-ADNI_LM_CUTOFFS: dict[str, dict[str, dict[str, int]]] = {
-    "ADNI1": {
-        "16+":  {"cn_min": 9, "mci_max": 8,  "ad_max": 8},
-        "8-15": {"cn_min": 5, "mci_max": 4,  "ad_max": 4},
-        "0-7":  {"cn_min": 3, "mci_max": 2,  "ad_max": 2},
-    },
-    "ADNIGO2": {
-        "16+":  {"cn_min": 9,  "emci_min": 9, "emci_max": 11, "lmci_max": 8, "ad_max": 8},
-        "8-15": {"cn_min": 5,  "emci_min": 5, "emci_max": 9,  "lmci_max": 4, "ad_max": 4},
-        "0-7":  {"cn_min": 3,  "emci_min": 3, "emci_max": 6,  "lmci_max": 2, "ad_max": 2},
-    },
-    "ADNI3": {
-        "16+":  {"cn_min": 9, "mci_max": 10, "ad_max": 8},
-        "8-15": {"cn_min": 5, "mci_max": 9,  "ad_max": 4},
-        "0-7":  {"cn_min": 3, "mci_max": 6,  "ad_max": 2},
-    },
-    "ADNI4": {  # same criteria as ADNI3
-        "16+":  {"cn_min": 9, "mci_max": 10, "ad_max": 8},
-        "8-15": {"cn_min": 5, "mci_max": 9,  "ad_max": 4},
-        "0-7":  {"cn_min": 3, "mci_max": 6,  "ad_max": 2},
-    },
+#
+# TODO (provisional): these numbers are still ADNI3/4-cohort-derived (Aisen 2024),
+# not an independent normative table — collapsing the old phase-specific tables
+# into one removes the ADNI-phase dependency but does not yet make this a true
+# NIA-AA-independent normative reference. A future refinement would replace this
+# with age-corrected normative data independent of ADNI (e.g. MOANS for Logical
+# Memory II), which would also require adding AGE as a new input (not used
+# anywhere in rules/ today, though it is available upstream in the merge pipeline
+# as a cofactor — see MergerTools.CATEGORY_KEYS["cofactor"]).
+MEMORY_IMPAIRMENT_CUTOFFS: dict[str, dict[str, int]] = {
+    "16+":  {"cn_min": 9, "mci_max": 10, "ad_max": 8},
+    "8-15": {"cn_min": 5, "mci_max": 9,  "ad_max": 4},
+    "0-7":  {"cn_min": 3, "mci_max": 6,  "ad_max": 2},
 }
 
 # Plan B — RAVLT Immediate Recall (5-trial sum, range 0–75), education-adjusted
@@ -130,14 +133,19 @@ EDUCATION_BAND_DEFAULT: str = "8-15"   # used when PTEDUCAT/EDUCAT is missing
 # Clinical / staging gates
 # ─────────────────────────────────────────────────────────────────────────────
 
-# MMSE inclusion ranges per protocol phase — (min_inclusive, max_inclusive)
-# Source: ADNI Procedures Manuals (phase-specific screening criteria)
-ADNI_MMSE_GATES: dict[str, dict[str, tuple[int, int]]] = {
-    "ADNI1":   {"cn_mci": (24, 30), "ad": (20, 26)},
-    "ADNIGO2": {"cn_mci": (24, 30), "ad": (20, 26)},
-    "ADNI3":   {"cn_mci": (24, 30), "ad": (20, 24)},
-    "ADNI4":   {"cn_mci": (24, 30), "ad": (20, 24)},
-}
+# MMSE range gates — (min_inclusive, max_inclusive). Single reference regardless
+# of dataset/study phase (same project decision as MEMORY_IMPAIRMENT_CUTOFFS
+# above). Note the MMSE is not itself part of the formal NIA-AA 2011 criteria
+# (neither Albert et al. nor McKhann et al. specify an MMSE range) — it is a
+# widely used screening instrument with severity bands published independently
+# of ADNI (e.g. Perneczky et al. 2006, Am J Geriatr Psychiatry).
+# Source: ADNI Procedures Manuals (former ADNI3/ADNI4 values, identical to each
+# other, kept as the single reference).
+#
+# TODO (provisional): still ADNI-cohort-derived values, not an MMSE severity
+# banding sourced independently of ADNI. A future refinement would replace this
+# with a published generic banding (e.g. Perneczky et al. 2006).
+MMSE_GATES: dict[str, tuple[int, int]] = {"cn_mci": (24, 30), "ad": (20, 24)}
 
 # FAQ — Functional Activities Questionnaire (Pfeffer 1982)
 FAQ_THRESHOLDS: dict[str, int] = {
@@ -537,7 +545,6 @@ NIA_AA_2024_STAGES: dict[int, dict] = {
 # ─────────────────────────────────────────────────────────────────────────────
 
 SYNTHETIC_DEFAULTS: dict[str, object] = {
-    "protocol":           "ADNI3",
     "csf_assay":          "SYNTHETIC",   # Elecsys scale, denormalised to clinical units
     "amyloid_pet_tracer": "FBP",
     "tau_pet_tracer":     "FTP",
@@ -553,9 +560,6 @@ DX_LABELS = {
     "CN":       "CN",
     "MCI":      "MCI",
     "DEMENTIA": "Dementia",
-    "EMCI":     "EMCI",      # ADNIGO2 only
-    "LMCI":     "LMCI",      # ADNIGO2 only
-    "SMC":      "SMC",       # ADNIGO2 subjective memory complaints
     "UNKNOWN":  "Unknown",
     "EXCLUDED": "Excluded",
 }

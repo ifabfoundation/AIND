@@ -17,7 +17,7 @@ from typing import Optional
 import pandas as pd
 
 from .config import FLAG_JOIN_SEP, NIA_AA_2024_STAGES
-from .nia_protocol_resolver import cdrsb_severity_band
+from .nia_clinical_resolver import cdrsb_severity_band
 
 
 def resolve_severity(cdrsb) -> tuple[Optional[str], list[str]]:

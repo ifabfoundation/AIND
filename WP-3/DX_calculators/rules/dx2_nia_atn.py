@@ -31,7 +31,7 @@ from .config import (
     SYNTHETIC_DEFAULTS,
     TAU_PET_CUTOFFS,
 )
-from .nia_protocol_resolver import get_value, is_missing
+from .nia_clinical_resolver import get_value, is_missing
 
 
 def resolve_method(

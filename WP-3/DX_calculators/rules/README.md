@@ -10,7 +10,7 @@ Sistema di classificazione diagnostica per pazienti ADNI e ADNI-like (sintetici)
 
 | # | Nome | Framework | Modulo | Output |
 |---|---|---|---|---|
-| 1 | Clinica pura | Algoritmo ADNI / NIA-AA 2011 | `dx1_nia_clinical.py` | `DX1_clinical` (CN/MCI/Dementia), `DX1_clinical_detailed` (+EMCI/LMCI per ADNIGO2) |
+| 1 | Clinica pura | NIA-AA 2011 (McKhann/Albert/Sperling) | `dx1_nia_clinical.py` | `DX1_clinical` (CN/MCI/Dementia) |
 | 2 | Biologica pura (ATN) | NIA-AA 2018 (Jack et al.) | `dx2_nia_atn.py` | `DX2_A`, `DX2_T`, `DX2_N` (booleani), `DX2_ATN_label` |
 | 3 | Combinata clinico-biologica | NIA-AA 2024, 6 stadi (Jack et al.) | `dx3_nia_combined.py` | `DX3_stage` (1-6 o `None`), `DX3_label` |
 
@@ -21,7 +21,7 @@ La Diagnosi 2 non riceve mai la Diagnosi 1 come input (e viceversa): sono assi i
 ```
 config.py                single source of truth per tutte le soglie (memoria, MMSE, CDR, FAQ,
                           CSF, PET amiloide/tau, volumi, staging NIA-AA 2024, registro flag)
-nia_protocol_resolver.py helper di risoluzione riga-per-riga (fase, banda educazione, test
+nia_clinical_resolver.py helper di risoluzione riga-per-riga (banda educazione, test
                           memoria Plan A/B, gate MMSE/FAQ, severità CDRSB) — nessuna decisione
 dx1_nia_clinical.py      Diagnosi 1 — gerarchia decisionale CN/MCI/Dementia
 dx2_nia_atn.py           Diagnosi 2 — stato A/T/N dai biomarcatori
@@ -60,9 +60,8 @@ Ogni funzione batch aggiunge una colonna `*_flags` (es. `DX1_flags`, `DX2_flags`
 
 - **Soglie %ICV per FreeSurfer 4.3, 4.4, 6.0, 7.4.1** non sono validate indipendentemente — nessuna letteratura versione-specifica esiste, e nessun fattore di conversione affidabile da 5.1 esiste (Gronenschild et al. 2012, PLoS One: il bias cross-versione è struttura-dipendente, non sistematico). `dx2_nia_atn.py`/`config.py` le popolano come **proxy esplicito dei cutoff "5.1"** (`is_proxy: True`), con flag `FS_VERSION_CUTOFF_PROXY_FROM_5.1` emesso in `DX2_flags` invece di restituire `N=None` silenziosamente. La derivazione empirica di cutoff propri per versione (es. percentili sul campione CN di quella versione) resta un TODO separato, non pianificato.
 - **`CDGLOBAL` (CDR Global) spesso mancante nel dataset di merge, mentre `CDRSB` è quasi sempre presente** — non è un vero gap di raccolta ADNI, è un bug di mapping nella pipeline `WP-2/Data_cleaning/` (dettagli in `STATUS_DIAGNOSI_PIPELINE_SINTETICA.md`, sezione 8bis: `CDGLOBAL` viene scartato silenziosamente dal filtro per categoria perché non è mai stato rinominato in `CDRGLOB`). Il fix corretto è a monte, in WP-2; nel frattempo `dx1_nia_clinical.py` (`classify_syndromic`) usa un fallback esplicito: quando `CDGLOBAL` manca ma `CDRSB` è disponibile, deriva un CDR Global approssimato via il crosswalk `config.CDRSB_TO_CDRGLOBAL` (O'Bryant et al. 2008, Arch Neurology — κ=0.90, 93-94% classificati correttamente in due studi indipendenti), con flag `CDGLOBAL_DERIVED_FROM_CDRSB` in `DX1_flags` per restare distinguibile da un valore osservato.
-- **Protocollo ADNI (`ORIGPROT`) non propagato nei dataset di merge finale** — oggi cade sempre sul default `ADNI3` per qualunque dato reale (non solo sintetico). Discussione aperta e volutamente non affrontata qui: rendere Diagnosi 1 indipendente dal dataset analizzato (default a un set di cutoff standard, criteri ADNI-phase-specifici come opzione avanzata esplicita anziché comportamento di default) — impatta il comportamento di default dell'intero modulo clinico, va valutata a sé.
+- **Diagnosi 1 non dipende più dal protocollo/fase ADNI** (risolto — era una discussione aperta in una versione precedente di questo file). `MEMORY_IMPAIRMENT_CUTOFFS` e `MMSE_GATES` in `config.py` sono ora un riferimento unico, non più selezionato per fase (`ORIGPROT`/`ADNI1`/`ADNIGO2`/`ADNI3`/`ADNI4`): i criteri NIA-AA 2011 (Albert et al. 2011, doi:10.1016/j.jalz.2011.03.008) definiscono l'impairment di memoria come soglia statistica generica ("1-1.5 SD sotto la norma età/educazione"), non un cutoff fase-specifico, quindi la selezione per fase non era mai stata un requisito NIA-AA. Per lo stesso motivo `EMCI`/`LMCI` (terminologia di arruolamento ADNI-GO/ADNI2, non categoria NIA-AA) è stato rimosso, insieme a `resolve_protocol()` e a `SMC` (mai calcolato, era comunque specifico di ADNIGO2). **Stato: provvisorio** — i valori di `MEMORY_IMPAIRMENT_CUTOFFS`/`MMSE_GATES` restano quelli del cohort ADNI3/4 (Aisen et al. 2024), solo scorporati dalla logica di fase; non sono (ancora) tabelle normative NIA-AA indipendenti da ADNI. Raffinamento futuro possibile: sostituirli con norme età-corrette pubblicate indipendentemente da ADNI (es. MOANS per Logical Memory II, Mayo/Schmidt per RAVLT) e una banda di gravità MMSE non-ADNI (es. Perneczky et al. 2006), il che richiederebbe aggiungere `AGE` come nuovo input (oggi non usato in `rules/`, pur essendo disponibile a monte nella pipeline di merge come cofattore).
 - **Nessuna chiave metadata dedicata per il tracciante tau** (`PET_filter` copre solo l'amiloide) — va risolto via parametro esplicito o default finché non compare una convenzione nei dati.
-- **SMC (ADNIGO2)** non viene calcolato: manca una variabile di "subjective memory complaint" nel dataset attuale.
 - Il confronto sistematico Diagnosi 1 vs `legacy/dx_rule_based.py` ("Metodo A vs B", vedi `STATUS_DIAGNOSI_PIPELINE_SINTETICA.md`) non è ancora automatizzato — oggi esiste solo come controllo di sanità manuale nello script di verifica.
 
 ## Verifica

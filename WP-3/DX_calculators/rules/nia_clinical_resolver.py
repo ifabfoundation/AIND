@@ -1,12 +1,13 @@
 """
-ADNI protocol resolution utilities — row-level helpers, no decision logic.
+NIA-AA clinical resolution utilities — row-level helpers, no decision logic.
 
-This module answers "given this row and config.py, what phase / education band /
-memory test / gate applies?" It never decides CN / MCI / Dementia — that
-happens in dx1_nia_clinical.py, which composes these functions the same way
-dx_rule_based.py composes thresholds.py.
+This module answers "given this row and config.py, what education band / memory
+test / gate applies?" It never decides CN / MCI / Dementia — that happens in
+dx1_nia_clinical.py, which composes these functions the same way dx_rule_based.py
+composes thresholds.py.
 
-Reference: docs/adni_diagnosis_classifier_brief.md, sections 1-2.
+Reference: docs/adni_diagnosis_classifier_brief.md, sections 1-2 (amended — see
+the note on the single-reference decision replacing ADNI-phase-aware cutoffs).
 """
 
 from __future__ import annotations
@@ -15,7 +16,7 @@ import math
 from typing import Optional
 
 from .config import (
-    ADNI_LM_CUTOFFS,
+    MEMORY_IMPAIRMENT_CUTOFFS,
     CDRSB_SEVERITY,
     CDRSB_TO_CDRGLOBAL,
     COLUMN_MAP,
@@ -23,10 +24,9 @@ from .config import (
     EDUCATION_BANDS,
     EXCLUSION_GATES,
     FAQ_THRESHOLDS,
-    ADNI_MMSE_GATES,
+    MMSE_GATES,
     MEMORY_TEST_PRIORITY,
     RAVLT_IMMEDIATE_CUTOFFS,
-    SYNTHETIC_DEFAULTS,
 )
 
 
@@ -45,23 +45,6 @@ def get_value(row, key: str):
     if hasattr(row, "get"):
         return row.get(column)
     return row[column] if column in row else None
-
-
-def resolve_protocol(row, protocol_col: str = "ORIGPROT") -> str:
-    """
-    Returns the ADNI phase key ("ADNI1"/"ADNIGO2"/"ADNI3"/"ADNI4") for a row.
-    Defaults to SYNTHETIC_DEFAULTS["protocol"] when the column is absent/NaN
-    (synthetic rows have no phase — brief section 1).
-    """
-    value = row.get(protocol_col) if hasattr(row, "get") else None
-    if value is None or is_missing(value):
-        return SYNTHETIC_DEFAULTS["protocol"]
-    value = str(value).upper()
-    if value in ("ADNIGO", "ADNI2", "ADNIGO2"):
-        return "ADNIGO2"
-    if value in ADNI_LM_CUTOFFS:
-        return value
-    return SYNTHETIC_DEFAULTS["protocol"]
 
 
 def resolve_education_band(educ_years) -> tuple[str, bool]:
@@ -95,21 +78,20 @@ def resolve_memory_test(row) -> tuple[Optional[str], Optional[float], bool]:
     return None, None, False
 
 
-def memory_status(test_name: str, value: float, band: str, protocol: str) -> str:
+def memory_status(test_name: str, value: float, band: str) -> str:
     """
-    Maps a memory test score to "normal" / "mci" / "ad" (LDELTOTAL, phase-aware
-    via ADNI_LM_CUTOFFS) or "normal" / "impaired" (RAVLT_immediate — no phase
-    axis in config.py, `protocol` is ignored for this branch).
+    Maps a memory test score to "normal" / "mci" / "ad" (LDELTOTAL, via
+    MEMORY_IMPAIRMENT_CUTOFFS) or "normal" / "impaired" (RAVLT_immediate).
     """
     if test_name == "LDELTOTAL":
-        cutoffs = ADNI_LM_CUTOFFS.get(protocol, ADNI_LM_CUTOFFS[SYNTHETIC_DEFAULTS["protocol"]])[band]
-        # ad_max/mci_max checked before cn_min: ADNI3/4 and ADNIGO2 bands
-        # deliberately overlap with cn_min (brief section 2.2/2.7) — e.g. ADNI3
-        # 16+ has cn_min=9 and mci_max=10, so 9-10 must resolve to "mci" here,
-        # letting the CDR-based decision hierarchy (and its tie-break flags)
-        # decide, rather than this function silently defaulting to "normal".
+        cutoffs = MEMORY_IMPAIRMENT_CUTOFFS[band]
+        # ad_max/mci_max checked before cn_min: the table deliberately overlaps
+        # with cn_min (brief section 2.2/2.7) — e.g. band "16+" has cn_min=9 and
+        # mci_max=10, so 9-10 must resolve to "mci" here, letting the CDR-based
+        # decision hierarchy (and its tie-break flags) decide, rather than this
+        # function silently defaulting to "normal".
         ad_max = cutoffs.get("ad_max")
-        impaired_upper = cutoffs.get("mci_max", cutoffs.get("emci_max"))
+        impaired_upper = cutoffs.get("mci_max")
         if ad_max is not None and value <= ad_max:
             return "ad"
         if impaired_upper is not None and value <= impaired_upper:
@@ -125,15 +107,14 @@ def memory_status(test_name: str, value: float, band: str, protocol: str) -> str
     raise ValueError(f"Unknown memory test: {test_name}")
 
 
-def mmse_in_range(mmse, protocol: str, category: str) -> Optional[bool]:
+def mmse_in_range(mmse, category: str) -> Optional[bool]:
     """
     category is "cn_mci" or "ad". Returns None (gate skipped) if mmse is
     missing (drives FLAGS["MISSING_MMSE_GATE_SKIPPED"]).
     """
     if is_missing(mmse):
         return None
-    gates = ADNI_MMSE_GATES.get(protocol, ADNI_MMSE_GATES[SYNTHETIC_DEFAULTS["protocol"]])
-    lo, hi = gates[category]
+    lo, hi = MMSE_GATES[category]
     return lo <= float(mmse) <= hi
 
 

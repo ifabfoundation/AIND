@@ -50,6 +50,15 @@ it enriches it (e.g. "MCI, A+T+" vs "MCI, A−").
   - *Single reference* (for synthetic patients, which have no phase): **use the
     ADNI3 cutoff set** (3 categories, inclusive MCI band). This is the default for
     the synthetic cohort.
+
+  > **AMENDMENT (later session):** this decision was revised — the implementation
+  > now uses the single reference (ADNI3/4 cutoff set) **unconditionally**, for
+  > every row, not just synthetic ones. `resolve_protocol()`/`ORIGPROT`-based
+  > phase branching was removed from `dx1_nia_clinical.py` entirely, and with it
+  > the EMCI/LMCI split (see amendment near §2.2 below for the rationale and
+  > caveats). Config names changed accordingly:
+  > `ADNI_LM_CUTOFFS` → `config.MEMORY_IMPAIRMENT_CUTOFFS`,
+  > `ADNI_MMSE_GATES` → `config.MMSE_GATES` (both now flat, no phase key).
 - **Biomarker cutoffs must be calibrated to the synthetic generator's scale.** Do
   NOT hardcode ADNI assay thresholds blindly — they depend on assay/pipeline. Put
   them in a config dict, with literature values as placeholders to be confirmed.
@@ -75,6 +84,33 @@ it enriches it (e.g. "MCI, A+T+" vs "MCI, A−").
 | Modified Hachinski | `HMSCORE` | Exclusion gate (≤ 4) |
 | Years of education | `PTEDUCAT` | Drives LM cutoff bands |
 | Age | `AGE` | Eligibility (55–90), adjustment |
+
+> **AMENDMENT (later session), covering §2.2, §2.3, §5, §6.4:** the table below
+> and the MMSE gate in §2.3 are kept here as historical record of where the
+> numbers came from, but the implementation no longer branches by phase — only
+> the "ADNI3/4" column of each table is used, unconditionally, for every row
+> (real or synthetic). Rationale: NIA-AA 2011 (Albert et al., Alzheimer's &
+> Dementia, doi:10.1016/j.jalz.2011.03.008) defines memory impairment as a
+> statistical criterion ("~1-1.5 SD below the mean for age/education-matched
+> peers on normative data"), not a cutoff tied to any ADNI study phase — so
+> phase-specific branching was never NIA-AA-required. The MMSE is not part of
+> the formal NIA-AA criteria at all (neither Albert 2011 nor McKhann et al.
+> 2011 specify an MMSE range); it is a screening instrument with severity bands
+> published independently of ADNI (e.g. Perneczky et al. 2006, Am J Geriatr
+> Psychiatry). EMCI/LMCI (§2.2, §7) is confirmed ADNI-GO/ADNI2 enrollment
+> terminology (Aisen et al., "ADNI Clinical Core"), not an NIA-AA diagnostic
+> category, so it was dropped along with the phase branching that produced it.
+>
+> **This is a provisional choice, not a final answer**: the ADNI3/4 numbers
+> below are still ADNI-cohort-derived (Aisen et al. 2024), not an independent
+> NIA-AA normative table. A future refinement would replace them with
+> age-corrected norms published independently of ADNI (MOANS for Logical
+> Memory II; Mayo/Schmidt for RAVLT) and a non-ADNI MMSE severity banding (e.g.
+> Perneczky 2006), which would require adding `AGE` as a new input (not read
+> anywhere in `rules/` today, though available upstream in the merge pipeline
+> as a cofactor). §6.4's "Protocol strategy for synthetic" TODO is resolved by
+> this amendment — there is no longer a protocol strategy to confirm, since
+> there is no protocol branching left.
 
 ### 2.2 Education-adjusted Logical Memory II (LDELTOTAL) cutoffs, by phase
 
